@@ -1,0 +1,26 @@
+# Specify the Docker Compose file version
+version: '3.8'
+
+# Define the services that make up the application
+services:
+  # Service name
+  bedrock-engineer:
+    # Build the Docker image using the Dockerfile in the current directory
+    build: .
+    # Define volume mappings
+    volumes:
+      # Mount the current directory to /app in the container
+      - .:/app
+      # Create a named volume for node_modules to prevent overwriting by the above mount
+      - /app/node_modules
+    # Map host port 3000 to container port 3000
+    ports:
+      - "3000:3000"
+    # Set environment variables
+    environment:
+      - NODE_ENV=production
+    # Allocate a pseudo-TTY
+    tty: true
+    # Load environment variables from a file
+    env_file:
+      - .env
