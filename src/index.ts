@@ -6,7 +6,7 @@ import {
   Message,
   Tool,
 } from "@aws-sdk/client-bedrock-runtime";
-import { executTool, tools } from "./tools/tools";
+import { executeTool, tools } from "./tools/tools";
 import systemPrompt from "./systemPrompt";
 import dotenv from "dotenv";
 import { log } from "./log";
@@ -155,7 +155,7 @@ const chatWithClaude = async (props: ChatWithClaudeProps) => {
           break;
         }
       }
-      const toolResult = await executTool(toolName, toolInput);
+      const toolResult = await executeTool(toolName, toolInput);
       log.tool(`Tool Result: ${toolResult}`);
 
       conversationHistory.push({

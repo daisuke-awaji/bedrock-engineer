@@ -13,6 +13,8 @@ import {
 // import { CloudWatchLogsClient } from "@aws-sdk/client-cloudwatch-logs";
 import { promisify } from "util";
 import { exec } from "child_process";
+import { isStackStatuses } from "./functions";
+import { capabilities, STACK_STATUS } from "./constants";
 const promiseExec = promisify(exec);
 
 const region = "us-east-1";
@@ -29,11 +31,7 @@ export async function createStack(
       TemplateBody: template,
       StackName: stackName,
       Parameters: parameters,
-      Capabilities: [
-        "CAPABILITY_IAM",
-        "CAPABILITY_NAMED_IAM",
-        "CAPABILITY_AUTO_EXPAND",
-      ],
+      Capabilities: capabilities,
       OnFailure: "DELETE",
       Tags: [
         {
@@ -65,7 +63,7 @@ export async function describeStack(stackName: string): Promise<string> {
 export async function listStacks(stackStatus: string[]): Promise<string> {
   try {
     const cmd = new ListStacksCommand({
-      StackStatusFilter: stackStatus as StackStatus[],
+      StackStatusFilter: isStackStatuses(stackStatus) ? stackStatus : [],
     });
     const res = await cfn.send(cmd);
     return JSON.stringify(res.StackSummaries);
@@ -96,11 +94,7 @@ export async function updateStack(
       TemplateBody: template,
       StackName: stackName,
       Parameters: parameters,
-      Capabilities: [
-        "CAPABILITY_IAM",
-        "CAPABILITY_NAMED_IAM",
-        "CAPABILITY_AUTO_EXPAND",
-      ],
+      Capabilities: capabilities,
       Tags: [
         {
           Key: "project",
@@ -230,32 +224,6 @@ export async function execCmd(cmd: string): Promise<string> {
     return `Error execCmd: ${JSON.stringify(e)}`;
   }
 }
-
-const STACK_STATUS = [
-  "CREATE_IN_PROGRESS",
-  "CREATE_FAILED",
-  "CREATE_COMPLETE",
-  "ROLLBACK_IN_PROGRESS",
-  "ROLLBACK_FAILED",
-  "ROLLBACK_COMPLETE",
-  "DELETE_IN_PROGRESS",
-  "DELETE_FAILED",
-  "DELETE_COMPLETE",
-  "UPDATE_IN_PROGRESS",
-  "UPDATE_COMPLETE_CLEANUP_IN_PROGRESS",
-  "UPDATE_COMPLETE",
-  "UPDATE_FAILED",
-  "UPDATE_ROLLBACK_IN_PROGRESS",
-  "UPDATE_ROLLBACK_FAILED",
-  "UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS",
-  "UPDATE_ROLLBACK_COMPLETE",
-  "REVIEW_IN_PROGRESS",
-  "IMPORT_IN_PROGRESS",
-  "IMPORT_COMPLETE",
-  "IMPORT_ROLLBACK_IN_PROGRESS",
-  "IMPORT_ROLLBACK_FAILED",
-  "IMPORT_ROLLBACK_COMPLETE",
-];
 
 export const tools: Tool[] = [
   {
@@ -594,7 +562,7 @@ Deleted stacks: You must specify the unique stack ID.
   },
 ];
 
-export const executTool = (toolName: string | undefined, toolInput: any) => {
+export const executeTool = (toolName: string | undefined, toolInput: any) => {
   switch (toolName) {
     case "createFolder":
       return createFolder(toolInput["path"]);
