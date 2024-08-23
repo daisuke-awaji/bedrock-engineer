@@ -40,17 +40,17 @@ api.post(
     res.setHeader('Cache-Control', 'no-cache, no-transform')
     res.setHeader('X-Accel-Buffering', 'no')
 
-    const result = await bedrock.converseStream({
-      modelId: req.body.modelId,
-      system: req.body.system,
-      messages: req.body.messages
-    })
-
-    if (!result.stream) {
-      return res.end()
-    }
-
     try {
+      const result = await bedrock.converseStream({
+        modelId: req.body.modelId,
+        system: req.body.system,
+        messages: req.body.messages
+      })
+
+      if (!result.stream) {
+        return res.end()
+      }
+
       for await (const item of result.stream) {
         res.write(JSON.stringify(item) + '\n')
       }

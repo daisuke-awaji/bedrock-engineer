@@ -1,8 +1,0 @@
-{
-  "contentBlockDelta": {
-    "contentBlockIndex": 0,
-    "delta": { "text": "\n      " },
-    "p": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQR"
-  }
-}
-{"contentBlockDelta":{"contentBlockIndex":0,"delta":{"text":"</"},"p":"abcdefghijklmnopqrstuvwxyzABCDEFGHIJK"}}{"contentBlockDelta":{"contentBlockIndex":0,"delta":{"text":"div"},"p":"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV"}}

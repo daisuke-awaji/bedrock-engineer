@@ -1,5 +1,7 @@
 import { ConverseStreamOutput } from '@aws-sdk/client-bedrock-runtime'
 
+const API_ENDPOINT = 'http://localhost:3000'
+
 type StreamChatCompletionProps = {
   modelId: string
   system: { text: string }[]
@@ -9,7 +11,7 @@ type StreamChatCompletionProps = {
 export async function* streamChatCompletion(
   props: StreamChatCompletionProps
 ): AsyncGenerator<ConverseStreamOutput, void, unknown> {
-  const res = await fetch('http://localhost:3000/converse/stream', {
+  const res = await fetch(`${API_ENDPOINT}/converse/stream`, {
     method: 'POST',
     body: JSON.stringify(props),
     headers: {
