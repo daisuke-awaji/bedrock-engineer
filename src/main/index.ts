@@ -43,13 +43,12 @@ function createWindow(): void {
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    mainWindow.webContents.openDevTools({
+      mode: 'right'
+    })
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
-
-  mainWindow.webContents.openDevTools({
-    mode: 'right'
-  })
 }
 
 // This method will be called when Electron has finished

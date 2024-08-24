@@ -1,11 +1,13 @@
 import React from 'react'
-import WebsiteGeneratorPage from './pages/GenerativeUIPage'
+import WebsiteGeneratorPage from './pages/WebsiteGeneratorPage/WebsiteGeneratorPage'
 import { FiGithub } from 'react-icons/fi'
 import { Tooltip } from 'flowbite-react'
 import { FiHome, FiFeather, FiSettings } from 'react-icons/fi'
 import { LuCombine } from 'react-icons/lu'
 import { createHashRouter, Link, Outlet, RouterProvider, useLocation } from 'react-router-dom'
-import StepFunctionsGeneratorPage from './pages/StepFunctionsGeneratorPage'
+import StepFunctionsGeneratorPage from './pages/StepFunctionsGeneratorPage/StepFunctionsGeneratorPage'
+import CmdK from './command-palette'
+import HomePage from './pages/HomePage/HomePage'
 
 const ListItem: React.FC<{
   children: any
@@ -27,7 +29,7 @@ const ListItem: React.FC<{
   )
 }
 
-const routes = [
+export const routes = [
   {
     name: 'Home',
     href: '/',
@@ -90,6 +92,7 @@ const Layout: React.FC = () => {
             </ul>
           </nav>
         </div>
+        <CmdK />
 
         <div className="flex-1 p-4">
           <Outlet />
@@ -100,7 +103,7 @@ const Layout: React.FC = () => {
 }
 
 const NotFoundPage = () => {
-  return <div className="m-2">page not found</div>
+  return <div className="m-2">page not found (to be implemented)</div>
 }
 
 const router = createHashRouter([
@@ -110,7 +113,7 @@ const router = createHashRouter([
     children: [
       {
         index: true,
-        element: <div>Home</div>
+        element: <HomePage />
       },
       {
         path: 'generative-ui',

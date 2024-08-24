@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react'
-// import { ASLEditor } from './components/ASLEditor'
 import { SAMPLE_ASL_PARALLEL } from './SAMPLE_ASL'
 
 import { BsGear } from 'react-icons/bs'
-import StepFunctionLogo from '../assets/images/Arch_AWS-Step-Functions_32.svg'
+import StepFunctionLogo from '../../assets/images/aws-icons/Arch_AWS-Step-Functions_32.svg'
 import AWSSfnGraph from '@tshepomgaga/aws-sfn-graph'
 import '@tshepomgaga/aws-sfn-graph/index.css'
 import { ASLEditor } from './ASLEditor'
 import { FiSend } from 'react-icons/fi'
-import { useChat } from '@renderer/hooks/userChat'
+import { useChat } from '@renderer/hooks/useChat'
 
 const Loader = () => {
   return (

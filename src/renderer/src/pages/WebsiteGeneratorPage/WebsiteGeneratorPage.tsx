@@ -1,11 +1,13 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { SandpackCodeEditor, SandpackPreview, SandpackProvider } from '@codesandbox/sandpack-react'
 import { autocompletion, completionKeymap } from '@codemirror/autocomplete'
 import { ToggleSwitch } from 'flowbite-react'
-import { FiSend } from 'react-icons/fi'
-import prompts from '../prompts/prompts'
-import { streamChatCompletion } from '@renderer/lib/api'
+import { FiMaximize, FiSend } from 'react-icons/fi'
+import prompts from '../../prompts/prompts'
 import { useDebounce } from '@renderer/hooks/use-debounse'
+import ReactLogo from '../../assets/images/icons/react.svg'
+import VueLogo from '../../assets/images/icons/vue.svg'
+import { useChat } from '@renderer/hooks/useChat'
 
 const DEFAULT_INDEX_HTML = `<!DOCTYPE html>
 <html lang="en">
@@ -36,8 +38,6 @@ export default function WebsiteGeneratorPage() {
   const [code, setCode] = useState(DEFAULT_APP_TSX)
   const [showCode, setShowCode] = useState(true)
   const [userInput, setUserInput] = useState('')
-  const [chatMessages, setMessages] = useState<any>([])
-  const [loading, setLoading] = useState(false)
   const selectedModel = {
     modelId: 'anthropic.claude-3-haiku-20240307-v1:0'
     // modelId: 'anthropic.claude-3-sonnet-20240229-v1:0'
@@ -48,48 +48,16 @@ export default function WebsiteGeneratorPage() {
     setShowCode(!showCode)
   }
 
-  const handleClickPromptSubmit = async (input: string, messages) => {
-    if (!input) {
-      alert('Please enter a prompt')
-      return
+  const { handleSubmit, messages, loading, lastText } = useChat({
+    systemPrompt: prompts['generative-ui'].system['react-ts'],
+    modelId: modelId
+  })
+
+  useEffect(() => {
+    if (messages !== undefined && messages.length > 0) {
+      setCode(lastText)
     }
-
-    const msgs = [...messages, { role: 'user', content: [{ text: input }] }]
-    setMessages(msgs)
-    setUserInput('')
-
-    setLoading(true)
-
-    const generator = streamChatCompletion({
-      messages: msgs,
-      modelId: modelId,
-      system: [
-        {
-          text: prompts['generative-ui'].system['react-ts']
-        }
-      ]
-    })
-
-    let s = ''
-    setCode('')
-
-    for await (const json of generator) {
-      try {
-        const text = json.contentBlockDelta?.delta?.text
-        if (text) {
-          setCode((prev) => prev + text)
-          s = s + text
-        }
-      } catch (error) {
-        console.error(error)
-      }
-    }
-    setLoading(false)
-    setCode(s)
-
-    const msgsToset = [...msgs, { role: 'assistant', content: [{ text: s }] }]
-    setMessages(msgsToset)
-  }
+  }, [messages, loading])
 
   const onkeydown = (e) => {
     if (
@@ -98,26 +66,74 @@ export default function WebsiteGeneratorPage() {
       (e.ctrlKey && e.key === 'Enter')
     ) {
       console.log('submit')
-      handleClickPromptSubmit(userInput, chatMessages)
+      handleSubmit(userInput, messages)
     }
   }
 
-  const debouncedCode = useDebounce(code, 100)
+  const debouncedCode = useDebounce(code, 50)
+
+  type Framework = {
+    id: string
+    name: string
+    logo: React.ReactNode
+  }
+  const supportedFrameworks = [
+    {
+      id: 'react',
+      name: 'React',
+      logo: <ReactLogo />
+    },
+    {
+      id: 'vue',
+      name: 'Vue',
+      logo: <VueLogo />
+    }
+  ]
+
+  const [selectedFw, setSelectedFw] = useState<string>('react')
+  const FrameworkButton: React.FC<Framework> = (fw) => {
+    return (
+      <button
+        type="button"
+        className={`
+      text-gray-900
+      ${selectedFw === fw.id ? 'bg-green-50' : 'bg-white'}
+      hover:bg-green-50
+      border
+      ${selectedFw === fw.id ? 'border-green-600' : 'border-gray-200'}
+      focus:ring-4
+      focus:outline-none
+      focus:ring-gray-100
+      font-medium
+      rounded-[1rem]
+      text-xs
+      px-3
+      py-1.5
+      inline-flex
+      items-center
+      flex
+      gap-2
+      `}
+        onClick={() => setSelectedFw(fw.id)}
+      >
+        <div className="w-[18px]">{fw.logo}</div>
+        <span>{fw.name}</span>
+      </button>
+    )
+  }
 
   return (
     <React.Fragment>
-      <div className={'flex flex-col h-[calc(100vh-6rem)] overflow-y-auto'}>
+      <div className={'flex flex-col h-[calc(100vh-8rem)] overflow-y-auto'}>
         <div className="flex pb-2 justify-between">
-          <span className="font-bold flex gap-2">
-            {/* <div className="content-center"> */}
-            {/* <StepFunctionLogo /> */}
-            {/* <FiFeather className="font-bold text-[2.5rem]" /> */}
-            {/* </div> */}
+          <span className="font-bold flex flex-col gap-2">
             <h1 className="content-center">Website Generator</h1>
+            <div className="flex gap-2">
+              {supportedFrameworks.map((fw) => (
+                <FrameworkButton {...fw} key={fw.id} />
+              ))}
+            </div>
           </span>
-          {/* <button className="hover:bg-gray-100 p-3 rounded-full"> */}
-          {/* <BsGear /> */}
-          {/* </button> */}
         </div>
 
         <SandpackProvider
@@ -162,18 +178,27 @@ export default function WebsiteGeneratorPage() {
               />
             )}
 
-            {loading ? (
-              <div className="h-[80vh] w-full">loading...</div>
-            ) : (
-              <SandpackPreview
-                style={{
-                  height: '80vh',
-                  borderRadius: '8px',
-                  backgroundColor: 'white'
-                }}
-                showOpenInCodeSandbox={false}
-              />
-            )}
+            <SandpackPreview
+              id="sandpack-preview"
+              style={{
+                height: '80vh',
+                borderRadius: '8px',
+                backgroundColor: 'white'
+              }}
+              showOpenInCodeSandbox={false}
+              actionsChildren={
+                <button
+                  onClick={() => {
+                    const iframe = document.getElementById('sandpack-preview')
+                    if (iframe) {
+                      iframe?.requestFullscreen()
+                    }
+                  }}
+                >
+                  <FiMaximize className="text-gray" />
+                </button>
+              }
+            />
           </div>
         </SandpackProvider>
 
@@ -236,7 +261,7 @@ Tailwind CSSでおしゃれなデザインにしてください`)
               disabled={loading}
             />
             <button
-              onClick={() => handleClickPromptSubmit(userInput, chatMessages)}
+              onClick={() => handleSubmit(userInput, messages)}
               className="absolute end-2.5 bottom-2.5 rounded-lg hover:bg-gray-200 px-2 py-2"
             >
               {/* {loading ? (
