@@ -1,46 +1,79 @@
 import React, { useEffect, useState } from 'react'
-import { SandpackCodeEditor, SandpackPreview, SandpackProvider } from '@codesandbox/sandpack-react'
-import { autocompletion, completionKeymap } from '@codemirror/autocomplete'
 import { ToggleSwitch } from 'flowbite-react'
-import { FiMaximize, FiSend } from 'react-icons/fi'
+import { FiSend } from 'react-icons/fi'
 import prompts from '../../prompts/prompts'
 import { useDebounce } from '@renderer/hooks/use-debounse'
 import ReactLogo from '../../assets/images/icons/react.svg'
 import VueLogo from '../../assets/images/icons/vue.svg'
+import VanillaLogo from '../../assets/images/icons/vanilla.svg'
 import { useChat } from '@renderer/hooks/useChat'
+import ReactSandpack from './ReactSandpack'
+import VueSandpack from './VueSandpack'
+import VanillaSandpack from './VanillaSandpack'
 
-const DEFAULT_INDEX_HTML = `<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
-</html>
-`
-
-const DEFAULT_APP_TSX = `import React from 'react';
-
-export default function App() {
-  return (
-    <div className="m-2">
-      <h1>Hello World</h1>
-    </div>
-  );
+type Framework = {
+  id: string
+  name: string
+  logo: React.ReactNode
 }
-`
 
 export default function WebsiteGeneratorPage() {
-  const [code, setCode] = useState(DEFAULT_APP_TSX)
+  const supportedFrameworks = [
+    {
+      id: 'react',
+      name: 'React',
+      logo: <ReactLogo />
+    },
+    {
+      id: 'vue',
+      name: 'Vue',
+      logo: <VueLogo />
+    },
+    {
+      id: 'vanilla',
+      name: 'Vanilla',
+      logo: <VanillaLogo />
+    }
+  ]
+
+  const [selectedFw, setSelectedFw] = useState<string>('react')
+  const FrameworkButton: React.FC<Framework> = (fw) => {
+    return (
+      <button
+        type="button"
+        className={`
+    text-gray-900
+    ${selectedFw === fw.id ? 'bg-green-50' : 'bg-white'}
+    hover:bg-green-50
+    border
+    ${selectedFw === fw.id ? 'border-green-600' : 'border-gray-200'}
+    focus:ring-4
+    focus:outline-none
+    focus:ring-gray-100
+    font-medium
+    rounded-[1rem]
+    text-xs
+    px-3
+    py-1.5
+    inline-flex
+    items-center
+    flex
+    gap-2
+    `}
+        onClick={() => setSelectedFw(fw.id)}
+      >
+        <div className="w-[18px]">{fw.logo}</div>
+        <span>{fw.name}</span>
+      </button>
+    )
+  }
+
+  const [code, setCode] = useState<string | undefined>()
   const [showCode, setShowCode] = useState(true)
   const [userInput, setUserInput] = useState('')
   const selectedModel = {
-    modelId: 'anthropic.claude-3-haiku-20240307-v1:0'
-    // modelId: 'anthropic.claude-3-sonnet-20240229-v1:0'
+    // modelId: 'anthropic.claude-3-haiku-20240307-v1:0'
+    modelId: 'anthropic.claude-3-sonnet-20240229-v1:0'
   }
   const modelId = selectedModel?.modelId
 
@@ -49,7 +82,7 @@ export default function WebsiteGeneratorPage() {
   }
 
   const { handleSubmit, messages, loading, lastText } = useChat({
-    systemPrompt: prompts['generative-ui'].system['react-ts'],
+    systemPrompt: prompts['generative-ui'].system[selectedFw],
     modelId: modelId
   })
 
@@ -72,56 +105,6 @@ export default function WebsiteGeneratorPage() {
 
   const debouncedCode = useDebounce(code, 50)
 
-  type Framework = {
-    id: string
-    name: string
-    logo: React.ReactNode
-  }
-  const supportedFrameworks = [
-    {
-      id: 'react',
-      name: 'React',
-      logo: <ReactLogo />
-    },
-    {
-      id: 'vue',
-      name: 'Vue',
-      logo: <VueLogo />
-    }
-  ]
-
-  const [selectedFw, setSelectedFw] = useState<string>('react')
-  const FrameworkButton: React.FC<Framework> = (fw) => {
-    return (
-      <button
-        type="button"
-        className={`
-      text-gray-900
-      ${selectedFw === fw.id ? 'bg-green-50' : 'bg-white'}
-      hover:bg-green-50
-      border
-      ${selectedFw === fw.id ? 'border-green-600' : 'border-gray-200'}
-      focus:ring-4
-      focus:outline-none
-      focus:ring-gray-100
-      font-medium
-      rounded-[1rem]
-      text-xs
-      px-3
-      py-1.5
-      inline-flex
-      items-center
-      flex
-      gap-2
-      `}
-        onClick={() => setSelectedFw(fw.id)}
-      >
-        <div className="w-[18px]">{fw.logo}</div>
-        <span>{fw.name}</span>
-      </button>
-    )
-  }
-
   return (
     <React.Fragment>
       <div className={'flex flex-col h-[calc(100vh-8rem)] overflow-y-auto'}>
@@ -136,71 +119,13 @@ export default function WebsiteGeneratorPage() {
           </span>
         </div>
 
-        <SandpackProvider
-          template="react-ts"
-          // template="vue-ts"
-          files={{
-            'App.tsx': { code: debouncedCode },
-            '/public/index.html': {
-              code: DEFAULT_INDEX_HTML
-            }
-          }}
-          options={{
-            externalResources: ['https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css'],
-            initMode: 'user-visible',
-            recompileMode: 'delayed',
-            autorun: true,
-            autoReload: true
-          }}
-          customSetup={{
-            dependencies: {
-              recharts: '2.9.0',
-              'react-router-dom': 'latest',
-              'react-icons': 'latest',
-              'date-fns': 'latest'
-            }
-          }}
-        >
-          <div className="flex gap-2">
-            {showCode && (
-              <SandpackCodeEditor
-                style={{
-                  height: '80vh',
-                  borderRadius: '8px',
-                  overflowX: 'scroll',
-                  maxWidth: '50vw'
-                }}
-                showTabs
-                showLineNumbers
-                showRunButton={true}
-                extensions={[autocompletion()]}
-                extensionsKeymap={[completionKeymap as any]}
-              />
-            )}
-
-            <SandpackPreview
-              id="sandpack-preview"
-              style={{
-                height: '80vh',
-                borderRadius: '8px',
-                backgroundColor: 'white'
-              }}
-              showOpenInCodeSandbox={false}
-              actionsChildren={
-                <button
-                  onClick={() => {
-                    const iframe = document.getElementById('sandpack-preview')
-                    if (iframe) {
-                      iframe?.requestFullscreen()
-                    }
-                  }}
-                >
-                  <FiMaximize className="text-gray" />
-                </button>
-              }
-            />
-          </div>
-        </SandpackProvider>
+        {selectedFw === 'react' ? (
+          <ReactSandpack code={debouncedCode} showCode={showCode} />
+        ) : selectedFw === 'vue' ? (
+          <VueSandpack code={debouncedCode} showCode={showCode} />
+        ) : (
+          <VanillaSandpack code={debouncedCode} showCode={showCode} />
+        )}
 
         {/* Buttom Input Field Block */}
         <div className="flex gap-2 fixed bottom-0 left-20 right-5 bottom-3">
