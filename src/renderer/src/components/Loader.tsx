@@ -1,23 +1,8 @@
-import { motion } from 'framer-motion'
-
-const Loader = () => {
+export const Loader = () => {
   return (
-    <motion.div
-      className="h-8 w-8 bg-gray-800"
-      animate={{
-        scale: [1, 2, 2, 1, 1],
-        rotate: [0, 0, 180, 180, 0],
-        borderRadius: ['20%', '20%', '50%', '50%', '20%']
-      }}
-      transition={{
-        duration: 1,
-        ease: 'easeInOut',
-        times: [0, 0.2, 0.5, 0.8, 1],
-        repeat: Infinity,
-        repeatDelay: 1
-      }}
-    />
+    <div className="flex flex-col justify-center items-center gap-2">
+      <div className="animate-spin h-8 w-8 bg-blue-300 rounded-xl"></div>
+      <span className="text-sm text-gray-400">loading...</span>
+    </div>
   )
 }
-
-export default Loader

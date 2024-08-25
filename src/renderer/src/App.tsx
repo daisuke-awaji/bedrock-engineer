@@ -1,13 +1,9 @@
 import React from 'react'
-import WebsiteGeneratorPage from './pages/WebsiteGeneratorPage/WebsiteGeneratorPage'
 import { FiGithub } from 'react-icons/fi'
 import { Tooltip } from 'flowbite-react'
-import { FiHome, FiFeather, FiSettings } from 'react-icons/fi'
-import { LuCombine } from 'react-icons/lu'
-import { createHashRouter, Link, Outlet, RouterProvider, useLocation } from 'react-router-dom'
-import StepFunctionsGeneratorPage from './pages/StepFunctionsGeneratorPage/StepFunctionsGeneratorPage'
+import { createBrowserRouter, Link, Outlet, RouterProvider, useLocation } from 'react-router-dom'
 import CmdK from './command-palette'
-import HomePage from './pages/HomePage/HomePage'
+import { routes } from './routes'
 
 const ListItem: React.FC<{
   children: any
@@ -29,43 +25,9 @@ const ListItem: React.FC<{
   )
 }
 
-export const routes = [
-  {
-    name: 'Home',
-    href: '/',
-    icon: FiHome,
-    position: 'top'
-  },
-  // {
-  //   name: 'History',
-  //   href: '/history',
-  //   icon: FiBook,
-  //   position: 'top'
-  // },
-  {
-    name: 'Website Generator',
-    href: '/generative-ui',
-    icon: FiFeather,
-    position: 'top'
-  },
-  {
-    name: 'Step Functions Generator',
-    href: '/step-functions-generator',
-    icon: LuCombine,
-    position: 'top'
-  },
-  {
-    name: 'Setting',
-    href: '/setting',
-    icon: FiSettings,
-    position: 'top'
-  }
-]
-
 const Layout: React.FC = () => {
   const location = useLocation()
 
-  // return <div>{children}</div>
   return (
     <div className="bg-gray-100">
       <div className="flex min-h-screen h-screen">
@@ -106,23 +68,15 @@ const NotFoundPage = () => {
   return <div className="m-2">page not found (to be implemented)</div>
 }
 
-const router = createHashRouter([
+const router = createBrowserRouter([
   {
     path: '/',
     element: <Layout />,
     children: [
-      {
-        index: true,
-        element: <HomePage />
-      },
-      {
-        path: 'generative-ui',
-        element: <WebsiteGeneratorPage />
-      },
-      {
-        path: 'step-functions-generator',
-        element: <StepFunctionsGeneratorPage />
-      },
+      ...routes.map((route) => ({
+        path: route.href,
+        element: route.element
+      })),
       {
         path: '*',
         element: <NotFoundPage />

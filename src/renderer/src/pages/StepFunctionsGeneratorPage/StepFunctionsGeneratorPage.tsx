@@ -8,15 +8,7 @@ import '@tshepomgaga/aws-sfn-graph/index.css'
 import { ASLEditor } from './ASLEditor'
 import { FiSend } from 'react-icons/fi'
 import { useChat } from '@renderer/hooks/useChat'
-
-const Loader = () => {
-  return (
-    <div className="flex flex-col justify-center items-center gap-2">
-      <div className="animate-spin h-8 w-8 bg-blue-300 rounded-xl"></div>
-      <span className="text-sm text-gray-400">loading...</span>
-    </div>
-  )
-}
+import { Loader } from '../../components/Loader'
 
 const HAIKU_MODEL_ID = 'anthropic.claude-3-haiku-20240307-v1:0'
 

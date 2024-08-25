@@ -1,9 +1,8 @@
 import 'react-cmdk/dist/cmdk.css'
 import CommandPalette, { filterItems, getItemIndex } from 'react-cmdk'
 import { useEffect, useState } from 'react'
-import { FiHome, FiSettings } from 'react-icons/fi'
-import { routes } from './App'
-import { Router, useNavigate } from 'react-router'
+import { routes } from './routes'
+import { useNavigate } from 'react-router'
 
 const CmdK = () => {
   const [page] = useState<'root' | 'projects'>('root')
@@ -45,7 +44,8 @@ const CmdK = () => {
       id: route.href,
       children: route.name,
       href: route.href,
-      icon: () => route.icon({ className: 'text-xl' })
+      icon: () => route.icon({ className: 'text-xl' }),
+      onClick: () => navigate(route.href)
     }
   })
 
