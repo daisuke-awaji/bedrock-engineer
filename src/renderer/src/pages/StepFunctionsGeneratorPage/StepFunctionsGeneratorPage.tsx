@@ -73,9 +73,9 @@ function StepFunctionsGeneratorPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-2">
+      <div className="grid grid-cols-2 gap-2">
         {/* LEFT */}
-        <div className="border h-[80vh] resize-x">
+        <div className="border h-[80vh] flex flex-col resize-x bg-white rounded-md">
           <div className="border-b p-1">
             <h1 className="text-xs italic">Editor</h1>
           </div>
@@ -83,7 +83,7 @@ function StepFunctionsGeneratorPage() {
         </div>
 
         {/* RIGHT */}
-        <div className="border h-[80vh] flex flex-col resize-x">
+        <div className="border h-[80vh] flex flex-col resize-x bg-white rounded-md">
           <div className="border-b p-1 flex justify-between">
             <h1 className="text-xs italic">Visualizer</h1>
           </div>

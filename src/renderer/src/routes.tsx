@@ -1,9 +1,11 @@
 import { FiHome, FiFeather, FiSettings } from 'react-icons/fi'
 import { LuCombine } from 'react-icons/lu'
+import { HiOutlineChatAlt2 } from 'react-icons/hi'
 import HomePage from './pages/HomePage/HomePage'
 import SettingPage from './pages/SettingPage/SettingPage'
 import StepFunctionsGeneratorPage from './pages/StepFunctionsGeneratorPage/StepFunctionsGeneratorPage'
 import WebsiteGeneratorPage from './pages/WebsiteGeneratorPage/WebsiteGeneratorPage'
+import ChatPage from './pages/ChatPage/ChatPage'
 
 export const routes = [
   {
@@ -12,6 +14,13 @@ export const routes = [
     icon: FiHome,
     position: 'top',
     element: <HomePage />
+  },
+  {
+    name: 'Chat',
+    href: '/chat',
+    icon: HiOutlineChatAlt2,
+    position: 'top',
+    element: <ChatPage />
   },
   // {
   //   name: 'History',

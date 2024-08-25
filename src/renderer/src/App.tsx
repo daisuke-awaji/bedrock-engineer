@@ -75,7 +75,8 @@ const router = createBrowserRouter([
     children: [
       ...routes.map((route) => ({
         path: route.href,
-        element: route.element
+        element: route.element,
+        index: route.href === '/'
       })),
       {
         path: '*',
