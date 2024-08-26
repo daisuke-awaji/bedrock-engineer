@@ -2,6 +2,7 @@ import { contextBridge } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import { api } from './api'
 import { store } from './store'
+import { file } from './file'
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
@@ -11,6 +12,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', api)
     contextBridge.exposeInMainWorld('store', store)
+    contextBridge.exposeInMainWorld('file', file)
   } catch (error) {
     console.error(error)
   }
@@ -21,4 +23,6 @@ if (process.contextIsolated) {
   window.api = api
   // @ts-ignore (define in dts)
   window.store = store
+  // @ts-ignore (define in dts)
+  window.file = file
 }

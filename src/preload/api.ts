@@ -11,9 +11,30 @@ import {
   ConverseStreamCommandOutput,
   Message
 } from '@aws-sdk/client-bedrock-runtime'
+import { executeTool, tools } from './tools'
 
 const client = new BedrockClient()
 const runtimeClient = new BedrockRuntimeClient()
+
+const inferenceConfig = {
+  maxTokens: 4096,
+  temperature: 0.5,
+  topP: 0.9
+}
+
+const isSetTaihvilyApiKey = !!process.env.TAVILY_API_KEY
+const isSetPexelsApiKey = !!process.env.PEXELS_API_KEY
+
+const toolConfig = {
+  tools: tools.filter((value) => {
+    if (value.toolSpec?.name === 'tavilySearch') {
+      return isSetTaihvilyApiKey
+    } else if (value.toolSpec?.name === 'pexelsSearch') {
+      return isSetPexelsApiKey
+    }
+    return true
+  })
+}
 
 export type CallConverseAPIProps = {
   modelId: string
@@ -26,7 +47,9 @@ const converse = async (props: CallConverseAPIProps): Promise<ConverseCommandOut
   const command = new ConverseCommand({
     modelId,
     messages,
-    system
+    system,
+    toolConfig,
+    inferenceConfig
   })
   return runtimeClient.send(command)
 }
@@ -53,7 +76,8 @@ export const api = {
   bedrock: {
     listModels,
     converse,
-    converseStream
+    converseStream,
+    executeTool
   }
 }
 
