@@ -4,6 +4,7 @@ import { Tooltip } from 'flowbite-react'
 import { createBrowserRouter, Link, Outlet, RouterProvider, useLocation } from 'react-router-dom'
 import CmdK from './command-palette'
 import { routes } from './routes'
+import HomePage from './pages/HomePage/HomePage'
 
 const ListItem: React.FC<{
   children: any
@@ -64,9 +65,9 @@ const Layout: React.FC = () => {
   )
 }
 
-const NotFoundPage = () => {
-  return <div className="m-2">page not found (to be implemented)</div>
-}
+// const NotFoundPage = () => {
+//   return <div className="m-2">page not found (to be implemented)</div>
+// }
 
 const router = createBrowserRouter([
   {
@@ -80,7 +81,7 @@ const router = createBrowserRouter([
       })),
       {
         path: '*',
-        element: <NotFoundPage />
+        element: <HomePage />
       }
     ]
   }

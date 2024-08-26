@@ -3,11 +3,8 @@ import { SandpackCodeEditor, SandpackPreview, SandpackProvider } from '@codesand
 
 import React from 'react'
 import { FiMaximize } from 'react-icons/fi'
-
-type ReactSandpackProps = {
-  code?: string
-  showCode?: boolean
-}
+import { SandpackViewerProps } from './Sandpack'
+import { Loader } from '@renderer/components/Loader'
 
 // const DEFAULT_INDEX_HTML = `<!DOCTYPE html>
 // <html lang="en">
@@ -55,7 +52,7 @@ import { ref } from 'vue';
 const msg = ref<string>('world');
 </script>
 `
-const VueSandpack: React.FC<ReactSandpackProps> = ({ code, showCode = true }) => {
+const VueSandpack: React.FC<SandpackViewerProps> = ({ code, showCode = true, loading = false }) => {
   return (
     <SandpackProvider
       template="vue-ts"
@@ -98,27 +95,33 @@ const VueSandpack: React.FC<ReactSandpackProps> = ({ code, showCode = true }) =>
           />
         )}
 
-        <SandpackPreview
-          id="sandpack-preview"
-          style={{
-            height: '80vh',
-            borderRadius: '8px',
-            backgroundColor: 'white'
-          }}
-          showOpenInCodeSandbox={false}
-          actionsChildren={
-            <button
-              onClick={() => {
-                const iframe = document.getElementById('sandpack-preview')
-                if (iframe) {
-                  iframe?.requestFullscreen()
-                }
-              }}
-            >
-              <FiMaximize className="text-gray" />
-            </button>
-          }
-        />
+        {loading ? (
+          <div className="flex w-full h-[80vh] justify-center items-center content-center align-center">
+            <Loader />
+          </div>
+        ) : (
+          <SandpackPreview
+            id="sandpack-preview"
+            style={{
+              height: '80vh',
+              borderRadius: '8px',
+              backgroundColor: 'white'
+            }}
+            showOpenInCodeSandbox={false}
+            actionsChildren={
+              <button
+                onClick={() => {
+                  const iframe = document.getElementById('sandpack-preview')
+                  if (iframe) {
+                    iframe?.requestFullscreen()
+                  }
+                }}
+              >
+                <FiMaximize className="text-gray" />
+              </button>
+            }
+          />
+        )}
       </div>
     </SandpackProvider>
   )

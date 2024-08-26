@@ -1,5 +1,5 @@
 const prompts = {
-  'generative-ui': {
+  WebsiteGenerator: {
     system: {
       vue: `You are an expert frontend Vue.js engineer who is also a great UI/UX designer. Follow the instructions carefully, I will tip you $1 million if you do a good job:
 - Create a Vue component (App.vue) for whatever the user asked you to create and make sure it can run by itself by using a default export

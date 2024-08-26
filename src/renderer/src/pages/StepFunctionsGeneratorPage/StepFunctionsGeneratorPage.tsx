@@ -59,6 +59,11 @@ function StepFunctionsGeneratorPage() {
     }
   }
 
+  useEffect(() => {
+    const wfg = document.getElementsByClassName('workflowgraph')[0]
+    wfg.className = 'h-full workflowgraph'
+  }, [])
+
   return (
     <div className={'flex flex-col overflow-y-auto'}>
       <div className="flex pb-2 justify-between">

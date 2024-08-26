@@ -60,7 +60,10 @@ export default function WebsiteGeneratorPage() {
     flex
     gap-2
     `}
-        onClick={() => setSelectedFw(fw.id)}
+        onClick={() => {
+          setSelectedFw(fw.id)
+          setCode(undefined)
+        }}
       >
         <div className="w-[18px]">{fw.logo}</div>
         <span>{fw.name}</span>
@@ -82,7 +85,7 @@ export default function WebsiteGeneratorPage() {
   }
 
   const { handleSubmit, messages, loading, lastText } = useChat({
-    systemPrompt: prompts['generative-ui'].system[selectedFw],
+    systemPrompt: prompts.WebsiteGenerator.system[selectedFw],
     modelId: modelId
   })
 
@@ -98,7 +101,6 @@ export default function WebsiteGeneratorPage() {
       (e.metaKey && e.key === 'Enter') ||
       (e.ctrlKey && e.key === 'Enter')
     ) {
-      console.log('submit')
       handleSubmit(userInput, messages)
     }
   }
@@ -120,11 +122,11 @@ export default function WebsiteGeneratorPage() {
         </div>
 
         {selectedFw === 'react' ? (
-          <ReactSandpack code={debouncedCode} showCode={showCode} />
+          <ReactSandpack code={debouncedCode} showCode={showCode} loading={loading} />
         ) : selectedFw === 'vue' ? (
-          <VueSandpack code={debouncedCode} showCode={showCode} />
+          <VueSandpack code={debouncedCode} showCode={showCode} loading={loading} />
         ) : (
-          <VanillaSandpack code={debouncedCode} showCode={showCode} />
+          <VanillaSandpack code={debouncedCode} showCode={showCode} loading={loading} />
         )}
 
         {/* Buttom Input Field Block */}
