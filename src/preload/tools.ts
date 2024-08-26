@@ -37,12 +37,27 @@ export async function readFile(filePath: string): Promise<string> {
   }
 }
 
+// export async function listFiles(dirPath = '.'): Promise<string> {
+//   try {
+//     const files = await fs.readdir(dirPath)
+//     return files.join('\n')
+//   } catch (e: any) {
+//     return `Error listing files: ${e.message}`
+//   }
+// }
+
 export async function listFiles(dirPath = '.'): Promise<string> {
   try {
-    const files = await fs.readdir(dirPath)
-    return files.join('\n')
+    const files = await fs.readdir(dirPath, { withFileTypes: true })
+    const result = files
+      .map((file) => {
+        const type = file.isDirectory() ? 'Dir' : 'File'
+        return `${type}: ${file.name}`
+      })
+      .join('\n')
+    return result
   } catch (e: any) {
-    return `Error listing files: ${e.message}`
+    return `Error listing files and directories: ${e.message}`
   }
 }
 

@@ -294,7 +294,7 @@ export default function ChatPage() {
                   className="px-4 py-2 border rounded-md text-gray-400 hover:text-gray-700 hover:border-gray-300"
                   onClick={() =>
                     setUserInput(
-                      `${projectPath} のフォルダに含まれる png ファイルだけを抽出して、images フォルダに移動してください。`
+                      `${projectPath} のフォルダに含まれる png ファイルだけを抽出して、${projectPath}/images フォルダにコピーしてください。`
                     )
                   }
                 >

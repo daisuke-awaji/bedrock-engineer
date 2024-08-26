@@ -1,34 +1,33 @@
-# butler
+# 🧙 Butler
 
-An Electron application with React and TypeScript
+Butler is an AI assistant of software development tasks. This tool combines the capabilities of a large language model with practical file system operations, web search functionality.
 
-## Recommended IDE Setup
+## 💻 Demo
 
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+https://github.com/user-attachments/assets/46b6bfe3-01c1-484a-927d-2e630a807919
 
-## Project Setup
+## ✨ Features
 
-### Install
+### Agent Chat
 
-```bash
-$ npm install
-```
+- 💬 Interactive chat interface with Anthoropic Claude 3 models.
+- 📁 File system operations (create folders, files, read/write files)
+- 🔍 Web search capabilities using Tavily API
+- 🏗️ Project structure creation and management
+- 🧐 Code analysis and improvement suggestions
+- 🚀 Automode for autonomous task completion
+- 🔄 Iteration tracking in automode
 
-### Development
+https://github.com/user-attachments/assets/1c8d413a-788d-4be4-9d71-b8cf78f30e20
 
-```bash
-$ npm run dev
-```
+### Website Generator
 
-### Build
+- React.js (w/ Typescript)
+- Vue.js (w/ Typescript)
+- Vanilla.js
 
-```bash
-# For windows
-$ npm run build:win
+https://github.com/user-attachments/assets/46b6bfe3-01c1-484a-927d-2e630a807919
 
-# For macOS
-$ npm run build:mac
+### Step Function Generator
 
-# For Linux
-$ npm run build:linux
-```
+https://github.com/user-attachments/assets/66efc6c2-85fc-4e8c-96aa-db0835aa9c56
