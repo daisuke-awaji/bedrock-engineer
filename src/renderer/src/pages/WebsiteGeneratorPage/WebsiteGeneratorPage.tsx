@@ -60,9 +60,13 @@ export default function WebsiteGeneratorPage() {
     flex
     gap-2
     `}
-        onClick={() => {
+        onClick={async () => {
+          const sleep = (msec) => new Promise((resolve) => setTimeout(resolve, msec))
+
+          handleRefresh()
+          await sleep(100)
+
           setSelectedFw(fw.id)
-          setCode(undefined)
         }}
       >
         <div className="w-[18px]">{fw.logo}</div>
@@ -84,10 +88,16 @@ export default function WebsiteGeneratorPage() {
     setShowCode(!showCode)
   }
 
-  const { handleSubmit, messages, loading, lastText } = useChat({
+  const { handleSubmit, messages, loading, lastText, initChat } = useChat({
     systemPrompt: prompts.WebsiteGenerator.system[selectedFw],
     modelId: modelId
   })
+
+  const handleRefresh = () => {
+    setCode(undefined)
+    setUserInput('')
+    initChat()
+  }
 
   useEffect(() => {
     if (messages !== undefined && messages.length > 0) {
@@ -168,13 +178,50 @@ Tailwind CSSでおしゃれなデザインにしてください`)
                 >
                   TODO アプリ
                 </button>
+                <button
+                  className="cursor-pointer rounded-full border p-2 text-xs hover:border-gray-300 hover:bg-gray-50"
+                  onClick={() => {
+                    setUserInput(`以下をウェブサイトでグラフとして可視化してください。
+
+購買データCSVファイル
+customer_id,product_id,purchase_date,purchase_amount
+C001,P001,2023-04-01,50.00
+C002,P002,2023-04-02,75.00
+C003,P003,2023-04-03,100.00
+C001,P002,2023-04-04,60.00
+C002,P001,2023-04-05,40.00
+C003,P003,2023-04-06,90.00
+C001,P001,2023-04-07,30.00
+C002,P002,2023-04-08,80.00
+C003,P001,2023-04-09,45.00
+C001,P003,2023-04-10,120.00
+
+
+このCSVファイルには、以下のような情報が含まれています。
+
+- 'customer_id': 顧客ID
+- 'product_id': 商品ID
+- 'purchase_date': 購買日
+- 'purchase_amount': 購買金額`)
+                  }}
+                >
+                  グラフの描画
+                </button>
               </div>
-              <ToggleSwitch
-                checked={showCode}
-                onChange={handleClickShowCode}
-                label="show code"
-                color="gray"
-              ></ToggleSwitch>
+              <div className="flex gap-2 items-center">
+                <ToggleSwitch
+                  checked={showCode}
+                  onChange={handleClickShowCode}
+                  label="show code"
+                  color="gray"
+                ></ToggleSwitch>
+                <button
+                  className="bg-gray-200 cursor-pointer rounded-md border py-1 px-2 hover:border-gray-300 hover:bg-gray-50"
+                  onClick={handleRefresh}
+                >
+                  clear
+                </button>
+              </div>
             </div>
 
             {/* prompt input form */}

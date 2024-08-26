@@ -1,5 +1,10 @@
 import { autocompletion, completionKeymap } from '@codemirror/autocomplete'
-import { SandpackCodeEditor, SandpackPreview, SandpackProvider } from '@codesandbox/sandpack-react'
+import {
+  SandpackCodeEditor,
+  SandpackLayout,
+  SandpackPreview,
+  SandpackProvider
+} from '@codesandbox/sandpack-react'
 
 import React from 'react'
 import { FiMaximize } from 'react-icons/fi'
@@ -31,7 +36,7 @@ export default function App() {
 }
 `
 const ReactSandpack: React.FC<SandpackViewerProps> = ({
-  code,
+  code = DEFAULT_APP_TSX,
   showCode = true,
   loading = false
 }) => {
@@ -39,7 +44,7 @@ const ReactSandpack: React.FC<SandpackViewerProps> = ({
     <SandpackProvider
       template="react-ts"
       files={{
-        'App.tsx': { code: code ?? DEFAULT_APP_TSX },
+        'App.tsx': { code: code },
         '/public/index.html': {
           code: DEFAULT_INDEX_HTML
         }
@@ -60,7 +65,14 @@ const ReactSandpack: React.FC<SandpackViewerProps> = ({
         }
       }}
     >
-      <div className="flex gap-2">
+      <SandpackLayout
+        style={{
+          display: 'flex',
+          gap: '1rem',
+          backgroundColor: 'rgb(243 244 246 / var(--tw-bg-opacity))',
+          border: 'none'
+        }}
+      >
         {showCode && (
           <SandpackCodeEditor
             style={{
@@ -78,7 +90,7 @@ const ReactSandpack: React.FC<SandpackViewerProps> = ({
         )}
 
         {loading ? (
-          <div className="flex w-full h-[80vh] justify-center items-center content-center align-center">
+          <div className="flex w-[50%] h-[80vh] justify-center items-center content-center align-center">
             <Loader />
           </div>
         ) : (
@@ -98,13 +110,14 @@ const ReactSandpack: React.FC<SandpackViewerProps> = ({
                     iframe?.requestFullscreen()
                   }
                 }}
+                className="border rounded-full bg-[#EFEFEF] p-2 text-gray-500 hover:text-gray-800"
               >
                 <FiMaximize className="text-gray" />
               </button>
             }
           />
         )}
-      </div>
+      </SandpackLayout>
     </SandpackProvider>
   )
 }

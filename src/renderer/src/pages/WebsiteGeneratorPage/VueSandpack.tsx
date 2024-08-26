@@ -1,25 +1,15 @@
 import { autocompletion, completionKeymap } from '@codemirror/autocomplete'
-import { SandpackCodeEditor, SandpackPreview, SandpackProvider } from '@codesandbox/sandpack-react'
+import {
+  SandpackCodeEditor,
+  SandpackLayout,
+  SandpackPreview,
+  SandpackProvider
+} from '@codesandbox/sandpack-react'
 
 import React from 'react'
 import { FiMaximize } from 'react-icons/fi'
 import { SandpackViewerProps } from './Sandpack'
 import { Loader } from '@renderer/components/Loader'
-
-// const DEFAULT_INDEX_HTML = `<!DOCTYPE html>
-// <html lang="en">
-//   <head>
-//     <meta charset="UTF-8" />
-//     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-//     <title>Document</title>
-//     <script src="https://cdn.tailwindcss.com"></script>
-//   </head>
-//   <body>
-//     <div id="root"></div>
-//   </body>
-// </html>
-
-// `
 
 const DEFAULT_INDEX_HTML = `<!DOCTYPE html>
 <html lang="en">
@@ -44,7 +34,9 @@ const DEFAULT_INDEX_HTML = `<!DOCTYPE html>
 `
 
 const DEFAULT_APP_VUE = `<template>
-  <h1>Hello {{ msg }}</h1>
+  <div className="m-2">
+    <h1>Hello {{ msg }}</h1>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -52,12 +44,16 @@ import { ref } from 'vue';
 const msg = ref<string>('world');
 </script>
 `
-const VueSandpack: React.FC<SandpackViewerProps> = ({ code, showCode = true, loading = false }) => {
+const VueSandpack: React.FC<SandpackViewerProps> = ({
+  code = DEFAULT_APP_VUE,
+  showCode = true,
+  loading = false
+}) => {
   return (
     <SandpackProvider
       template="vue-ts"
       files={{
-        'src/App.vue': { code: code ?? DEFAULT_APP_VUE },
+        'src/App.vue': { code: code },
         '/public/index.html': {
           code: DEFAULT_INDEX_HTML
         }
@@ -69,16 +65,15 @@ const VueSandpack: React.FC<SandpackViewerProps> = ({ code, showCode = true, loa
         autorun: true,
         autoReload: true
       }}
-      // customSetup={{
-      //   dependencies: {
-      //     recharts: '2.9.0',
-      //     'react-router-dom': 'latest',
-      //     'react-icons': 'latest',
-      //     'date-fns': 'latest'
-      //   }
-      // }}
     >
-      <div className="flex gap-2">
+      <SandpackLayout
+        style={{
+          display: 'flex',
+          gap: '1rem',
+          backgroundColor: 'rgb(243 244 246 / var(--tw-bg-opacity))',
+          border: 'none'
+        }}
+      >
         {showCode && (
           <SandpackCodeEditor
             style={{
@@ -94,9 +89,8 @@ const VueSandpack: React.FC<SandpackViewerProps> = ({ code, showCode = true, loa
             extensionsKeymap={[completionKeymap as any]}
           />
         )}
-
         {loading ? (
-          <div className="flex w-full h-[80vh] justify-center items-center content-center align-center">
+          <div className="flex w-[50%] h-[80vh] justify-center items-center content-center align-center">
             <Loader />
           </div>
         ) : (
@@ -116,13 +110,14 @@ const VueSandpack: React.FC<SandpackViewerProps> = ({ code, showCode = true, loa
                     iframe?.requestFullscreen()
                   }
                 }}
+                className="border rounded-full bg-[#EFEFEF] p-2 text-gray-500 hover:text-gray-800"
               >
                 <FiMaximize className="text-gray" />
               </button>
             }
           />
         )}
-      </div>
+      </SandpackLayout>
     </SandpackProvider>
   )
 }

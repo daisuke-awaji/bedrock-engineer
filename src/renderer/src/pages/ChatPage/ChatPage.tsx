@@ -162,9 +162,11 @@ export default function ChatPage() {
       }
       return color.assistant
     }
+
+    return color.user
   }
 
-  const renderMessageContent = (message) => {
+  const renderMessageContent = (message: { content: any }) => {
     // 一旦 message.content の配列要素が１つであると仮定して実装する
     for (const c of message.content) {
       if ('text' in c) {
@@ -200,9 +202,10 @@ export default function ChatPage() {
         throw new Error('Invalid message content')
       }
     }
+    return null
   }
 
-  const renderAvator = (message) => {
+  const renderAvator = (message: { role: string; content: any }) => {
     if (message.role === 'user') {
       for (const c of message.content) {
         if ('toolResult' in c) {
@@ -222,6 +225,7 @@ export default function ChatPage() {
     } else {
       throw new Error('Invalid message role')
     }
+    return null
   }
 
   const onkeydown = (e) => {

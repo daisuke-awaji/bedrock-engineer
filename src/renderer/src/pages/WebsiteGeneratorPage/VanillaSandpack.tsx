@@ -1,5 +1,10 @@
 import { autocompletion, completionKeymap } from '@codemirror/autocomplete'
-import { SandpackCodeEditor, SandpackPreview, SandpackProvider } from '@codesandbox/sandpack-react'
+import {
+  SandpackCodeEditor,
+  SandpackLayout,
+  SandpackPreview,
+  SandpackProvider
+} from '@codesandbox/sandpack-react'
 
 import React from 'react'
 import { FiMaximize } from 'react-icons/fi'
@@ -7,29 +12,31 @@ import { SandpackViewerProps } from './Sandpack'
 import { Loader } from '@renderer/components/Loader'
 
 const DEFAULT_INDEX_HTML = `<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body>
-    <div id="app"></div>
-  </body>
+<html>
+
+<head>
+  <title>Parcel Sandbox</title>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+
+<body>
+  <h1>Hello world</h1>
+</body>
+
 </html>
 `
 
 const VanillaSandpack: React.FC<SandpackViewerProps> = ({
-  code,
+  code = DEFAULT_INDEX_HTML,
   showCode = true,
   loading = false
 }) => {
   return (
     <SandpackProvider
-      template="vanilla"
+      template="static"
       files={{
-        'index.html': { code: code ?? DEFAULT_INDEX_HTML }
+        'index.html': { code: code }
       }}
       options={{
         externalResources: ['https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css'],
@@ -40,7 +47,14 @@ const VanillaSandpack: React.FC<SandpackViewerProps> = ({
         activeFile: 'index.html'
       }}
     >
-      <div className="flex gap-2">
+      <SandpackLayout
+        style={{
+          display: 'flex',
+          gap: '1rem',
+          backgroundColor: 'rgb(243 244 246 / var(--tw-bg-opacity))',
+          border: 'none'
+        }}
+      >
         {showCode && (
           <SandpackCodeEditor
             style={{
@@ -58,7 +72,7 @@ const VanillaSandpack: React.FC<SandpackViewerProps> = ({
         )}
 
         {loading ? (
-          <div className="flex w-full h-[80vh] justify-center items-center content-center align-center">
+          <div className="flex w-[50%] h-[80vh] justify-center items-center content-center align-center">
             <Loader />
           </div>
         ) : (
@@ -78,13 +92,14 @@ const VanillaSandpack: React.FC<SandpackViewerProps> = ({
                     iframe?.requestFullscreen()
                   }
                 }}
+                className="border rounded-full bg-[#EFEFEF] p-2 text-gray-500 hover:text-gray-800"
               >
                 <FiMaximize className="text-gray" />
               </button>
             }
           />
         )}
-      </div>
+      </SandpackLayout>
     </SandpackProvider>
   )
 }

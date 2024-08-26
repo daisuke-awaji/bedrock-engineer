@@ -50,7 +50,10 @@ export const useChat = (props: UseChatProps) => {
     setMessages(msgsToset)
   }
 
-  const initChat = () => setMessages([])
+  const initChat = () => {
+    setMessages([])
+    setLatestText('')
+  }
 
   return { messages, handleSubmit, loading, initChat, lastText }
 }
