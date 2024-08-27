@@ -4,7 +4,8 @@ Bedrock Enginner is an AI assistant of software development tasks. This tool com
 
 ## 💻 Demo
 
-https://github.com/user-attachments/assets/46b6bfe3-01c1-484a-927d-2e630a807919
+
+https://github.com/user-attachments/assets/5a6b7d10-9447-4845-81d1-df2a1428915d
 
 ## 🍎 Getting Started
 
@@ -48,7 +49,10 @@ Use the application stored in the `dist` directory.
 - 🚀 Automode for autonomous task completion
 - 🔄 Iteration tracking in automode
 
-https://github.com/user-attachments/assets/1c8d413a-788d-4be4-9d71-b8cf78f30e20
+
+
+https://github.com/user-attachments/assets/838fc854-f310-40dc-8237-f82ffd623ef3
+
 
 ### Website Generator
 
@@ -56,8 +60,10 @@ https://github.com/user-attachments/assets/1c8d413a-788d-4be4-9d71-b8cf78f30e20
 - Vue.js (w/ Typescript)
 - Vanilla.js
 
-https://github.com/user-attachments/assets/46b6bfe3-01c1-484a-927d-2e630a807919
+https://github.com/user-attachments/assets/d28c2ab1-70f4-4ce0-9537-cf89a2c31ad4
+
 
 ### Step Function Generator
 
-https://github.com/user-attachments/assets/66efc6c2-85fc-4e8c-96aa-db0835aa9c56
+https://github.com/user-attachments/assets/17756811-6314-438f-a13d-61af10c1963e
+
