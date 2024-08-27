@@ -3,7 +3,7 @@
 import { Editor } from '@monaco-editor/react'
 import { useRef } from 'react'
 
-type ASLEditorProps = { value: any; setValue: any }
+type ASLEditorProps = { value: any; setValue?: any }
 export const ASLEditor: React.FC<ASLEditorProps> = ({ value, setValue }) => {
   const editorRef = useRef(null)
 

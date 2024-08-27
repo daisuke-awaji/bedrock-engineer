@@ -1,9 +1,11 @@
 import Store from 'electron-store'
 import { LLM } from '../types/llm'
+import { AgentChatConfig } from '../types/agent-chat'
 
 type StoreScheme = {
   projectPath?: string
   llm?: LLM
+  agentChatConfig: AgentChatConfig
 }
 
 const electronStore = new Store<StoreScheme>()

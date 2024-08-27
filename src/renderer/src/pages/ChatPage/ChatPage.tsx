@@ -6,17 +6,16 @@ import useModal from '../../hooks/useModal'
 import tools from './tools'
 import prompts from '@renderer/prompts/prompts'
 import useProject from '@renderer/hooks/useProject'
+import useLLM from '@renderer/hooks/useLLM'
+import useAgentChatSetting from '@renderer/hooks/useAgentChatSetting'
 
 export default function ChatPage() {
   const [userInput, setUserInput] = useState('')
   const [chatMessages, setMessages] = useState<any>([])
   const [loading, setLoading] = useState(false)
-  const [automode, setAutomode] = useState(false)
-  const selectedModel = {
-    // modelId: 'anthropic.claude-3-haiku-20240307-v1:0'
-    modelId: 'anthropic.claude-3-sonnet-20240229-v1:0'
-  }
-  const modelId = selectedModel?.modelId
+  const { automode, setAutomode, getAutomode } = useAgentChatSetting()
+  const { llm } = useLLM()
+  const modelId = llm?.modelId
 
   const systemPrompt = prompts.Chat.system
 
@@ -114,8 +113,10 @@ export default function ChatPage() {
       })
       setMessages(msgs)
       setLoading(false)
+      setUserInput('つづけてください')
 
-      if (automode) {
+      // 再帰処理の中から判断したいので、React のステートではなく、electron の store から参照する
+      if (getAutomode()) {
         const complete = msgs.slice(-1)[0]?.content[0]?.text.includes('AUTOMODE_COMPLETE')
         loopCount++
         if (complete || loopCount > MAX_ITERATIONS) {
@@ -177,6 +178,7 @@ export default function ChatPage() {
             </span>
 
             <div>input</div>
+
             <span>{JSON.stringify(c.toolUse.input, null, 2)}</span>
           </div>
         )
@@ -361,7 +363,7 @@ export default function ChatPage() {
                     type="checkbox"
                     checked={automode}
                     className="sr-only peer"
-                    onChange={() => setAutomode((a) => !a)}
+                    onChange={() => setAutomode(!automode)}
                   />
                   <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                   <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
