@@ -8,12 +8,15 @@ import prompts from '@renderer/prompts/prompts'
 import useProject from '@renderer/hooks/useProject'
 import useLLM from '@renderer/hooks/useLLM'
 import useAgentChatSetting from '@renderer/hooks/useAgentChatSetting'
+import useTavilySearch from '@renderer/hooks/useTavilySearch'
 
 export default function ChatPage() {
   const [userInput, setUserInput] = useState('')
   const [chatMessages, setMessages] = useState<any>([])
   const [loading, setLoading] = useState(false)
   const { automode, setAutomode, getAutomode } = useAgentChatSetting()
+  const { apikey } = useTavilySearch()
+  const tavilySearchEnabled = apikey !== 'tvly-xxxxxxxxxxxxxxxxxxx'
   const { llm } = useLLM()
   const modelId = llm?.modelId
 
@@ -45,7 +48,8 @@ export default function ChatPage() {
           {
             text: systemPrompt({
               automode: automode,
-              workingDir: projectPath
+              workingDir: projectPath,
+              useTavilySearch: tavilySearchEnabled
             })
           }
         ]
@@ -237,6 +241,47 @@ export default function ChatPage() {
 
   const { Modal, openModal } = useModal()
 
+  const exampleSenarios = [
+    {
+      title: 'Create a new file',
+      content:
+        'Create a new file called "test.txt" in the current directory with the content "Hello, World!"'
+    },
+    {
+      title: '昨日のニュース',
+      content: `昨日 (${new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() - 1)}) 世界で起きたニュースを教えてください。`
+    },
+    {
+      title: 'シンプルなウェブサイト',
+      content: 'IT企業のかっこいいウェブサイトを HTML, CSS, JavaScript を使って実装してください。'
+    },
+    {
+      title: 'フォルダの整理',
+      content: `${projectPath} のフォルダに含まれる png ファイルだけを抽出して、${projectPath}/images フォルダにコピーしてください。`
+    },
+    {
+      title: 'シンプルな API',
+      content: `Node.js ランタイムの AWS Lambda をデプロイするために、Node.js で記述された lambda.handler のソースコードと、AWS SAM のテンプレートファイル（YAML形式）を作成してください。
+この Lambda は API Gateway と proxy 統合され、インターネットに公開されます。
+ソースコードに記述するロジックはシンプルに "Hello World from AWS Lambda" という文字列を返す実装としてください。
+
+## 補足情報
+Node.js のランタイムバージョン: nodejs18.x
+デプロイするリージョン: 東京リージョン
+`
+    },
+    {
+      title: 'CDKプロジェクト',
+      content: `AWS CDK を使って、S3 バケットを作成し、その中にファイルをアップロードするコードを作成してください。
+
+この一連のソースコードは cdk のプロジェクトとして作成するため、ベストプラクティスに従ってプロジェクト構造ごと作成してください。
+package.json や requirement.yaml などの構成ファイルも忘れずに作成してください。
+ファイルをアップロードするコードは bash による Shell Script で実装してください。
+最後にこのプロジェクトを使用する、あるいは開発するために必要となる情報を README.md に丁寧に記述してください。
+`
+    }
+  ]
+
   return (
     <React.Fragment>
       <div
@@ -280,27 +325,18 @@ export default function ChatPage() {
               <div className="text-gray-400">
                 This AI agent understands software project structures and creates files and folders.
               </div>
-              <div className="flex items-center gap-2 pt-6 text-xs">
-                <button
-                  className="px-4 py-2 border rounded-md text-gray-400 hover:text-gray-700 hover:border-gray-300"
-                  onClick={() =>
-                    setUserInput(
-                      'IT企業のかっこいいウェブサイトを HTML, CSS, JavaScript を使って実装してください。'
-                    )
-                  }
-                >
-                  シンプルなウェブサイト
-                </button>
-                <button
-                  className="px-4 py-2 border rounded-md text-gray-400 hover:text-gray-700 hover:border-gray-300"
-                  onClick={() =>
-                    setUserInput(
-                      `${projectPath} のフォルダに含まれる png ファイルだけを抽出して、${projectPath}/images フォルダにコピーしてください。`
-                    )
-                  }
-                >
-                  フォルダの整理
-                </button>
+              <div className="grid grid-cols-3 gap-2 pt-6 text-xs">
+                {exampleSenarios.map((senario) => {
+                  return (
+                    <button
+                      key={senario.title}
+                      className="px-4 py-2 border rounded-md text-gray-400 hover:text-gray-700 hover:border-gray-300"
+                      onClick={() => setUserInput(senario.content)}
+                    >
+                      {senario.title}
+                    </button>
+                  )
+                })}
               </div>
             </div>
           ) : null}

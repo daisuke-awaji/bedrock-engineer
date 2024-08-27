@@ -1,5 +1,6 @@
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import * as fs from 'fs/promises'
+import { store } from './store'
 
 export async function createFolder(folderPath: string): Promise<string> {
   try {
@@ -87,7 +88,7 @@ export async function tavilySearch(query: string): Promise<string> {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        api_key: process.env.VITE_TAVILY_API_KEY,
+        api_key: store.get('tavilySearch').apikey,
         query,
         search_depth: 'advanced',
         include_answer: true,

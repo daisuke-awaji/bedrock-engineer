@@ -49,9 +49,11 @@ const Layout: React.FC = () => {
               })}
             </ul>
             <ul>
-              <ListItem href="https://github.com/daisuke-awaji/bedrock-engineer">
-                <FiGithub className="text-xl" />
-              </ListItem>
+              <div onClick={() => open('https://github.com/daisuke-awaji/butler')}>
+                <ListItem href="#">
+                  <FiGithub className="text-xl" />
+                </ListItem>
+              </div>
             </ul>
           </nav>
         </div>

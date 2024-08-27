@@ -55,5 +55,5 @@ export const useChat = (props: UseChatProps) => {
     setLatestText('')
   }
 
-  return { messages, handleSubmit, loading, initChat, lastText }
+  return { messages, handleSubmit, loading, initChat, lastText, setLoading }
 }

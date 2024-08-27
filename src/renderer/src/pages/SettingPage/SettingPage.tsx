@@ -1,8 +1,11 @@
 import useLLM from '@renderer/hooks/useLLM'
 import useProject from '@renderer/hooks/useProject'
 import React from 'react'
+import FigmaLogo from '../../assets/images/icons/figma.svg'
 
 import { FcElectronics, FcFolder, FcMindMap } from 'react-icons/fc'
+import useFigma from '@renderer/hooks/useFigmaConfig'
+import useTavilySearch from '@renderer/hooks/useTavilySearch'
 
 interface InputWithLabelProp extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string
@@ -14,7 +17,6 @@ const InputWithLabel: React.FC<InputWithLabelProp> = (props) => {
         {props.label}
       </label>
       <input
-        disabled // TODO
         type={props.type}
         className="bg-white-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         placeholder={props.placeholder}
@@ -30,6 +32,8 @@ const InputWithLabel: React.FC<InputWithLabelProp> = (props) => {
 export default function SettingPage() {
   const { projectPath, selectDirectory } = useProject()
   const { llm, setLLM, availableModels } = useLLM()
+  const { accessToken, setAccessToken } = useFigma()
+  const { apikey, setApiKey } = useTavilySearch()
 
   const handleChangeLLMSelect = (e) => {
     const selectedModelId = e.target.value
@@ -43,7 +47,7 @@ export default function SettingPage() {
 
   return (
     <React.Fragment>
-      <div className="flex flex-col gap-4 min-w-[320px] max-w-[1024px] mx-auto">
+      <div className="flex flex-col gap-4 min-w-[320px] max-w-[1024px] mx-auto h-full overflow-y-auto">
         <h1 className="text-lg font-bold">Setting</h1>
 
         <h2 className="text-lg">Project Setting</h2>
@@ -57,6 +61,20 @@ export default function SettingPage() {
               <span>{projectPath}</span>
             </div>
           </label>
+        </div>
+
+        <h2 className="text-lg">Agent Chat</h2>
+        <div className="flex flex-col gap-2">
+          <InputWithLabel
+            label="Tavily Search API Key"
+            type="string"
+            placeholder="Tavily Search API Key"
+            value={apikey}
+            onChange={(e) => {
+              console.log(e.target.value)
+              setApiKey(e.target.value)
+            }}
+          />
         </div>
 
         <h2 className="text-lg">Amazon Bedrock</h2>
@@ -92,6 +110,7 @@ export default function SettingPage() {
           </label>
 
           <InputWithLabel
+            disabled // TODO
             label="Max Tokens"
             type="number"
             placeholder="Max tokens"
@@ -103,6 +122,7 @@ export default function SettingPage() {
             }}
           />
           <InputWithLabel
+            disabled // TODO
             label="Temperture"
             type="number"
             placeholder="Temperture"
@@ -114,6 +134,7 @@ export default function SettingPage() {
             }}
           />
           <InputWithLabel
+            disabled // TODO
             label="topP"
             type="number"
             placeholder="topP"
@@ -125,6 +146,27 @@ export default function SettingPage() {
             }}
           />
           {/* todo */}
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="block text-sm font-medium leading-6 text-gray-900">
+            <div className="flex gap-2 items-center">
+              <span className="h-3 w-3">
+                <FigmaLogo />
+              </span>
+              <span>Connect to Figma</span>
+            </div>
+          </label>
+          <InputWithLabel
+            label="Personal access token"
+            type="string"
+            placeholder="Figma personal access token"
+            value={accessToken}
+            onChange={(e) => {
+              console.log(e.target.value)
+              setAccessToken(e.target.value)
+            }}
+          />
         </div>
       </div>
     </React.Fragment>

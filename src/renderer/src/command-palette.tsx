@@ -52,7 +52,7 @@ const CmdK = () => {
   const filteredItems = filterItems(
     [
       {
-        heading: 'TODO: 最後に実装する',
+        heading: '',
         id: 'home',
         items
       }

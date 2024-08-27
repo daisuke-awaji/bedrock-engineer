@@ -8,7 +8,10 @@ import {
   Message
 } from '@aws-sdk/client-bedrock-runtime'
 import { executeTool, tools } from './tools'
+import * as Figma from 'figma-js'
+
 import NodeCache from 'node-cache'
+import { store } from './store'
 const cache = new NodeCache()
 
 const client = new BedrockClient()
@@ -93,12 +96,23 @@ const listModels = async () => {
   return result
 }
 
+const getFile = async (fileKey: string) => {
+  const client = Figma.Client({
+    personalAccessToken: store.get('figma').personalAccessToken
+  })
+  const res = await client.file(fileKey)
+  return res.data
+}
+
 export const api = {
   bedrock: {
     listModels,
     converse,
     converseStream,
     executeTool
+  },
+  figma: {
+    getFile
   }
 }
 

@@ -102,26 +102,26 @@ const tools: Tool[] = [
         }
       }
     }
+  },
+  {
+    toolSpec: {
+      name: 'tavilySearch',
+      description:
+        'Perform a web search using Tavily API to get up-to-date information or additional context. Use this when you need current information or feel a search could provide a better answer.',
+      inputSchema: {
+        json: {
+          type: 'object',
+          properties: {
+            query: {
+              type: 'string',
+              description: 'The search query'
+            }
+          },
+          required: ['query']
+        }
+      }
+    }
   }
-  // {
-  //   toolSpec: {
-  //     name: 'tavilySearch',
-  //     description:
-  //       'Perform a web search using Tavily API to get up-to-date information or additional context. Use this when you need current information or feel a search could provide a better answer.',
-  //     inputSchema: {
-  //       json: {
-  //         type: 'object',
-  //         properties: {
-  //           query: {
-  //             type: 'string',
-  //             description: 'The search query'
-  //           }
-  //         },
-  //         required: ['query']
-  //       }
-  //     }
-  //   }
-  // },
   // {
   //   toolSpec: {
   //     name: 'fetchAPI',

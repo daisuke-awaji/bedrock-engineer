@@ -65,6 +65,15 @@ const VueSandpack: React.FC<SandpackViewerProps> = ({
         autorun: true,
         autoReload: true
       }}
+      customSetup={{
+        dependencies: {
+          recharts: '2.9.0',
+          'date-fns': 'latest',
+          'vue-chartjs': 'latest',
+          'chart.js': 'latest',
+          'vue-router': 'latest'
+        }
+      }}
     >
       <SandpackLayout
         style={{

@@ -6,11 +6,13 @@ import ReactLogo from '../../assets/images/icons/react.svg'
 import VueLogo from '../../assets/images/icons/vue.svg'
 import VanillaLogo from '../../assets/images/icons/vanilla.svg'
 import FigmaLogo from '../../assets/images/icons/figma.svg'
+import SvelteLogo from '../../assets/images/icons/svelte.svg'
 import { useChat } from '@renderer/hooks/useChat'
-import ReactSandpack from './ReactSandpack'
-import VueSandpack from './VueSandpack'
-import VanillaSandpack from './VanillaSandpack'
+import ReactSandpack from './Sandpack/ReactSandpack'
+import VueSandpack from './Sandpack/VueSandpack'
+import VanillaSandpack from './Sandpack/VanillaSandpack'
 import useLLM from '@renderer/hooks/useLLM'
+import SvelteSandpack from './Sandpack/SvelteSandpack'
 
 type Framework = {
   id: string
@@ -29,6 +31,11 @@ export default function WebsiteGeneratorPage() {
       id: 'vue',
       name: 'Vue',
       logo: <VueLogo />
+    },
+    {
+      id: 'svelte',
+      name: 'Svelte',
+      logo: <SvelteLogo />
     },
     {
       id: 'vanilla',
@@ -85,7 +92,7 @@ export default function WebsiteGeneratorPage() {
     setShowCode(!showCode)
   }
 
-  const { handleSubmit, messages, loading, lastText, initChat } = useChat({
+  const { handleSubmit, messages, loading, lastText, initChat, setLoading } = useChat({
     systemPrompt: prompts.WebsiteGenerator.system[selectedFw],
     modelId: llm.modelId
   })
@@ -112,6 +119,23 @@ export default function WebsiteGeneratorPage() {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const getFigmaFile = async () => {
+    const fileKey = 'OTZ9duRPzWibEEwMa7tqcm'
+    setLoading(true)
+    const figmaFile = await window.api.figma.getFile(fileKey)
+    console.log(figmaFile)
+    const figmaFileStr = JSON.stringify(figmaFile.document.children).substring(0, 10000)
+    handleSubmit(
+      userInput +
+        '\nCreate website based on the Figma file below.\n' +
+        '<figma-file>\n' +
+        figmaFileStr +
+        '</figma-file>\n',
+      messages
+    )
+  }
+
   return (
     <React.Fragment>
       <div className={'flex flex-col h-[calc(100vh-8rem)] overflow-y-auto'}>
@@ -130,6 +154,8 @@ export default function WebsiteGeneratorPage() {
           <ReactSandpack code={code} showCode={showCode} loading={loading} />
         ) : selectedFw === 'vue' ? (
           <VueSandpack code={code} showCode={showCode} loading={loading} />
+        ) : selectedFw === 'svelte' ? (
+          <SvelteSandpack code={code} showCode={showCode} loading={loading} />
         ) : (
           <VanillaSandpack code={code} showCode={showCode} loading={loading} />
         )}
@@ -206,6 +232,7 @@ C001,P003,2023-04-10,120.00
               <div className="flex gap-2 items-center">
                 <button
                   onClick={() => alert('TO BE IMPLEMENTED')}
+                  // onClick={() => getFigmaFile()}
                   className="flex items-center justify-center p-0.5 me-2 overflow-hidden text-xs text-gray-900 rounded-lg group bg-gradient-to-br from-red-200 via-red-300 to-yellow-200 group-hover:from-red-200 group-hover:via-red-300 group-hover:to-yellow-200 dark:text-white dark:hover:text-gray-900 focus:ring-4 focus:outline-none focus:ring-red-100 dark:focus:ring-red-400"
                 >
                   <span className="px-3 py-1.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0 flex gap-2">

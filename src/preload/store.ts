@@ -6,6 +6,12 @@ type StoreScheme = {
   projectPath?: string
   llm?: LLM
   agentChatConfig: AgentChatConfig
+  figma: {
+    personalAccessToken: string
+  }
+  tavilySearch: {
+    apikey: string
+  }
 }
 
 const electronStore = new Store<StoreScheme>()

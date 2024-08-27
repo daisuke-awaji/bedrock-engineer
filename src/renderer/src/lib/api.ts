@@ -4,7 +4,7 @@ const API_ENDPOINT = 'http://localhost:3000'
 
 type StreamChatCompletionProps = {
   modelId: string
-  system: { text: string }[]
+  system: { text: string }[] | undefined
   messages: { role: string; content: { text: string }[] }[]
 }
 
