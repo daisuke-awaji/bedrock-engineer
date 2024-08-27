@@ -4,8 +4,7 @@ Bedrock Enginner is an AI assistant of software development tasks. This tool com
 
 ## 💻 Demo
 
-
-https://github.com/user-attachments/assets/5a6b7d10-9447-4845-81d1-df2a1428915d
+https://github.com/user-attachments/assets/83f46abe-0b69-4748-a4a0-e0155c7d80ae
 
 ## 🍎 Getting Started
 
