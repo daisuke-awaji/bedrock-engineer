@@ -64,6 +64,49 @@ function StepFunctionsGeneratorPage() {
     wfg.className = 'h-full workflowgraph'
   }, [])
 
+  const examples = [
+    {
+      title: '注文処理のワークフロー',
+      value: `注文処理のワークフローを実装してください`
+    },
+    {
+      title: '７種類の State',
+      value: `以下の７種類の State を組み合わせたワークフローを実装してみてください。
+- Task
+- Wait
+- Pass
+- Succeed
+- Fail
+- Choice
+- Parallel`
+    },
+    {
+      title: 'Nested Workflow',
+      value: `Nested Workflow を実装してください`
+    },
+    {
+      title: 'ユーザー登録処理',
+      value: `ユーザー登録処理のワークフローを実装してください。
+
+まず初めに Lambda を使って、入力内容を検証します。
+
+その次に、入力内容に問題がなければ DynamoDB にその情報を保存します。
+最後にメールを送ります。メールは Amaaon SNS を使います。
+
+もし、Lambdaの入力内容の検証に失敗した場合、DynamoDB には情報を保存せず、ユーザにエラーが発生したことをメールで通知します。
+
+DynamoDB や SNS を使用する際には Lambda を使用せず、AWS のネイティブ統合を量してください。
+`
+    },
+    {
+      title: 'S3 で CSV を処理する Distributed Map',
+      value: `分散マップを使用して、S3 で生成された CSV ファイルの行を反復処理します。
+各行には注文と発送情報があります。
+分散マップ項目プロセッサは、これらの行のバッチを反復処理し、Lambda 関数を使用して遅延した順序を検出します。
+その後、遅延した順序ごとに SQS キューにメッセージを送信します。`
+    }
+  ]
+
   return (
     <div className={'flex flex-col overflow-y-auto'}>
       <div className="flex pb-2 justify-between">
@@ -105,30 +148,19 @@ function StepFunctionsGeneratorPage() {
         <div className="relative w-full">
           <div className="flex gap-2 justify-between">
             <div>
-              <button
-                className="cursor-pointer rounded-full border p-2 text-xs hover:border-gray-300 hover:bg-gray-50"
-                onClick={() => {
-                  setUserInput(`注文処理のワークフロー`)
-                }}
-              >
-                注文処理のワークフロー
-              </button>
-              <button
-                className="cursor-pointer rounded-full border p-2 text-xs hover:border-gray-300 hover:bg-gray-50"
-                onClick={() => {
-                  setUserInput(`以下の７種類の State を組み合わせたワークフロー
-- Task
-- Wait
-- Pass
-- Succeed
-- Fail
-- Choice
-- Parallel
-`)
-                }}
-              >
-                ７種類の State の組み合わせ
-              </button>
+              {examples.map((e) => {
+                return (
+                  <button
+                    key={e.title}
+                    className="cursor-pointer rounded-full border p-2 text-xs hover:border-gray-300 hover:bg-gray-50"
+                    onClick={() => {
+                      setUserInput(e.value)
+                    }}
+                  >
+                    {e.title}
+                  </button>
+                )
+              })}
             </div>
           </div>
 

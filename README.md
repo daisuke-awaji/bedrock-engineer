@@ -1,6 +1,6 @@
-# 🧙 Butler
+# 🧙 Bedrock Enginner
 
-Butler is an AI assistant of software development tasks. This tool combines the capabilities of a large language model with practical file system operations, web search functionality.
+Bedrock Enginner is an AI assistant of software development tasks. This tool combines the capabilities of a large language model with practical file system operations, web search functionality.
 
 ## 💻 Demo
 

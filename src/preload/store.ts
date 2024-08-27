@@ -17,6 +17,16 @@ type StoreScheme = {
 const electronStore = new Store<StoreScheme>()
 console.log('store path', electronStore.path)
 
+const init = () => {
+  const pjPath = electronStore.get('projectPath')
+  if (!pjPath) {
+    const defaultProjectPath = process.env[process.platform == 'win32' ? 'USERPROFILE' : 'HOME']
+    electronStore.set('projectPath', defaultProjectPath)
+  }
+}
+
+init()
+
 type Key = keyof StoreScheme
 export const store = {
   get<T extends Key>(key: T) {

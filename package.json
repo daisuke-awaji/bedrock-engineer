@@ -1,9 +1,9 @@
 {
-  "name": "butler",
+  "name": "bedrock-engineer",
   "version": "1.0.0",
-  "description": "An Electron application with React and TypeScript",
+  "description": "An AI assistant of software development tasks. This tool combines the capabilities of a large language model with practical file system operations, web search functionality.",
   "main": "./out/main/index.js",
-  "author": "example.com",
+  "author": "gee.awa@gmail.com",
   "homepage": "https://electron-vite.org",
   "scripts": {
     "format": "prettier --write .",

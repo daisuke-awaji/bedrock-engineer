@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: butler
+productName: Bedrock Engineer
 directories:
   buildResources: build
 files:
@@ -12,7 +12,7 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: butler
+  executableName: Bedrock Engineer
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
