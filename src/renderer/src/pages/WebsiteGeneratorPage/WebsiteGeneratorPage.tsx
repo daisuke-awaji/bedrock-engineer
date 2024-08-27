@@ -2,14 +2,15 @@ import React, { useEffect, useState } from 'react'
 import { ToggleSwitch } from 'flowbite-react'
 import { FiSend } from 'react-icons/fi'
 import prompts from '../../prompts/prompts'
-import { useDebounce } from '@renderer/hooks/use-debounse'
 import ReactLogo from '../../assets/images/icons/react.svg'
 import VueLogo from '../../assets/images/icons/vue.svg'
 import VanillaLogo from '../../assets/images/icons/vanilla.svg'
+import FigmaLogo from '../../assets/images/icons/figma.svg'
 import { useChat } from '@renderer/hooks/useChat'
 import ReactSandpack from './ReactSandpack'
 import VueSandpack from './VueSandpack'
 import VanillaSandpack from './VanillaSandpack'
+import useLLM from '@renderer/hooks/useLLM'
 
 type Framework = {
   id: string
@@ -78,11 +79,7 @@ export default function WebsiteGeneratorPage() {
   const [code, setCode] = useState<string | undefined>()
   const [showCode, setShowCode] = useState(true)
   const [userInput, setUserInput] = useState('')
-  const selectedModel = {
-    // modelId: 'anthropic.claude-3-haiku-20240307-v1:0'
-    modelId: 'anthropic.claude-3-sonnet-20240229-v1:0'
-  }
-  const modelId = selectedModel?.modelId
+  const { llm } = useLLM()
 
   const handleClickShowCode = () => {
     setShowCode(!showCode)
@@ -90,7 +87,7 @@ export default function WebsiteGeneratorPage() {
 
   const { handleSubmit, messages, loading, lastText, initChat } = useChat({
     systemPrompt: prompts.WebsiteGenerator.system[selectedFw],
-    modelId: modelId
+    modelId: llm.modelId
   })
 
   const handleRefresh = () => {
@@ -115,8 +112,6 @@ export default function WebsiteGeneratorPage() {
     }
   }
 
-  const debouncedCode = useDebounce(code, 50)
-
   return (
     <React.Fragment>
       <div className={'flex flex-col h-[calc(100vh-8rem)] overflow-y-auto'}>
@@ -132,11 +127,11 @@ export default function WebsiteGeneratorPage() {
         </div>
 
         {selectedFw === 'react' ? (
-          <ReactSandpack code={debouncedCode} showCode={showCode} loading={loading} />
+          <ReactSandpack code={code} showCode={showCode} loading={loading} />
         ) : selectedFw === 'vue' ? (
-          <VueSandpack code={debouncedCode} showCode={showCode} loading={loading} />
+          <VueSandpack code={code} showCode={showCode} loading={loading} />
         ) : (
-          <VanillaSandpack code={debouncedCode} showCode={showCode} loading={loading} />
+          <VanillaSandpack code={code} showCode={showCode} loading={loading} />
         )}
 
         {/* Buttom Input Field Block */}
@@ -209,6 +204,17 @@ C001,P003,2023-04-10,120.00
                 </button>
               </div>
               <div className="flex gap-2 items-center">
+                <button
+                  onClick={() => alert('TO BE IMPLEMENTED')}
+                  className="flex items-center justify-center p-0.5 me-2 overflow-hidden text-xs text-gray-900 rounded-lg group bg-gradient-to-br from-red-200 via-red-300 to-yellow-200 group-hover:from-red-200 group-hover:via-red-300 group-hover:to-yellow-200 dark:text-white dark:hover:text-gray-900 focus:ring-4 focus:outline-none focus:ring-red-100 dark:focus:ring-red-400"
+                >
+                  <span className="px-3 py-1.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0 flex gap-2">
+                    <div className="h-3 w-3">
+                      <FigmaLogo />
+                    </div>
+                    Connect
+                  </span>
+                </button>
                 <ToggleSwitch
                   checked={showCode}
                   onChange={handleClickShowCode}
@@ -238,27 +244,7 @@ C001,P003,2023-04-10,120.00
               onClick={() => handleSubmit(userInput, messages)}
               className="absolute end-2.5 bottom-2.5 rounded-lg hover:bg-gray-200 px-2 py-2"
             >
-              {/* {loading ? (
-                <motion.div
-                  animate={{
-                    scale: [1, 1.2, 1.3, 1],
-                    x: [0, 50, 100, 200],
-                    y: [0, -50, -80, -80],
-                    borderRadius: ['20%', '50%', '20%']
-                  }}
-                  transition={{
-                    duration: 2,
-                    ease: 'easeInOut',
-                    times: [0, 0.5, 1],
-                    repeat: NaN,
-                    repeatDelay: 1
-                  }}
-                >
-                  <FiSend className="text-xl" />
-                </motion.div>
-              ) : ( */}
               <FiSend className="text-xl" />
-              {/* )} */}
             </button>
           </div>
         </div>

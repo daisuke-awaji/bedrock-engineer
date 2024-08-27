@@ -1,16 +1,22 @@
-// import { ipcRenderer } from 'electron'
+import Store from 'electron-store'
+import { LLM } from '../types/llm'
 
-// export const store = {
-//   get(key: string) {
-//     return ipcRenderer.sendSync('electron-store-get', key)
-//   },
-//   set(property: string, value: string) {
-//     ipcRenderer.send('electron-store-set', property, value)
-//   }
-// }
-
-export const store = {
-  counter: 0
+type StoreScheme = {
+  projectPath?: string
+  llm?: LLM
 }
 
-export type Store = typeof store
+const electronStore = new Store<StoreScheme>()
+console.log('store path', electronStore.path)
+
+type Key = keyof StoreScheme
+export const store = {
+  get<T extends Key>(key: T) {
+    return electronStore.get(key)
+  },
+  set<T extends Key>(key: T, value: StoreScheme[T]) {
+    return electronStore.set(key, value)
+  }
+}
+
+export type ConfigStore = typeof store

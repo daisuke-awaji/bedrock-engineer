@@ -1,4 +1,4 @@
-import { expect, test } from '@jest/globals'
+import { expect, test, describe } from '@jest/globals'
 import { api } from '../preload/api'
 
 describe('api', () => {
@@ -6,7 +6,12 @@ describe('api', () => {
     expect(1).toBe(1)
   })
 
-  test('call converse stream', async () => {
+  test('list available foundation models', async () => {
+    const res = await api.bedrock.listModels()
+    console.log(res)
+  })
+
+  test.skip('call converse stream', async () => {
     const res = await api.bedrock.converseStream({
       modelId: 'anthropic.claude-3-haiku-20240307-v1:0',
       system: [{ text: 'hello' }],

@@ -1,8 +1,4 @@
-import {
-  BedrockClient,
-  FoundationModelSummary,
-  ListFoundationModelsCommand
-} from '@aws-sdk/client-bedrock'
+import { BedrockClient, ListFoundationModelsCommand } from '@aws-sdk/client-bedrock'
 import {
   BedrockRuntimeClient,
   ConverseCommand,
@@ -12,6 +8,8 @@ import {
   Message
 } from '@aws-sdk/client-bedrock-runtime'
 import { executeTool, tools } from './tools'
+import NodeCache from 'node-cache'
+const cache = new NodeCache()
 
 const client = new BedrockClient()
 const runtimeClient = new BedrockRuntimeClient()
@@ -66,10 +64,33 @@ const converseStream = async (
   return runtimeClient.send(command)
 }
 
-const listModels = async (): Promise<FoundationModelSummary[] | undefined> => {
+const listModels = async () => {
   const command = new ListFoundationModelsCommand()
+
+  // TODO: API Cache の機構はあとで考える
+  const cached = cache.get('listModels')
+  if (cached) {
+    return cached
+  }
   const res = await client.send(command)
-  return res.modelSummaries
+  const result = res.modelSummaries
+    ?.filter((value) => {
+      return (
+        value.providerName === 'Anthropic' &&
+        value.modelLifecycle?.status === 'ACTIVE' &&
+        value.inferenceTypesSupported?.includes('ON_DEMAND') &&
+        value.modelName?.includes('Claude 3')
+      )
+    })
+    .map((value) => {
+      return {
+        modelId: value.modelId,
+        modelName: value.modelName
+      }
+    })
+
+  cache.set('listModels', result, 180)
+  return result
 }
 
 export const api = {

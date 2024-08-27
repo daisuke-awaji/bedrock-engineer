@@ -5,6 +5,9 @@ import icon from '../../build/icon.ico?asset'
 import api from './api'
 import { handleFileOpen } from '../preload/file'
 
+import Store from 'electron-store'
+Store.initRenderer()
+
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -17,7 +20,7 @@ function createWindow(): void {
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: true
+      sandbox: false
     }
   })
 
@@ -83,6 +86,9 @@ app.whenReady().then(() => {
   )
 
   createWindow()
+
+  // Electron Store save config.json in this directory
+  console.log({ userDataDir: app.getPath('userData') })
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the

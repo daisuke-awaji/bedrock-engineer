@@ -6,6 +6,36 @@ Butler is an AI assistant of software development tasks. This tool combines the 
 
 https://github.com/user-attachments/assets/46b6bfe3-01c1-484a-927d-2e630a807919
 
+## 🍎 Getting Started
+
+It is still under development and no packaged binaries have been created. Please build it yourself and use it.
+
+First, install the npm modules:
+
+```
+npm install
+```
+
+Then, build appplication package
+
+```
+npm run build:mac
+```
+
+or
+
+```
+npm run build:win
+```
+
+or
+
+```
+npm run build:linux
+```
+
+Use the application stored in the `dist` directory.
+
 ## ✨ Features
 
 ### Agent Chat

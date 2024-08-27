@@ -5,6 +5,7 @@ import { RiRobot2Line } from 'react-icons/ri'
 import useModal from '../../hooks/useModal'
 import tools from './tools'
 import prompts from '@renderer/prompts/prompts'
+import useProject from '@renderer/hooks/useProject'
 
 export default function ChatPage() {
   const [userInput, setUserInput] = useState('')
@@ -21,13 +22,7 @@ export default function ChatPage() {
 
   const MAX_ITERATIONS = 10
 
-  const [projectPath, setProjectPath] = useState('/Users/geeawa/Desktop') // bedrock enginner works in this file path
-  const handleFileOpen = async () => {
-    const path = await window.file.handleFolderOpen()
-    if (path) {
-      setProjectPath(path)
-    }
-  }
+  const { projectPath, selectDirectory } = useProject()
 
   const handleClickPromptSubmit = async (input: string, messages) => {
     let loopCount = 0
@@ -349,7 +344,7 @@ export default function ChatPage() {
                 </label>
 
                 <label
-                  onClick={handleFileOpen}
+                  onClick={selectDirectory}
                   className="block text-sm font-medium text-gray-900 dark:text-white cursor-pointer hover:text-gray-500"
                 >
                   <div className="flex gap-2 items-center">

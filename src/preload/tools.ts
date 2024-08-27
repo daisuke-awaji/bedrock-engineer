@@ -87,7 +87,7 @@ export async function tavilySearch(query: string): Promise<string> {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        api_key: process.env.TAVILY_API_KEY,
+        api_key: process.env.VITE_TAVILY_API_KEY,
         query,
         search_depth: 'advanced',
         include_answer: true,
@@ -120,7 +120,7 @@ export async function pexelsSearch(query: string): Promise<string> {
   try {
     const res = await fetch(`https://api.pexels.com/v1/search?${query}&per_page=1`, {
       headers: {
-        Authorization: process.env.PEXELS_API_KEY ?? ''
+        Authorization: process.env.PRELOAD_VITE_PEXELS_API_KEY ?? ''
       }
     })
     return JSON.stringify(res)
@@ -145,8 +145,8 @@ export const executeTool = async (toolName: string | undefined, toolInput: any) 
       return moveFile(toolInput['source'], toolInput['destination'])
     case 'copyFile':
       return copyFile(toolInput['source'], toolInput['destination'])
-    // case 'tavilySearch':
-    // return tavilySearch(toolInput['query'])
+    case 'tavilySearch':
+      return tavilySearch(toolInput['query'])
     default:
       throw new Error(`Unknown tool: ${toolName}`)
   }
@@ -300,26 +300,26 @@ export const tools: Tool[] = [
         }
       }
     }
+  },
+  {
+    toolSpec: {
+      name: 'tavilySearch',
+      description:
+        'Perform a web search using Tavily API to get up-to-date information or additional context. Use this when you need current information or feel a search could provide a better answer.',
+      inputSchema: {
+        json: {
+          type: 'object',
+          properties: {
+            query: {
+              type: 'string',
+              description: 'The search query'
+            }
+          },
+          required: ['query']
+        }
+      }
+    }
   }
-  // {
-  //   toolSpec: {
-  //     name: 'tavilySearch',
-  //     description:
-  //       'Perform a web search using Tavily API to get up-to-date information or additional context. Use this when you need current information or feel a search could provide a better answer.',
-  //     inputSchema: {
-  //       json: {
-  //         type: 'object',
-  //         properties: {
-  //           query: {
-  //             type: 'string',
-  //             description: 'The search query'
-  //           }
-  //         },
-  //         required: ['query']
-  //       }
-  //     }
-  //   }
-  // },
   // {
   //   toolSpec: {
   //     name: 'fetchAPI',

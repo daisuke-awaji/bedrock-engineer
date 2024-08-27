@@ -9,8 +9,7 @@ import { ASLEditor } from './ASLEditor'
 import { FiSend } from 'react-icons/fi'
 import { useChat } from '@renderer/hooks/useChat'
 import { Loader } from '../../components/Loader'
-
-const HAIKU_MODEL_ID = 'anthropic.claude-3-haiku-20240307-v1:0'
+import useLLM from '@renderer/hooks/useLLM'
 
 const systemPrompt = `あなたは AWS Step Functions の ASL (Amazon States Language) を生成するAIアシスタントです。与えられた文章とルールに従い、JSON 形式の ASL を出力してください。
 <rules>
@@ -25,9 +24,10 @@ function StepFunctionsGeneratorPage() {
   const [_asl, setAsl] = useState(SAMPLE_ASL_PARALLEL)
   const [editorValue, setEditorValue] = useState(JSON.stringify(SAMPLE_ASL_PARALLEL, null, 2))
   const [userInput, setUserInput] = useState('')
+  const { llm } = useLLM()
   const { messages, handleSubmit, loading, lastText } = useChat({
     systemPrompt,
-    modelId: HAIKU_MODEL_ID
+    modelId: llm.modelId
   })
 
   useEffect(() => {
