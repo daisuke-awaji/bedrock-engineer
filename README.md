@@ -36,6 +36,12 @@ npm run build:linux
 
 Use the application stored in the `dist` directory.
 
+### AWS Credentials
+
+Bedrock Engineer uses aws-sdk internally. Please set credentials using environment variables or shared credentials file as per the following document.
+
+https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/loading-node-credentials-shared.html
+
 ## ✨ Features
 
 ### Agent Chat
