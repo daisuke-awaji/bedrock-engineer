@@ -410,8 +410,8 @@ package.json や requirement.yaml などの構成ファイルも忘れずに作�
             </div>
 
             {/* prompt input form */}
-            <input
-              className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg ${
+            <textarea
+              className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2 ${
                 automode && loading ? 'bg-gray-300' : 'bg-gray-50'
               }`}
               placeholder="Type your message... (Cmd + Enter / Shift + Enter to send message)"
@@ -424,7 +424,9 @@ package.json や requirement.yaml などの構成ファイルも忘れずに作�
               onChange={(e) => setUserInput(e.target.value)}
               onKeyDown={(e) => onkeydown(e)}
               required
+              rows={3}
             />
+
             <button
               onClick={() => handleClickPromptSubmit(userInput, chatMessages)}
               className="absolute end-2.5 bottom-2.5 rounded-lg hover:bg-gray-200 px-2 py-2"

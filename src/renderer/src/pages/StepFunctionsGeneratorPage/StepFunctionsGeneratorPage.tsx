@@ -165,14 +165,15 @@ DynamoDB や SNS を使用する際には Lambda を使用せず、AWS のネイ
           </div>
 
           {/* prompt input form */}
-          <input
+          <textarea
             className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2`}
-            placeholder="What kind of website will you create? (Cmd + Enter / Shift + Enter to send message)"
+            placeholder="What kind of step functions will you create? (Cmd + Enter / Shift + Enter to send message)"
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
-            onKeyDown={(e) => onkeydown(e)}
+            onKeyDown={onkeydown}
             required
             disabled={loading}
+            rows={3}
           />
           <button
             onClick={() => handleSubmit(userInput, messages)}
