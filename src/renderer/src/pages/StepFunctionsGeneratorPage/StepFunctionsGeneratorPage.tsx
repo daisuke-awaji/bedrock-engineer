@@ -10,12 +10,14 @@ import { FiSend } from 'react-icons/fi'
 import { useChat } from '@renderer/hooks/useChat'
 import { Loader } from '../../components/Loader'
 import useLLM from '@renderer/hooks/useLLM'
+import useAdvancedSetting from '@renderer/hooks/useAdvancedSetting'
 
-const systemPrompt = `あなたは AWS Step Functions の ASL (Amazon States Language) を生成するAIアシスタントです。与えられた文章とルールに従い、JSON 形式の ASL を出力してください。
+const systemPrompt = `You are an AI assistant that generates AWS Step Functions ASL (Amazon States Language). Follow the given sentences and rules to output JSON format ASL.
+
 <rules>
-* 説明は一切不要です。
-* \`\`\`json のような接頭語も一切不要です。
-* ASL のテキストだけ生成してください
+- No explanation is required.
+- There is no prefix such as * \`\`\` json.
+- Please generate only ASL text
 </rules>
 `
 
@@ -49,12 +51,21 @@ function StepFunctionsGeneratorPage() {
     }
   }, [messages, loading])
 
+  const [isComposing, setIsComposing] = useState(false)
+  const { sendMsgKey } = useAdvancedSetting()
   const onkeydown = (e) => {
-    if (
-      (e.shiftKey && e.key === 'Enter') ||
-      (e.metaKey && e.key === 'Enter') ||
-      (e.ctrlKey && e.key === 'Enter')
-    ) {
+    if (e.shiftKey) {
+      return
+    }
+    if (isComposing) {
+      return
+    }
+
+    const cmdenter = e.key === 'Enter' && (e.metaKey || e.ctrlKey)
+    const enter = e.key === 'Enter'
+
+    if ((sendMsgKey === 'Enter' && enter) || (sendMsgKey === 'Cmd+Enter' && cmdenter)) {
+      e.preventDefault()
       handleSubmit(userInput, messages)
     }
   }
@@ -66,12 +77,13 @@ function StepFunctionsGeneratorPage() {
 
   const examples = [
     {
-      title: '注文処理のワークフロー',
-      value: `注文処理のワークフローを実装してください`
+      title: 'Order processing workflow',
+      value: `Create order processing workflow`
     },
     {
-      title: '７種類の State',
-      value: `以下の７種類の State を組み合わせたワークフローを実装してみてください。
+      title: '7 types of State',
+      value: `Please implement a workflow that combines the following seven types.
+
 - Task
 - Wait
 - Pass
@@ -82,33 +94,33 @@ function StepFunctionsGeneratorPage() {
     },
     {
       title: 'Nested Workflow',
-      value: `Nested Workflow を実装してください`
+      value: `Create Nested Workflow example`
     },
     {
-      title: 'ユーザー登録処理',
-      value: `ユーザー登録処理のワークフローを実装してください。
+      title: 'User registration process',
+      value: `Implement the workflow for user registration processing.
 
-まず初めに Lambda を使って、入力内容を検証します。
+First, use Lambda to verify the input contents.
 
-その次に、入力内容に問題がなければ DynamoDB にその情報を保存します。
-最後にメールを送ります。メールは Amaaon SNS を使います。
+Next, if there is no problem with the input content, save the information to Dynamodb.
+Finally, send an email. The email uses AMAAON SNS.
 
-もし、Lambdaの入力内容の検証に失敗した場合、DynamoDB には情報を保存せず、ユーザにエラーが発生したことをメールで通知します。
+If Lambda's input content fails, dynamodb will not save information and will notify the user by e -mail.
 
-DynamoDB や SNS を使用する際には Lambda を使用せず、AWS のネイティブ統合を量してください。
+When using dynamodb or SNS, do not use Lambda and weigh AWS native integration.
 `
     },
     {
-      title: 'S3 で CSV を処理する Distributed Map',
-      value: `分散マップを使用して、S3 で生成された CSV ファイルの行を反復処理します。
-各行には注文と発送情報があります。
-分散マップ項目プロセッサは、これらの行のバッチを反復処理し、Lambda 関数を使用して遅延した順序を検出します。
-その後、遅延した順序ごとに SQS キューにメッセージを送信します。`
+      title: 'Distributed Map to process CSV in S3',
+      value: `Use the distributed map to repeat the row of the CSV file generated in S3.
+Each line has orders and shipping information.
+The distributed map processor repeats the batch of these rows and uses the Lambda function to detect the delayed order.
+After that, send a message to the SQS queue for each delayed order.`
     }
   ]
 
   return (
-    <div className={'flex flex-col overflow-y-auto'}>
+    <div className={'flex flex-col h-[calc(100vh-11rem)] overflow-y-auto'}>
       <div className="flex pb-2 justify-between">
         <span className="font-bold flex gap-2">
           <div className="content-center">
@@ -166,8 +178,10 @@ DynamoDB や SNS を使用する際には Lambda を使用せず、AWS のネイ
 
           {/* prompt input form */}
           <textarea
+            onCompositionStart={() => setIsComposing(true)}
+            onCompositionEnd={() => setIsComposing(false)}
             className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2`}
-            placeholder="What kind of step functions will you create? (Cmd + Enter / Shift + Enter to send message)"
+            placeholder="What kind of step functions will you create?"
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
             onKeyDown={onkeydown}

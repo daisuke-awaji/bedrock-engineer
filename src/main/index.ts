@@ -4,15 +4,16 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../build/icon.ico?asset'
 import api from './api'
 import { handleFileOpen } from '../preload/file'
-
 import Store from 'electron-store'
+import getRandomPort from '../preload/lib/random-port'
+import { store } from '../preload/store'
 Store.initRenderer()
 
-function createWindow(): void {
+async function createWindow(): Promise<void> {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    minWidth: 900,
-    minHeight: 670,
+    minWidth: 640,
+    minHeight: 416,
     width: 1800,
     height: 1340,
     show: false,
@@ -40,9 +41,13 @@ function createWindow(): void {
   // } else {
   //   mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   // }
-  const port = process.env.PORT || '3000'
+  const port = await getRandomPort(3000)
+  store.set('apiEndpoint', `http://localhost:${port}`)
+
   api.listen(port, () => {
-    console.log(process.env['ELECTRON_RENDERER_URL'])
+    console.log({
+      API_ENDPOINT: 'http://localhost' + port
+    })
   })
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {

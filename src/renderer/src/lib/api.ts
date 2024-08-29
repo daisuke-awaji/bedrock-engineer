@@ -1,12 +1,12 @@
 import { ConverseStreamOutput } from '@aws-sdk/client-bedrock-runtime'
 
-const API_ENDPOINT = 'http://localhost:3000'
-
 type StreamChatCompletionProps = {
   modelId: string
   system: { text: string }[] | undefined
   messages: { role: string; content: { text: string }[] }[]
 }
+
+const API_ENDPOINT = window.store.get('apiEndpoint')
 
 export async function* streamChatCompletion(
   props: StreamChatCompletionProps

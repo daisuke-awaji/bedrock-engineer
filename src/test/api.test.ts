@@ -3,6 +3,7 @@ import { jest, expect, test, describe } from '@jest/globals'
 // import { GetFileComponentsResponse, type GetFileResponse } from '@figma/rest-api-spec'
 // import axios from 'axios'
 import * as Figma from 'figma-js'
+import getRandomPort from '../preload/lib/random-port'
 
 jest.setTimeout(300000)
 
@@ -41,5 +42,10 @@ describe('api', () => {
     })
     const res = await client.file(fileKey)
     console.log(JSON.stringify(res.data, null, 2))
+  })
+
+  test('port', async () => {
+    const p = await getRandomPort(3000)
+    console.log(p)
   })
 })

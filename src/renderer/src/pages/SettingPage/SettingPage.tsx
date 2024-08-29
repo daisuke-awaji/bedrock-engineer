@@ -6,6 +6,7 @@ import FigmaLogo from '../../assets/images/icons/figma.svg'
 import { FcElectronics, FcFolder, FcMindMap } from 'react-icons/fc'
 import useFigma from '@renderer/hooks/useFigmaConfig'
 import useTavilySearch from '@renderer/hooks/useTavilySearch'
+import useAdvancedSetting from '@renderer/hooks/useAdvancedSetting'
 
 interface InputWithLabelProp extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string
@@ -34,6 +35,7 @@ export default function SettingPage() {
   const { llm, setLLM, availableModels } = useLLM()
   const { accessToken, setAccessToken } = useFigma()
   const { apikey, setApiKey } = useTavilySearch()
+  const { sendMsgKey, setSendMsgKey } = useAdvancedSetting()
 
   const handleChangeLLMSelect = (e) => {
     const selectedModelId = e.target.value
@@ -148,6 +150,8 @@ export default function SettingPage() {
           {/* todo */}
         </div>
 
+        <h2 className="text-lg">Figma</h2>
+
         <div className="flex flex-col gap-2">
           <label className="block text-sm font-medium leading-6 text-gray-900">
             <div className="flex gap-2 items-center">
@@ -167,6 +171,42 @@ export default function SettingPage() {
               setAccessToken(e.target.value)
             }}
           />
+        </div>
+
+        <h2 className="text-lg">Advanced Setting</h2>
+
+        <div className="flex flex-col gap-2">
+          <label className="block text-sm font-medium leading-6 text-gray-900">
+            <div className="flex gap-2 items-center">
+              <span>When writing a message, press Enter to.</span>
+            </div>
+          </label>
+          <div className="flex items-center mb-2" onClick={() => setSendMsgKey('Enter')}>
+            <input
+              checked={sendMsgKey === 'Enter'}
+              onChange={() => setSendMsgKey('Enter')}
+              id="default-radio-1"
+              type="radio"
+              name="default-radio"
+              className="cursor-pointer	w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            />
+            <label className="cursor-pointer	ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+              Send the message
+            </label>
+          </div>
+          <div className="flex items-center" onClick={() => setSendMsgKey('Cmd+Enter')}>
+            <input
+              checked={sendMsgKey === 'Cmd+Enter'}
+              onChange={() => setSendMsgKey('Cmd+Enter')}
+              id="default-radio-2"
+              type="radio"
+              name="default-radio"
+              className="cursor-pointer	w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            />
+            <label className="cursor-pointer	ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+              Start a new line (use Cmd+Enter to send)
+            </label>
+          </div>
         </div>
       </div>
     </React.Fragment>

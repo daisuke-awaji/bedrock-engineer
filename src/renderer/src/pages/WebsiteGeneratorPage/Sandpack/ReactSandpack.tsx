@@ -49,6 +49,9 @@ const ReactSandpack: React.FC<SandpackViewerProps> = ({
           code: DEFAULT_INDEX_HTML
         }
       }}
+      style={{
+        height: 'calc(100vh - 16rem)'
+      }}
       options={{
         externalResources: ['https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css'],
         initMode: 'user-visible',
@@ -70,13 +73,14 @@ const ReactSandpack: React.FC<SandpackViewerProps> = ({
           display: 'flex',
           gap: '1rem',
           backgroundColor: 'rgb(243 244 246 / var(--tw-bg-opacity))',
-          border: 'none'
+          border: 'none',
+          height: '100%'
         }}
       >
         {showCode && (
           <SandpackCodeEditor
             style={{
-              height: '80vh',
+              height: '100%',
               borderRadius: '8px',
               overflowX: 'scroll',
               maxWidth: '50vw'
@@ -90,14 +94,14 @@ const ReactSandpack: React.FC<SandpackViewerProps> = ({
         )}
 
         {loading ? (
-          <div className="flex w-[50%] h-[80vh] justify-center items-center content-center align-center">
+          <div className="flex w-[50%] h-[100%] justify-center items-center content-center align-center">
             <Loader />
           </div>
         ) : (
           <SandpackPreview
             id="sandpack-preview"
             style={{
-              height: '80vh',
+              height: '100%',
               borderRadius: '8px',
               backgroundColor: 'white'
             }}

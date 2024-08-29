@@ -9,6 +9,7 @@ import useProject from '@renderer/hooks/useProject'
 import useLLM from '@renderer/hooks/useLLM'
 import useAgentChatSetting from '@renderer/hooks/useAgentChatSetting'
 import useTavilySearch from '@renderer/hooks/useTavilySearch'
+import useAdvancedSetting from '@renderer/hooks/useAdvancedSetting'
 
 export default function ChatPage() {
   const [userInput, setUserInput] = useState('')
@@ -229,12 +230,21 @@ export default function ChatPage() {
     return null
   }
 
+  const [isComposing, setIsComposing] = useState(false)
+  const { sendMsgKey } = useAdvancedSetting()
   const onkeydown = (e) => {
-    if (
-      (e.shiftKey && e.key === 'Enter') ||
-      (e.metaKey && e.key === 'Enter') ||
-      (e.ctrlKey && e.key === 'Enter')
-    ) {
+    if (e.shiftKey) {
+      return
+    }
+    if (isComposing) {
+      return
+    }
+
+    const cmdenter = e.key === 'Enter' && (e.metaKey || e.ctrlKey)
+    const enter = e.key === 'Enter'
+
+    if ((sendMsgKey === 'Enter' && enter) || (sendMsgKey === 'Cmd+Enter' && cmdenter)) {
+      e.preventDefault()
       handleClickPromptSubmit(userInput, chatMessages)
     }
   }
@@ -411,10 +421,12 @@ package.json や requirement.yaml などの構成ファイルも忘れずに作�
 
             {/* prompt input form */}
             <textarea
+              onCompositionStart={() => setIsComposing(true)}
+              onCompositionEnd={() => setIsComposing(false)}
               className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2 ${
                 automode && loading ? 'bg-gray-300' : 'bg-gray-50'
               }`}
-              placeholder="Type your message... (Cmd + Enter / Shift + Enter to send message)"
+              placeholder="Type your message... "
               disabled={automode && loading}
               value={
                 automode && loading

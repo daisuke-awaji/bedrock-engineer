@@ -13,6 +13,7 @@ import VueSandpack from './Sandpack/VueSandpack'
 import VanillaSandpack from './Sandpack/VanillaSandpack'
 import useLLM from '@renderer/hooks/useLLM'
 import SvelteSandpack from './Sandpack/SvelteSandpack'
+import useAdvancedSetting from '@renderer/hooks/useAdvancedSetting'
 
 type Framework = {
   id: string
@@ -107,18 +108,27 @@ export default function WebsiteGeneratorPage() {
     if (messages !== undefined && messages.length > 0) {
       setCode(lastText)
     }
-  }, [messages, loading])
+  }, [lastText])
 
+  const [isComposing, setIsComposing] = useState(false)
+  const { sendMsgKey } = useAdvancedSetting()
   const onkeydown = (e) => {
-    if (
-      (e.shiftKey && e.key === 'Enter') ||
-      (e.metaKey && e.key === 'Enter') ||
-      (e.ctrlKey && e.key === 'Enter')
-    ) {
+    if (e.shiftKey) {
+      return
+    }
+
+    if (isComposing) {
+      return
+    }
+
+    const cmdenter = e.key === 'Enter' && (e.metaKey || e.ctrlKey)
+    const enter = e.key === 'Enter'
+
+    if ((sendMsgKey === 'Enter' && enter) || (sendMsgKey === 'Cmd+Enter' && cmdenter)) {
+      e.preventDefault()
       handleSubmit(userInput, messages)
     }
   }
-
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getFigmaFile = async () => {
     const fileKey = 'OTZ9duRPzWibEEwMa7tqcm'
@@ -138,7 +148,7 @@ export default function WebsiteGeneratorPage() {
 
   return (
     <React.Fragment>
-      <div className={'flex flex-col h-[calc(100vh-8rem)] overflow-y-auto'}>
+      <div className={'flex flex-col h-[calc(100vh-11rem)] overflow-y-auto'}>
         <div className="flex pb-2 justify-between">
           <span className="font-bold flex flex-col gap-2">
             <h1 className="content-center">Website Generator</h1>
@@ -259,8 +269,10 @@ C001,P003,2023-04-10,120.00
 
             {/* prompt input form */}
             <textarea
+              onCompositionStart={() => setIsComposing(true)}
+              onCompositionEnd={() => setIsComposing(false)}
               className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2`}
-              placeholder="What kind of website will you create? (Cmd + Enter / Shift + Enter to send message)"
+              placeholder="What kind of website will you create?"
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
               onKeyDown={onkeydown}

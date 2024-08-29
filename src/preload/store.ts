@@ -1,6 +1,6 @@
 import Store from 'electron-store'
 import { LLM } from '../types/llm'
-import { AgentChatConfig } from '../types/agent-chat'
+import { AgentChatConfig, SendMsgKey } from '../types/agent-chat'
 
 type StoreScheme = {
   projectPath?: string
@@ -12,6 +12,12 @@ type StoreScheme = {
   tavilySearch: {
     apikey: string
   }
+  apiEndpoint: string
+  advancedSetting: {
+    keybinding: {
+      sendMsgKey: SendMsgKey
+    }
+  }
 }
 
 const electronStore = new Store<StoreScheme>()
@@ -22,6 +28,15 @@ const init = () => {
   if (!pjPath) {
     const defaultProjectPath = process.env[process.platform == 'win32' ? 'USERPROFILE' : 'HOME']
     electronStore.set('projectPath', defaultProjectPath)
+  }
+
+  const keybinding = electronStore.get('advancedSetting')?.keybinding
+  if (!keybinding) {
+    electronStore.set('advancedSetting', {
+      keybinding: {
+        sendMsgKey: 'Enter'
+      }
+    })
   }
 }
 
