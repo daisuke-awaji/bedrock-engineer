@@ -43,6 +43,9 @@ export type CallConverseAPIProps = {
   system: [{ text: string }]
 }
 
+// sleep
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
 const converse = async (props: CallConverseAPIProps): Promise<ConverseCommandOutput> => {
   const { modelId, messages, system } = props
   const command = new ConverseCommand({
@@ -52,7 +55,25 @@ const converse = async (props: CallConverseAPIProps): Promise<ConverseCommandOut
     toolConfig,
     inferenceConfig
   })
-  return runtimeClient.send(command)
+  const MAX_ATTEMPTS = 30
+  let attempt = 0
+  const retrySend = async () => {
+    attempt += 1
+    try {
+      const res = await runtimeClient.send(command)
+      return res
+    } catch (e) {
+      console.warn(e)
+      await sleep(5000)
+      if (attempt < MAX_ATTEMPTS) {
+        return retrySend()
+      } else {
+        throw new Error('Max attempts reached')
+      }
+    }
+  }
+
+  return retrySend()
 }
 
 const converseStream = async (
@@ -91,6 +112,11 @@ const listModels = async () => {
         modelName: value.modelName
       }
     })
+
+  result?.push({
+    modelId: 'us.anthropic.claude-3-5-sonnet-20240620-v1:0',
+    modelName: 'Claude 3 Sonnet (cross region inference)'
+  })
 
   cache.set('listModels', result, 180)
   return result

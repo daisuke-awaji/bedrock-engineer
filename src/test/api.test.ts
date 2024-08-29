@@ -4,6 +4,7 @@ import { jest, expect, test, describe } from '@jest/globals'
 // import axios from 'axios'
 import * as Figma from 'figma-js'
 import getRandomPort from '../preload/lib/random-port'
+import { BedrockClient, ListFoundationModelsCommand } from '@aws-sdk/client-bedrock'
 
 jest.setTimeout(300000)
 
@@ -12,10 +13,27 @@ describe('api', () => {
     expect(1).toBe(1)
   })
 
-  // test.skip('list available foundation models', async () => {
-  //   const res = await api.bedrock.listModels()
-  //   console.log(res)
-  // })
+  test.skip('list available foundation models', async () => {
+    const client = new BedrockClient()
+    const command = new ListFoundationModelsCommand()
+    const res = await client.send(command)
+    const result = res.modelSummaries
+      ?.filter((value) => {
+        return (
+          value.providerName === 'Anthropic' &&
+          value.modelLifecycle?.status === 'ACTIVE' &&
+          value.inferenceTypesSupported?.includes('ON_DEMAND') &&
+          value.modelName?.includes('Claude 3')
+        )
+      })
+      .map((value) => {
+        return {
+          modelId: value.modelId,
+          modelName: value.modelName
+        }
+      })
+    console.log(result)
+  })
 
   // test.skip('call converse stream', async () => {
   //   const res = await api.bedrock.converseStream({
@@ -44,7 +62,7 @@ describe('api', () => {
     console.log(JSON.stringify(res.data, null, 2))
   })
 
-  test('port', async () => {
+  test.skip('port', async () => {
     const p = await getRandomPort(3000)
     console.log(p)
   })
