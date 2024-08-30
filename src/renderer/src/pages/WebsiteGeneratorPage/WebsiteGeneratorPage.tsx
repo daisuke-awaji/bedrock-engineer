@@ -18,119 +18,25 @@ import {
   SandpackLayout,
   SandpackPredefinedTemplate,
   SandpackPreview,
-  SandpackProvider
+  SandpackProvider,
+  useActiveCode,
+  useSandpack,
+  useSandpackNavigation
 } from '@codesandbox/sandpack-react'
 
 import { FiMaximize } from 'react-icons/fi'
 import { Loader } from '@renderer/components/Loader'
 import { sleep } from '@renderer/lib/util'
 import useDataSourceConnectModal from './useDataSourceConnectModal'
-
-const DEFAULT_INDEX_HTML = `<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
-</html>
-`
-
-const DEFAULT_APP_TSX = `import React from 'react';
-
-export default function App() {
-  return (
-    <div className="m-2">
-      <h1>Hello World</h1>
-    </div>
-  );
-}
-`
-
-const DEFAULT_VUE_INDEX_HTML = `<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-    <title>codesandbox</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body>
-    <noscript>
-      <strong
-        >We're sorry but codesandbox doesn't work properly without JavaScript
-        enabled. Please enable it to continue.</strong
-      >
-    </noscript>
-    <div id="app"></div>
-    <!-- built files will be auto injected -->
-  </body>
-</html>
-`
-
-const DEFAULT_APP_VUE = `<template>
-  <div className="m-2">
-    <h1>Hello {{ msg }}</h1>
-  </div>
-</template>
-
-<script setup lang="ts">
-import { ref } from 'vue';
-const msg = ref<string>('world');
-</script>
-`
-
-const DEFAULT_VANILLA_INDEX_HTML = `<!DOCTYPE html>
-<html>
-
-<head>
-  <title>Parcel Sandbox</title>
-  <meta charset="UTF-8" />
-  <link rel="stylesheet" href="/styles.css" />
-</head>
-
-<body>
-  <h1>Hello world</h1>
-</body>
-
-</html>
-`
-
-const DEFAULT_SVELTE_INDEX_HTML = `<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf8" />
-    <meta name="viewport" content="width=device-width" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <title>Svelte app</title>
-
-    <link rel="stylesheet" href="public/bundle.css" />
-  </head>
-
-  <body>
-    <script src="bundle.js"></script>
-  </body>
-</html>`
-
-const DEFAULT_SVELTE_APP_SVELTE = `<style>
-  h1 {
-    font-size: 1.5rem;
-  }
-</style>
-
-<script>
-  let name = 'world';
-</script>
-
-<main>
-  <h1>Hello {name}</h1>
-</main>
-`
+import {
+  DEFAULT_INDEX_HTML,
+  DEFAULT_APP_TSX,
+  DEFAULT_APP_VUE,
+  DEFAULT_VUE_INDEX_HTML,
+  DEFAULT_SVELTE_APP_SVELTE,
+  DEFAULT_SVELTE_INDEX_HTML,
+  DEFAULT_VANILLA_INDEX_HTML
+} from './DEFAULT_CODES'
 
 type SupportedTemplate = {
   id: SandpackPredefinedTemplate
@@ -215,9 +121,102 @@ This CSV file contains the following information:
     value: `Create a simple to-do app website`
   }
 ]
+const templates = {
+  'react-ts': {
+    files: {
+      '/public/index.html': {
+        code: DEFAULT_INDEX_HTML
+      },
+      'App.tsx': { code: DEFAULT_APP_TSX }
+    },
+    mainFile: 'App.tsx',
+    customSetup: {
+      dependencies: {
+        recharts: '2.9.0',
+        'react-router-dom': 'latest',
+        'react-icons': 'latest',
+        'date-fns': 'latest'
+      }
+    }
+  },
+  'vue-ts': {
+    files: {
+      'src/App.vue': { code: DEFAULT_APP_VUE },
+      '/public/index.html': {
+        code: DEFAULT_VUE_INDEX_HTML
+      }
+    },
+    mainFile: 'src/App.vue',
+    customSetup: {
+      dependencies: {
+        recharts: '2.9.0',
+        'date-fns': 'latest',
+        'vue-chartjs': 'latest',
+        'chart.js': 'latest',
+        'vue-router': 'latest'
+      }
+    }
+  },
+  svelte: {
+    files: {
+      'App.svelte': { code: DEFAULT_SVELTE_APP_SVELTE },
+      '/public/index.html': {
+        code: DEFAULT_SVELTE_INDEX_HTML
+      }
+    },
+    mainFile: 'App.svelte',
+    customSetup: {
+      dependencies: {
+        d3: 'latest',
+        'd3-scale': 'latest',
+        'd3-color': 'latest',
+        'd3-interpolate': 'latest',
+        'd3-fetch': 'latest'
+      }
+    }
+  },
+  static: {
+    files: {
+      'index.html': {
+        code: DEFAULT_VANILLA_INDEX_HTML
+      }
+    },
+    mainFile: 'index.html'
+  }
+}
 
 export default function WebsiteGeneratorPage() {
   const [template, setTemplate] = useState<SupportedTemplate['id']>('react-ts')
+
+  return (
+    <SandpackProvider
+      template={template}
+      files={templates[template].files}
+      style={{
+        height: 'calc(100vh - 16rem)'
+      }}
+      options={{
+        externalResources: ['https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css'],
+        initMode: 'user-visible',
+        recompileMode: 'delayed',
+        autorun: true,
+        autoReload: true
+      }}
+      customSetup={{
+        dependencies: templates[template].customSetup.dependencies
+      }}
+    >
+      <WebsiteGeneratorPageContents template={template} setTemplate={setTemplate} />
+    </SandpackProvider>
+  )
+}
+
+type WebsiteGeneratorPageContentsProps = {
+  template: SupportedTemplate['id']
+  setTemplate: (template: SupportedTemplate['id']) => void
+}
+function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) {
+  const { template, setTemplate } = props
   const TemplateButton: React.FC<SupportedTemplate> = (t) => {
     return (
       <button
@@ -242,9 +241,9 @@ export default function WebsiteGeneratorPage() {
     gap-2
     `}
         onClick={async () => {
-          handleRefresh()
-          await sleep(100)
           setTemplate(t.id)
+          await sleep(100)
+          handleRefresh()
         }}
       >
         <div className="w-[18px]">{t.logo}</div>
@@ -253,7 +252,10 @@ export default function WebsiteGeneratorPage() {
     )
   }
 
-  const [code, setCode] = useState<string | undefined>()
+  const { sandpack } = useSandpack()
+  const { runSandpack } = sandpack
+  const { updateCode } = useActiveCode()
+
   const [showCode, setShowCode] = useState(true)
   const [loadingText, setLoadingText] = useState<string | undefined>()
   const [userInput, setUserInput] = useState('')
@@ -318,15 +320,22 @@ export default function WebsiteGeneratorPage() {
     setLoading(false)
   }
 
-  const handleRefresh = () => {
-    setCode(undefined)
+  const { refresh } = useSandpackNavigation()
+
+  const handleRefresh = async () => {
+    refresh()
+
+    const c = templates[template].files[templates[template].mainFile]?.code
+    updateCode(c)
     setUserInput('')
     initChat()
+    runSandpack()
   }
 
   useEffect(() => {
     if (messages?.length > 0) {
-      setCode(lastText)
+      updateCode(lastText)
+      runSandpack()
     }
   }, [lastText])
 
@@ -352,224 +361,151 @@ export default function WebsiteGeneratorPage() {
 
   const { DataSourceConnectModal, openModal } = useDataSourceConnectModal()
 
-  const templates = {
-    'react-ts': {
-      files: {
-        '/public/index.html': {
-          code: DEFAULT_INDEX_HTML
-        },
-        'App.tsx': { code: code || DEFAULT_APP_TSX }
-      },
-      customSetup: {
-        dependencies: {
-          recharts: '2.9.0',
-          'react-router-dom': 'latest',
-          'react-icons': 'latest',
-          'date-fns': 'latest'
-        }
-      }
-    },
-    'vue-ts': {
-      files: {
-        'src/App.vue': { code: code || DEFAULT_APP_VUE },
-        '/public/index.html': {
-          code: DEFAULT_VUE_INDEX_HTML
-        }
-      },
-      customSetup: {
-        dependencies: {
-          recharts: '2.9.0',
-          'date-fns': 'latest',
-          'vue-chartjs': 'latest',
-          'chart.js': 'latest',
-          'vue-router': 'latest'
-        }
-      }
-    },
-    svelte: {
-      files: {
-        'App.svelte': { code: code || DEFAULT_SVELTE_APP_SVELTE },
-        '/public/index.html': {
-          code: DEFAULT_SVELTE_INDEX_HTML
-        }
-      },
-      customSetup: {
-        dependencies: {
-          d3: 'latest',
-          'd3-scale': 'latest',
-          'd3-color': 'latest',
-          'd3-interpolate': 'latest',
-          'd3-fetch': 'latest'
-        }
-      }
-    },
-    static: {
-      files: {
-        'index.html': {
-          code: DEFAULT_VANILLA_INDEX_HTML
-        }
-      }
-    }
-  }
-
   return (
-    <SandpackProvider
-      template={template}
-      files={templates[template].files}
-      style={{
-        height: 'calc(100vh - 16rem)'
-      }}
-      options={{
-        externalResources: ['https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css'],
-        initMode: 'user-visible',
-        recompileMode: 'delayed',
-        autorun: true,
-        autoReload: true
-      }}
-      customSetup={{
-        dependencies: templates[template].customSetup.dependencies
-      }}
-    >
-      <div className={'flex flex-col h-[calc(100vh-11rem)] overflow-y-auto'}>
-        <div className="flex pb-2 justify-between">
-          <span className="font-bold flex flex-col gap-2">
-            <h1 className="content-center">Website Generator</h1>
-            <div className="flex gap-2">
-              {TEMPLATES.map((fw) => (
-                <TemplateButton {...fw} key={fw.id} />
-              ))}
-            </div>
-          </span>
-        </div>
-
-        <DataSourceConnectModal />
-
-        <SandpackLayout
-          style={{
-            display: 'flex',
-            gap: '1rem',
-            backgroundColor: 'rgb(243 244 246 / var(--tw-bg-opacity))',
-            border: 'none',
-            height: '100%'
-          }}
-        >
-          {showCode && (
-            <SandpackCodeEditor
-              style={{
-                height: '100%',
-                borderRadius: '8px',
-                overflowX: 'scroll',
-                maxWidth: '50vw'
-              }}
-              showTabs
-              showLineNumbers
-              showRunButton={true}
-              extensions={[autocompletion()]}
-              extensionsKeymap={[completionKeymap as any]}
-            />
-          )}
-
-          {loading ? (
-            <div
-              className={`flex ${showCode ? 'w-[50%]' : 'w-[100%]'} h-[100%] justify-center items-center content-center align-center`}
-            >
-              <Loader text={loadingText} />
-            </div>
-          ) : (
-            <SandpackPreview
-              id="sandpack-preview"
-              style={{
-                height: '100%',
-                borderRadius: '8px',
-                backgroundColor: 'white'
-              }}
-              showOpenInCodeSandbox={false}
-              actionsChildren={
-                <button
-                  onClick={() => {
-                    const iframe = document.getElementById('sandpack-preview')
-                    if (iframe) {
-                      iframe?.requestFullscreen()
-                    }
-                  }}
-                  className="border rounded-full bg-[#EFEFEF] p-2 text-gray-500 hover:text-gray-800"
-                >
-                  <FiMaximize className="text-gray" />
-                </button>
-              }
-            />
-          )}
-        </SandpackLayout>
-
-        {/* Buttom Input Field Block */}
-        <div className="flex gap-2 fixed bottom-0 left-20 right-5 bottom-3">
-          <div className="relative w-full">
-            <div className="flex gap-2 justify-between">
-              <div>
-                {examplePrompts.map((a) => {
-                  return (
-                    <button
-                      key={a.title}
-                      className="cursor-pointer rounded-full border p-2 text-xs hover:border-gray-300 hover:bg-gray-50"
-                      onClick={() => {
-                        setUserInput(a.value)
-                      }}
-                    >
-                      {a.title}
-                    </button>
-                  )
-                })}
-              </div>
-
-              <div className="flex gap-2 items-center">
-                <button
-                  onClick={() => openModal()}
-                  className="flex items-center justify-center p-0.5 me-2 overflow-hidden text-xs text-gray-900 rounded-lg group bg-gradient-to-br from-red-200 via-red-300 to-yellow-200 group-hover:from-red-200 group-hover:via-red-300 group-hover:to-yellow-200 dark:text-white dark:hover:text-gray-900 focus:ring-4 focus:outline-none focus:ring-red-100 dark:focus:ring-red-400"
-                >
-                  <span className="items-center px-3 py-1.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0 flex gap-2">
-                    <FiDatabase className="text-sm" />
-                    Connect
-                  </span>
-                </button>
-                <ToggleSwitch
-                  checked={showCode}
-                  onChange={handleClickShowCode}
-                  label="show code"
-                  color="gray"
-                ></ToggleSwitch>
-                <button
-                  className="bg-gray-200 cursor-pointer rounded-md border py-1 px-2 hover:border-gray-300 hover:bg-gray-50"
-                  onClick={handleRefresh}
-                >
-                  clear
-                </button>
-              </div>
-            </div>
-
-            {/* prompt input form */}
-            <textarea
-              onCompositionStart={() => setIsComposing(true)}
-              onCompositionEnd={() => setIsComposing(false)}
-              className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2`}
-              placeholder="What kind of website will you create?"
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              onKeyDown={onkeydown}
-              required
-              disabled={loading}
-              rows={3}
-            />
-            <button
-              onClick={() =>
-                ragEnabled ? ragSubmit(userInput, messages) : handleSubmit(userInput, messages)
-              }
-              className="absolute end-2.5 bottom-2.5 rounded-lg hover:bg-gray-200 px-2 py-2"
-            >
-              <FiSend className="text-xl" />
-            </button>
+    <div className={'flex flex-col h-[calc(100vh-11rem)] overflow-y-auto'}>
+      <div className="flex pb-2 justify-between">
+        <span className="font-bold flex flex-col gap-2">
+          <h1 className="content-center">Website Generator</h1>
+          <div className="flex gap-2">
+            {TEMPLATES.map((fw) => (
+              <TemplateButton {...fw} key={fw.id} />
+            ))}
           </div>
+        </span>
+      </div>
+
+      <DataSourceConnectModal />
+
+      <SandpackLayout
+        style={{
+          display: 'flex',
+          gap: '1rem',
+          backgroundColor: 'rgb(243 244 246 / var(--tw-bg-opacity))',
+          border: 'none',
+          height: '100%'
+        }}
+      >
+        {showCode && (
+          <SandpackCodeEditor
+            style={{
+              height: '100%',
+              borderRadius: '8px',
+              overflowX: 'scroll',
+              maxWidth: '50vw'
+            }}
+            showInlineErrors={true}
+            showTabs
+            showLineNumbers
+            showRunButton={true}
+            extensions={[autocompletion()]}
+            extensionsKeymap={[completionKeymap as any]}
+          />
+        )}
+
+        {loading ? (
+          <div
+            className={`flex ${showCode ? 'w-[50%]' : 'w-[100%]'} h-[100%] justify-center items-center content-center align-center`}
+          >
+            <Loader text={loadingText} />
+          </div>
+        ) : (
+          <SandpackPreview
+            id="sandpack-preview"
+            style={{
+              height: '100%',
+              borderRadius: '8px',
+              border: '1px solid white'
+            }}
+            showRestartButton={true}
+            showOpenNewtab={true}
+            showSandpackErrorOverlay={true}
+            showOpenInCodeSandbox={false}
+            showNavigator={true}
+            actionsChildren={
+              <button
+                onClick={() => {
+                  const iframe = document.getElementById('sandpack-preview')
+                  if (iframe) {
+                    iframe?.requestFullscreen()
+                  }
+                }}
+                className="border rounded-full bg-[#EFEFEF] p-2 text-gray-500 hover:text-gray-800"
+              >
+                <FiMaximize className="text-gray" />
+              </button>
+            }
+          />
+        )}
+      </SandpackLayout>
+
+      {/* Buttom Input Field Block */}
+      <div className="flex gap-2 fixed bottom-0 left-20 right-5 bottom-3">
+        <div className="relative w-full">
+          <div className="flex gap-2 justify-between">
+            <div>
+              {examplePrompts.map((a) => {
+                return (
+                  <button
+                    key={a.title}
+                    className="cursor-pointer rounded-full border p-2 text-xs hover:border-gray-300 hover:bg-gray-50"
+                    onClick={() => {
+                      setUserInput(a.value)
+                    }}
+                  >
+                    {a.title}
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="flex gap-2 items-center">
+              <button
+                onClick={() => openModal()}
+                className="flex items-center justify-center p-0.5 me-2 overflow-hidden text-xs text-gray-900 rounded-lg group bg-gradient-to-br from-red-200 via-red-300 to-yellow-200 group-hover:from-red-200 group-hover:via-red-300 group-hover:to-yellow-200 dark:text-white dark:hover:text-gray-900 focus:ring-4 focus:outline-none focus:ring-red-100 dark:focus:ring-red-400"
+              >
+                <span className="items-center px-3 py-1.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0 flex gap-2">
+                  <FiDatabase className="text-sm" />
+                  Connect
+                </span>
+              </button>
+              <ToggleSwitch
+                checked={showCode}
+                onChange={handleClickShowCode}
+                label="show code"
+                color="gray"
+              ></ToggleSwitch>
+              <button
+                className="bg-gray-200 cursor-pointer rounded-md border py-1 px-2 hover:border-gray-300 hover:bg-gray-50"
+                onClick={handleRefresh}
+              >
+                clear
+              </button>
+            </div>
+          </div>
+
+          {/* prompt input form */}
+          <textarea
+            onCompositionStart={() => setIsComposing(true)}
+            onCompositionEnd={() => setIsComposing(false)}
+            className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2`}
+            placeholder="What kind of website will you create?"
+            value={userInput}
+            onChange={(e) => setUserInput(e.target.value)}
+            onKeyDown={onkeydown}
+            required
+            disabled={loading}
+            rows={3}
+          />
+          <button
+            onClick={() =>
+              ragEnabled ? ragSubmit(userInput, messages) : handleSubmit(userInput, messages)
+            }
+            className="absolute end-2.5 bottom-2.5 rounded-lg hover:bg-gray-200 px-2 py-2"
+          >
+            <FiSend className="text-xl" />
+          </button>
         </div>
       </div>
-    </SandpackProvider>
+    </div>
   )
 }
