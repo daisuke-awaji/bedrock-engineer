@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { ToggleSwitch } from 'flowbite-react'
+import { Dropdown, ToggleSwitch } from 'flowbite-react'
+import { GrClearOption } from 'react-icons/gr'
 import { FiDatabase, FiSend } from 'react-icons/fi'
 import prompts from '../../prompts/prompts'
 import ReactLogo from '../../assets/images/icons/react.svg'
@@ -11,7 +12,7 @@ import useLLM from '@renderer/hooks/useLLM'
 import useAdvancedSetting from '@renderer/hooks/useAdvancedSetting'
 import { retrieveAndGenerate } from '@renderer/lib/api'
 import useWebsiteGeneratorSettings from '@renderer/hooks/useWebsiteGeneratorSetting'
-
+import { Tooltip } from 'flowbite-react'
 import { autocompletion, completionKeymap } from '@codemirror/autocomplete'
 import {
   SandpackCodeEditor,
@@ -267,8 +268,11 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     setShowCode(!showCode)
   }
 
+  const [styleType, setStyleType] = useState<string>('tailwind')
   const { handleSubmit, messages, loading, lastText, initChat, setLoading } = useChat({
-    systemPrompt: prompts.WebsiteGenerator.system[template],
+    systemPrompt: prompts.WebsiteGenerator.system[template]({
+      styleType: styleType
+    }),
     modelId: llm.modelId
   })
 
@@ -414,7 +418,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
             style={{
               height: '100%',
               borderRadius: '8px',
-              border: '1px solid white'
+              border: '2px solid white'
             }}
             showRestartButton={true}
             showOpenNewtab={true}
@@ -458,28 +462,42 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
               })}
             </div>
 
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-3 items-center">
               <button
                 onClick={() => openModal()}
-                className="flex items-center justify-center p-0.5 me-2 overflow-hidden text-xs text-gray-900 rounded-lg group bg-gradient-to-br from-red-200 via-red-300 to-yellow-200 group-hover:from-red-200 group-hover:via-red-300 group-hover:to-yellow-200 dark:text-white dark:hover:text-gray-900 focus:ring-4 focus:outline-none focus:ring-red-100 dark:focus:ring-red-400"
+                className="flex items-center justify-center p-[2px] overflow-hidden text-xs text-gray-900 rounded-lg group bg-gradient-to-br from-red-200 via-red-300 to-yellow-200 group-hover:from-red-200 group-hover:via-red-300 group-hover:to-yellow-200 dark:text-white dark:hover:text-gray-900 focus:ring-4 focus:outline-none focus:ring-red-100 dark:focus:ring-red-400"
               >
                 <span className="items-center px-3 py-1.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0 flex gap-2">
                   <FiDatabase className="text-sm" />
                   Connect
                 </span>
               </button>
-              <ToggleSwitch
-                checked={showCode}
-                onChange={handleClickShowCode}
-                label="show code"
-                color="gray"
-              ></ToggleSwitch>
-              <button
-                className="bg-gray-200 cursor-pointer rounded-md border py-1 px-2 hover:border-gray-300 hover:bg-gray-50"
-                onClick={handleRefresh}
+              <Dropdown
+                label={styleType + ' style'}
+                dismissOnClick={true}
+                size="xs"
+                color={'indigo'}
               >
-                clear
-              </button>
+                <Dropdown.Item onClick={() => setStyleType('inline')}>Inline style</Dropdown.Item>
+                <Dropdown.Item onClick={() => setStyleType('tailwind')}>Tailwind.css</Dropdown.Item>
+              </Dropdown>
+              <Tooltip content="show code" placement="bottom" animation="duration-500">
+                <ToggleSwitch
+                  checked={showCode}
+                  onChange={handleClickShowCode}
+                  // label="show code"
+                  color="gray"
+                ></ToggleSwitch>
+              </Tooltip>
+
+              <Tooltip content="clear" placement="bottom" animation="duration-500">
+                <button
+                  className="cursor-pointer rounded-md py-1.5 px-2 hover:border-gray-300 hover:bg-gray-50"
+                  onClick={handleRefresh}
+                >
+                  <GrClearOption className="text-xl" />
+                </button>
+              </Tooltip>
             </div>
           </div>
 
