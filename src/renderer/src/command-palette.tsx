@@ -29,7 +29,9 @@ const CmdK = () => {
           }
 
           const id = Number(e.key)
-          navigate(routes[id - 1].href)
+          if (id > 0 && id <= routes.length) {
+            navigate(routes[id - 1].href)
+          }
         } catch (e) {
           console.log(e)
         }

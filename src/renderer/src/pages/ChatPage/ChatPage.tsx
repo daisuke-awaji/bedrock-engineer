@@ -11,6 +11,15 @@ import useAgentChatSetting from '@renderer/hooks/useAgentChatSetting'
 import useTavilySearch from '@renderer/hooks/useTavilySearch'
 import useAdvancedSetting from '@renderer/hooks/useAdvancedSetting'
 
+const agents = [
+  {
+    name: 'Software Engineer Agent',
+    value: 'softwareAgent',
+    description:
+      'This AI agent understands software project structures and creates files and folders.'
+  }
+]
+
 export default function ChatPage() {
   const [userInput, setUserInput] = useState('')
   const [chatMessages, setMessages] = useState<any>([])
@@ -21,7 +30,8 @@ export default function ChatPage() {
   const { llm } = useLLM()
   const modelId = llm?.modelId
 
-  const systemPrompt = prompts.Chat.system
+  const [agent, setAgent] = useState('softwareAgent')
+  const systemPrompt = prompts.Chat[agent]
 
   const MAX_ITERATIONS = 10
 
@@ -118,7 +128,9 @@ export default function ChatPage() {
       })
       setMessages(msgs)
       setLoading(false)
-      setUserInput('つづけてください')
+      if (agent === 'softwareAgent') {
+        setUserInput('つづけてください')
+      }
 
       // 再帰処理の中から判断したいので、React のステートではなく、electron の store から参照する
       if (getAutomode()) {
@@ -173,7 +185,6 @@ export default function ChatPage() {
       if ('text' in c) {
         return <div className="whitespace-pre-line">{c.text}</div>
       } else if ('toolUse' in c) {
-        // return JSON.stringify(c);
         return (
           <div className="flex flex-col">
             <span className="flex gap-2 items-center">
@@ -251,46 +262,49 @@ export default function ChatPage() {
 
   const { Modal, openModal } = useModal()
 
-  const exampleSenarios = [
-    {
-      title: 'Create a new file',
-      content:
-        'Create a new file called "test.txt" in the current directory with the content "Hello, World!"'
-    },
-    {
-      title: '昨日のニュース',
-      content: `昨日 (${new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() - 1)}) 世界で起きたニュースを教えてください。`
-    },
-    {
-      title: 'シンプルなウェブサイト',
-      content: 'IT企業のかっこいいウェブサイトを HTML, CSS, JavaScript を使って実装してください。'
-    },
-    {
-      title: 'フォルダの整理',
-      content: `${projectPath} のフォルダに含まれる png ファイルだけを抽出して、${projectPath}/images フォルダにコピーしてください。`
-    },
-    {
-      title: 'シンプルな API',
-      content: `Node.js ランタイムの AWS Lambda をデプロイするために、Node.js で記述された lambda.handler のソースコードと、AWS SAM のテンプレートファイル（YAML形式）を作成してください。
-この Lambda は API Gateway と proxy 統合され、インターネットに公開されます。
-ソースコードに記述するロジックはシンプルに "Hello World from AWS Lambda" という文字列を返す実装としてください。
+  const exampleSenarios = {
+    softwareAgent: [
+      {
+        title: 'Create a new file',
+        content:
+          'Create a new file called "test.txt" in the current directory with the content "Hello, World!"'
+      },
+      {
+        title: `Yesterday's News`,
+        content: `What news happened in the world yesterday (${new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() - 1).toLocaleDateString('ja')})?`
+      },
+      {
+        title: 'Simple website',
+        content: 'Create a cool website for an IT company using HTML, CSS, and JavaScript.'
+      },
+      {
+        title: 'Organizing folders',
+        content: `Extract only the png files contained in the ${projectPath} folder and copy them to the ${projectPath}/images folder.`
+      },
+      {
+        title: 'Simple Web API',
+        content: `To deploy AWS Lambda with Node.js runtime, please create the source code of lambda.handler written in Node.js and the template file of AWS SAM (YAML format).
 
-## 補足情報
-Node.js のランタイムバージョン: nodejs18.x
-デプロイするリージョン: 東京リージョン
-`
-    },
-    {
-      title: 'CDKプロジェクト',
-      content: `AWS CDK を使って、S3 バケットを作成し、その中にファイルをアップロードするコードを作成してください。
+This Lambda will be integrated with API Gateway and proxy and will be exposed to the Internet.
+The logic written in the source code should be a simple implementation that returns the string "Hello World from AWS Lambda".
 
-この一連のソースコードは cdk のプロジェクトとして作成するため、ベストプラクティスに従ってプロジェクト構造ごと作成してください。
-package.json や requirement.yaml などの構成ファイルも忘れずに作成してください。
-ファイルをアップロードするコードは bash による Shell Script で実装してください。
-最後にこのプロジェクトを使用する、あるいは開発するために必要となる情報を README.md に丁寧に記述してください。
+## Additional information
+Node.js runtime version: nodejs18.x
+Deployment region: Tokyo region
 `
-    }
-  ]
+      },
+      {
+        title: 'CDK Project',
+        content: `Use AWS CDK to create an S3 bucket and create code to upload a file into it.
+
+This set of source code will be created as a cdk project, so create the project structure according to best practices.
+Don't forget to create configuration files such as package.json and requirement.yaml.
+Implement the code to upload the file in a shell script using bash.
+Finally, carefully describe any information required to use or develop this project in README.md.
+`
+      }
+    ]
+  }
 
   return (
     <React.Fragment>
@@ -326,6 +340,23 @@ package.json や requirement.yaml などの構成ファイルも忘れずに作�
         </Modal>
 
         <div className="flex flex-col gap-2 ">
+          {chatMessages.length === 0 && agents.length > 1 ? (
+            <div className="justify-center flex flex-col items-center gap-2">
+              <span className="text-gray-400 text-xs">Select agent</span>
+              <select
+                className="w-[30vw] bg-gray-50 border border-gray-300 text-gray-600 text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-1.5"
+                value={agent}
+                onChange={(e) => setAgent(e.target.value)}
+              >
+                {agents.map((agent, index) => (
+                  <option key={index} value={agent.value}>
+                    {agent.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
+
           {chatMessages.length === 0 ? (
             <div className="flex flex-col h-[calc(100vh-8rem)] w-full justify-center items-center content-center align-center gap-1">
               <div className="flex flex-row gap-2 items-center">
@@ -336,7 +367,7 @@ package.json や requirement.yaml などの構成ファイルも忘れずに作�
                 This AI agent understands software project structures and creates files and folders.
               </div>
               <div className="grid grid-cols-3 gap-2 pt-6 text-xs">
-                {exampleSenarios.map((senario) => {
+                {exampleSenarios[agent]?.map((senario) => {
                   return (
                     <button
                       key={senario.title}

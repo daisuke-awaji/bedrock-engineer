@@ -76,7 +76,9 @@ const VanillaSandpack: React.FC<SandpackViewerProps> = ({
         )}
 
         {loading ? (
-          <div className="flex w-[50%] h-[100%] justify-center items-center content-center align-center">
+          <div
+            className={`flex ${showCode ? 'w-[50%]' : 'w-[100%]'} h-[100%] justify-center items-center content-center align-center`}
+          >
             <Loader />
           </div>
         ) : (

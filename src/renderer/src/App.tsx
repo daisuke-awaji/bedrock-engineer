@@ -67,10 +67,6 @@ const Layout: React.FC = () => {
   )
 }
 
-// const NotFoundPage = () => {
-//   return <div className="m-2">page not found (to be implemented)</div>
-// }
-
 const router = createBrowserRouter([
   {
     path: '/',

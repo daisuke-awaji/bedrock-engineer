@@ -116,7 +116,7 @@ export default function SettingPage() {
             label="Max Tokens"
             type="number"
             placeholder="Max tokens"
-            value={2048}
+            value={4096}
             min={1}
             max={4096}
             onChange={(e) => {

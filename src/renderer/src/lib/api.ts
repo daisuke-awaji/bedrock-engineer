@@ -1,3 +1,4 @@
+import { RetrieveAndGenerateCommandInput } from '@aws-sdk/client-bedrock-agent-runtime'
 import { ConverseStreamOutput } from '@aws-sdk/client-bedrock-runtime'
 
 type StreamChatCompletionProps = {
@@ -54,4 +55,15 @@ export async function* streamChatCompletion(
       }
     }
   }
+}
+
+export async function retrieveAndGenerate(props: RetrieveAndGenerateCommandInput) {
+  const res = await fetch(`${API_ENDPOINT}/retrieveAndGenerate`, {
+    method: 'POST',
+    body: JSON.stringify(props),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  return res.json()
 }

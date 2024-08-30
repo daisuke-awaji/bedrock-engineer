@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express'
 import cors from 'cors'
 import { bedrock, CallConverseAPIProps } from './bedrock'
 import { RequestHandler, NextFunction } from 'express'
+import { RetrieveAndGenerateCommandInput } from '@aws-sdk/client-bedrock-agent-runtime'
 
 interface PromiseRequestHandler {
   (req: Request, res: Response, next: NextFunction): Promise<unknown>
@@ -60,6 +61,24 @@ api.post(
     }
 
     return res.end()
+  })
+)
+
+type RetrieveAndGenerateCommandInputRequest = CustomRequest<RetrieveAndGenerateCommandInput>
+
+api.post(
+  '/retrieveAndGenerate',
+  wrap(async (req: RetrieveAndGenerateCommandInputRequest, res) => {
+    res.setHeader('Content-Type', 'application/json')
+    try {
+      const result = await bedrock.retrieveAndGenerate(req.body)
+      return res.json(result)
+    } catch (error) {
+      console.log(error)
+      return res.status(500).send(error)
+    }
+
+    return res.status(500).send('error')
   })
 )
 

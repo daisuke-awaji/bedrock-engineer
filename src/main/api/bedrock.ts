@@ -11,9 +11,15 @@ import {
   ConverseStreamCommandOutput,
   Message
 } from '@aws-sdk/client-bedrock-runtime'
+import {
+  BedrockAgentRuntimeClient,
+  RetrieveAndGenerateCommand,
+  RetrieveAndGenerateCommandInput
+} from '@aws-sdk/client-bedrock-agent-runtime'
 
 const client = new BedrockClient()
 const runtimeClient = new BedrockRuntimeClient()
+const agentClient = new BedrockAgentRuntimeClient({ region: 'ap-northeast-1' }) // TODO
 
 export type CallConverseAPIProps = {
   modelId: string
@@ -49,10 +55,17 @@ const listModels = async (): Promise<FoundationModelSummary[] | undefined> => {
   return res.modelSummaries
 }
 
+const retrieveAndGenerate = async (props: RetrieveAndGenerateCommandInput) => {
+  const command = new RetrieveAndGenerateCommand(props)
+  const res = await agentClient.send(command)
+  return res
+}
+
 export const bedrock = {
   listModels,
   converse,
-  converseStream
+  converseStream,
+  retrieveAndGenerate
 }
 
 export type BedrockService = typeof bedrock

@@ -9,6 +9,10 @@ type StoreScheme = {
   figma: {
     personalAccessToken: string
   }
+  websiteGenerator: {
+    // 今だけ Knowledge base にしておく、今後透過的に GitHub のデータソースを元に推論できるUIと機能を実装する
+    knowledgeBaseId: string
+  }
   tavilySearch: {
     apikey: string
   }

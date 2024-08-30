@@ -18,7 +18,7 @@ const client = new BedrockClient()
 const runtimeClient = new BedrockRuntimeClient()
 
 const inferenceConfig = {
-  maxTokens: 4096,
+  maxTokens: 4096, // 8192,
   temperature: 0.5,
   topP: 0.9
 }
@@ -115,7 +115,7 @@ const listModels = async () => {
 
   result?.push({
     modelId: 'us.anthropic.claude-3-5-sonnet-20240620-v1:0',
-    modelName: 'Claude 3 Sonnet (cross region inference)'
+    modelName: 'Claude 3.5 Sonnet (cross region inference)'
   })
 
   cache.set('listModels', result, 180)
