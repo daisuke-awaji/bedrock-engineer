@@ -182,7 +182,10 @@ const templates = {
         code: DEFAULT_VANILLA_INDEX_HTML
       }
     },
-    mainFile: 'index.html'
+    mainFile: 'index.html',
+    customSetup: {
+      dependencies: {}
+    }
   }
 }
 
