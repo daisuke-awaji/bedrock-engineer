@@ -39,6 +39,9 @@ import {
   DEFAULT_VANILLA_INDEX_HTML
 } from './DEFAULT_CODES'
 
+import { converse } from '../../lib/api'
+import { motion } from 'framer-motion'
+
 type SupportedTemplate = {
   id: SandpackPredefinedTemplate
   name: string
@@ -259,6 +262,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   const { sandpack } = useSandpack()
   const { runSandpack } = sandpack
   const { updateCode } = useActiveCode()
+  const [recommendChanges, setRecommendChanges] = useState(examplePrompts)
 
   const [showCode, setShowCode] = useState(true)
   const [loadingText, setLoadingText] = useState<string | undefined>()
@@ -278,6 +282,31 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     }),
     modelId: llm.modelId
   })
+
+  const getRecommendChanges = async (websiteCode: string) => {
+    const result = await converse({
+      modelId: 'anthropic.claude-3-haiku-20240307-v1:0',
+      system: [{ text: prompts.WebsiteGenerator.recommend.system }],
+      messages: [{ role: 'user', content: [{ text: websiteCode }] }]
+    })
+
+    const recommendChanges = result.output.message?.content[0]?.text
+    try {
+      if (recommendChanges) {
+        const json = JSON.parse(recommendChanges)
+        console.log({ json })
+        setRecommendChanges(json)
+      }
+    } catch (e) {
+      console.log(e)
+    }
+  }
+
+  useEffect(() => {
+    if (!loading && messages.length > 0 && lastText) {
+      getRecommendChanges(lastText)
+    }
+  }, [loading, messages])
 
   const RETRIVE_AND_GEN_MODEL_ARN =
     'arn:aws:bedrock:ap-northeast-1::foundation-model/anthropic.claude-3-haiku-20240307-v1:0'
@@ -450,9 +479,11 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
         <div className="relative w-full">
           <div className="flex gap-2 justify-between">
             <div>
-              {examplePrompts.map((a) => {
+              {recommendChanges?.map((a) => {
                 return (
-                  <button
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
                     key={a.title}
                     className="cursor-pointer rounded-full border p-2 text-xs hover:border-gray-300 hover:bg-gray-50"
                     onClick={() => {
@@ -460,7 +491,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
                     }}
                   >
                     {a.title}
-                  </button>
+                  </motion.button>
                 )
               })}
             </div>

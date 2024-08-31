@@ -57,6 +57,23 @@ export async function* streamChatCompletion(
   }
 }
 
+type ConverseProps = {
+  modelId: string
+  system: { text: string }[] | undefined
+  messages: { role: string; content: { text: string }[] }[]
+}
+
+export async function converse(props: ConverseProps) {
+  const res = await fetch(`${API_ENDPOINT}/converse`, {
+    method: 'POST',
+    body: JSON.stringify(props),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  return res.json()
+}
+
 export async function retrieveAndGenerate(props: RetrieveAndGenerateCommandInput) {
   const res = await fetch(`${API_ENDPOINT}/retrieveAndGenerate`, {
     method: 'POST',

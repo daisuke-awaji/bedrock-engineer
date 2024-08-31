@@ -64,6 +64,27 @@ api.post(
   })
 )
 
+type ConverseRequest = CustomRequest<CallConverseAPIProps>
+
+api.post(
+  '/converse',
+  wrap(async (req: ConverseRequest, res) => {
+    res.setHeader('Content-Type', 'application/json')
+
+    try {
+      const result = await bedrock.converse({
+        modelId: req.body.modelId,
+        system: req.body.system,
+        messages: req.body.messages
+      })
+      return res.json(result)
+    } catch (error) {
+      console.log(error)
+      return res.status(500).send(error)
+    }
+  })
+)
+
 type RetrieveAndGenerateCommandInputRequest = CustomRequest<RetrieveAndGenerateCommandInput>
 
 api.post(

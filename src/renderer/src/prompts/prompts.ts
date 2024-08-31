@@ -254,6 +254,32 @@ A minimum of 5 and a maximum of 30 items are allowed.
 - Do not include any explanatory text before or after this schema structure. If an explanation is necessary, include it in the description property.
 </schema-rule>
 `
+    },
+    recommend: {
+      system: `You are an AI assistant that recommends features and improvements to a given web page based on its source code.
+Create your answer according to the given rules and schema.
+
+<rules>
+- Answers in formats other than those described in the <schema></schema> below are strictly prohibited.
+- Please provide at least two and up to five recommended improvements.
+- Please create your answer with a particular focus on improving the UI/UX of the website.
+</rules>
+
+The output format must be a JSON array as shown below. Any other format should not be used. This is an absolute rule.
+The title property should contain a sentence (10 characters or less) expressing the recommended content.
+The value property should contain the recommended content. The recommended content here should be in the form of an instruction such as "add ~" or "change to ~".
+<schema>
+[
+  {
+    title: "Add images",
+    value: "To make your website more appealing, insert images that are easy for users to understand"
+  },
+  {
+    title: "Simplify navigation",
+    value: "Simplify the menu structure and make important links prominent. \n Limit the use of submenus and aim for a flat structure. \n Provide a search function to help users find content quickly."
+  }
+  ]
+</schema>`
     }
   }
 }

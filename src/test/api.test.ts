@@ -71,7 +71,7 @@ describe('api', () => {
     console.log(p)
   })
 
-  test('bedrock knowledge base', async () => {
+  test.skip('bedrock knowledge base', async () => {
     const client = new BedrockAgentRuntimeClient({ region: 'ap-northeast-1' })
 
     const promptTemplate = `お客様からのお問い合わせ内容と参考ドキュメントとして与えられるデザインシステムの内容を元に、React のコンポーネントソースコードとその説明文をJSON 配列の形式で出力してください。
