@@ -284,6 +284,10 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   })
 
   const getRecommendChanges = async (websiteCode: string) => {
+    let retry = 0
+    if (retry > 3) {
+      return
+    }
     const result = await converse({
       modelId: 'anthropic.claude-3-haiku-20240307-v1:0',
       system: [{ text: prompts.WebsiteGenerator.recommend.system }],
@@ -299,6 +303,8 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
       }
     } catch (e) {
       console.log(e)
+      retry += 1
+      return getRecommendChanges(websiteCode)
     }
   }
 
