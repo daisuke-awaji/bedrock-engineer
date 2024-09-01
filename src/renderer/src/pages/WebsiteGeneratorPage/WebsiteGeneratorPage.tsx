@@ -11,7 +11,6 @@ import { useChat } from '@renderer/hooks/useChat'
 import useLLM from '@renderer/hooks/useLLM'
 import useAdvancedSetting from '@renderer/hooks/useAdvancedSetting'
 import { retrieveAndGenerate } from '@renderer/lib/api'
-import useWebsiteGeneratorSettings from '@renderer/hooks/useWebsiteGeneratorSetting'
 import { autocompletion, completionKeymap } from '@codemirror/autocomplete'
 import {
   SandpackCodeEditor,
@@ -41,6 +40,8 @@ import {
 import { converse } from '../../lib/api'
 import { motion } from 'framer-motion'
 import LoadingDotsLottie from './LoadingDots.lottie'
+import LoadingDataBaseLottie from './LoadingDataBase.lottie'
+import LazyVisibleMessage from './LazyVisibleMessage'
 
 type SupportedTemplate = {
   id: SandpackPredefinedTemplate
@@ -323,11 +324,10 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   const [recommendLoading, setRecommendLoading] = useState(false)
 
   const [showCode, setShowCode] = useState(true)
-  const [loadingText, setLoadingText] = useState<string | undefined>()
+  // const [loadingText, setLoadingText] = useState<string | undefined>()
+  const [ragLoading, setRagLoading] = useState<boolean>(false)
   const [userInput, setUserInput] = useState('')
   const { llm } = useLLM()
-  const { kbId } = useWebsiteGeneratorSettings()
-  const ragEnabled = !!kbId
 
   const handleClickShowCode = () => {
     setShowCode(!showCode)
@@ -339,7 +339,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   })
   const { handleSubmit, messages, loading, lastText, initChat, setLoading } = useChat({
     systemPrompt: prompts.WebsiteGenerator.system[template]({
-      styleType: styleType
+      styleType: styleType.value
     }),
     modelId: llm.modelId
   })
@@ -382,11 +382,14 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   const ragSubmit = async (input: string, messages) => {
     setLoading(true)
 
-    setLoadingText('Quering datasource...')
+    setRagLoading(true)
     const promptTemplate = prompts.WebsiteGenerator.rag.promptTemplate
-    const inputText =
-      'Please provide a sample of React source code that is relevant to the following instructions.\n' +
-      userInput
+    const inputText = `Consider the React component elements required to achieve the following requirements and provide relevant React source code examples.
+
+Examples of React components: button, accordion, breadcrumb list, checkbox, divider, input, error text, label, link, radio button
+
+Requirements: \n`
+    userInput
 
     const res = await retrieveAndGenerate({
       input: {
@@ -413,10 +416,12 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
 
     console.log(res?.output?.text)
 
-    setLoadingText('Generating code...')
+    setRagLoading(false)
+
     await handleSubmit(
       input +
         '\nCreate website based on the example source code below.\n' +
+        '\n!Important: The style should follow the sample code as closely as possible, and exceptions should be avoided wherever possible.\n' +
         '<code>\n' +
         res?.output?.text +
         '</code>\n',
@@ -469,7 +474,8 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     }
   }
 
-  const { DataSourceConnectModal, openModal } = useDataSourceConnectModal()
+  const { kbId, DataSourceConnectModal, openModal } = useDataSourceConnectModal()
+  const ragEnabled = !!kbId
 
   return (
     <div className={'flex flex-col h-[calc(100vh-11rem)] overflow-y-auto'}>
@@ -517,7 +523,17 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
           <div
             className={`flex ${showCode ? 'w-[50%]' : 'w-[100%]'} h-[100%] justify-center items-center content-center align-center`}
           >
-            <Loader text={loadingText} />
+            {ragLoading ? (
+              <div className="flex flex-col justify-center items-center gap-2">
+                <LoadingDataBaseLottie className="w-[6rem]" />
+                <span className="text-sm text-gray-400">Connecting datasource...</span>
+                <span className="text-xs text-gray-400">
+                  <LazyVisibleMessage message="Searching for related source code" />
+                </span>
+              </div>
+            ) : (
+              <Loader text={'Generating code...'} />
+            )}
           </div>
         ) : (
           <SandpackPreview

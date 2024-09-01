@@ -52,7 +52,7 @@ const useDataSourceConnectModal = () => {
     </Modal>
   )
 
-  return { DataSourceConnectModal, openModal }
+  return { kbId, DataSourceConnectModal, openModal }
 }
 
 export default useDataSourceConnectModal

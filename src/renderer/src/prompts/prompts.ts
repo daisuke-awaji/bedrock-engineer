@@ -109,15 +109,15 @@ ${
   - recharts
   - react-router-dom
   - react-icons
-  - @mui/material
-  - @emotion/react
-  - @emotion/styled
-  - @fontsource/roboto
-  - @mui/icons-material
+  ${props.styleType === 'mui' ? '- @mui/material' : null}
+  ${props.styleType === 'mui' ? '- @mui/icons-material' : null}
+  ${props.styleType === 'mui' ? '- @mui/material' : null}
+  ${props.styleType === 'mui' ? '- @mui/material' : null}
 - ONLY IF the user asks for a dashboard, graph or chart, the recharts library is available to be imported, e.g. \`import { LineChart, XAxis, ... } from "recharts"\` & \`<LineChart ...><XAxis dataKey="name"> ...\`. Please only use this when needed.
 - NO OTHER LIBRARIES (e.g. zod, hookform) ARE INSTALLED OR ABLE TO BE IMPORTED.
 - !Important Rule: Triple backticks or triple backquotes (\`\`\`) must not be output.
 - Please ONLY return the full React code starting with the imports, nothing else. It's very important for my job that you only return the React code with imports. DO NOT START WITH \`\`\`typescript or \`\`\`javascript or \`\`\`tsx or \`\`\`.
+- !Important Rule: dont import relative path module (like import { Button } from './Button';)
 - Any text other than the source code is strictly prohibited. Greetings, chatting, explanations of rules, etc. are strictly prohibited.
 - The generated application will be displayed to the full screen, but this may be changed if specified.
 - If necessary, source code that fetches and displays the API will also be generated.
