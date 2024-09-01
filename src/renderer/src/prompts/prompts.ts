@@ -7,7 +7,7 @@ type SystemPromptProps = {
 }
 
 type WebsiteGeneratorPromptProps = {
-  styleType: 'tailwind' | 'inline'
+  styleType: 'tailwind' | 'inline' | 'mui'
 }
 
 const prompts = {
@@ -96,16 +96,24 @@ ${
     ? `
 - Use Tailwind classes for styling. DO NOT USE ARBITRARY VALUES (e.g. \`h-[600px]\`). Make sure to use a consistent color palette.
 `
-    : `
+    : props.styleType === 'mui'
+      ? `
+- Use Material UI for styling.
+`
+      : `
 - Use plane css styles for styling. Don't import css files, write inline JavaScript file for HTML file.
 `
 }
-
 
 - The following libraries can be used:
   - recharts
   - react-router-dom
   - react-icons
+  - @mui/material
+  - @emotion/react
+  - @emotion/styled
+  - @fontsource/roboto
+  - @mui/icons-material
 - ONLY IF the user asks for a dashboard, graph or chart, the recharts library is available to be imported, e.g. \`import { LineChart, XAxis, ... } from "recharts"\` & \`<LineChart ...><XAxis dataKey="name"> ...\`. Please only use this when needed.
 - NO OTHER LIBRARIES (e.g. zod, hookform) ARE INSTALLED OR ABLE TO BE IMPORTED.
 - !Important Rule: Triple backticks or triple backquotes (\`\`\`) must not be output.

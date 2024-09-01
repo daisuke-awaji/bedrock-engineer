@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Dropdown, ToggleSwitch } from 'flowbite-react'
+import { Dropdown, ToggleSwitch, Tooltip } from 'flowbite-react'
 import { GrClearOption } from 'react-icons/gr'
 import { FiDatabase, FiSend } from 'react-icons/fi'
 import prompts from '../../prompts/prompts'
@@ -12,7 +12,6 @@ import useLLM from '@renderer/hooks/useLLM'
 import useAdvancedSetting from '@renderer/hooks/useAdvancedSetting'
 import { retrieveAndGenerate } from '@renderer/lib/api'
 import useWebsiteGeneratorSettings from '@renderer/hooks/useWebsiteGeneratorSetting'
-import { Tooltip } from 'flowbite-react'
 import { autocompletion, completionKeymap } from '@codemirror/autocomplete'
 import {
   SandpackCodeEditor,
@@ -41,6 +40,7 @@ import {
 
 import { converse } from '../../lib/api'
 import { motion } from 'framer-motion'
+import LoadingDotsLottie from './LoadingDots.lottie'
 
 type SupportedTemplate = {
   id: SandpackPredefinedTemplate
@@ -139,7 +139,12 @@ const templates = {
         recharts: '2.9.0',
         'react-router-dom': 'latest',
         'react-icons': 'latest',
-        'date-fns': 'latest'
+        'date-fns': 'latest',
+        '@mui/material': 'latest',
+        '@emotion/react': 'latest',
+        '@emotion/styled': 'latest',
+        '@fontsource/roboto': 'latest',
+        '@mui/icons-material': 'latest'
       }
     }
   },
@@ -190,6 +195,58 @@ const templates = {
       dependencies: {}
     }
   }
+}
+
+type Style = {
+  label: string
+  value: string
+}
+
+const supportedStyles = {
+  'react-ts': [
+    {
+      label: 'Inline style',
+      value: 'inline'
+    },
+    {
+      label: 'Tailwind.css',
+      value: 'tailwind'
+    },
+    {
+      label: 'Material UI',
+      value: 'mui'
+    }
+  ],
+  'vue-ts': [
+    {
+      label: 'Inline style',
+      value: 'inline'
+    },
+    {
+      label: 'Tailwind.css',
+      value: 'tailwind'
+    }
+  ],
+  svelte: [
+    {
+      label: 'Inline style',
+      value: 'inline'
+    },
+    {
+      label: 'Tailwind.css',
+      value: 'tailwind'
+    }
+  ],
+  static: [
+    {
+      label: 'Inline style',
+      value: 'inline'
+    },
+    {
+      label: 'Tailwind.css',
+      value: 'tailwind'
+    }
+  ]
 }
 
 export default function WebsiteGeneratorPage() {
@@ -263,6 +320,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   const { runSandpack } = sandpack
   const { updateCode } = useActiveCode()
   const [recommendChanges, setRecommendChanges] = useState(examplePrompts)
+  const [recommendLoading, setRecommendLoading] = useState(false)
 
   const [showCode, setShowCode] = useState(true)
   const [loadingText, setLoadingText] = useState<string | undefined>()
@@ -275,7 +333,10 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     setShowCode(!showCode)
   }
 
-  const [styleType, setStyleType] = useState<string>('tailwind')
+  const [styleType, setStyleType] = useState<Style>({
+    label: 'Tailwind.css',
+    value: 'tailwind'
+  })
   const { handleSubmit, messages, loading, lastText, initChat, setLoading } = useChat({
     systemPrompt: prompts.WebsiteGenerator.system[template]({
       styleType: styleType
@@ -288,6 +349,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     if (retry > 3) {
       return
     }
+    setRecommendLoading(true)
     const result = await converse({
       modelId: 'anthropic.claude-3-haiku-20240307-v1:0',
       system: [{ text: prompts.WebsiteGenerator.recommend.system }],
@@ -300,6 +362,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
         const json = JSON.parse(recommendChanges)
         console.log({ json })
         setRecommendChanges(json)
+        setRecommendLoading(false)
       }
     } catch (e) {
       console.log(e)
@@ -370,6 +433,11 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     const c = templates[template].files[templates[template].mainFile]?.code
     updateCode(c)
     setUserInput('')
+    setStyleType({
+      label: 'Tailwind.css',
+      value: 'tailwind'
+    })
+    setRecommendChanges(examplePrompts)
     initChat()
     runSandpack()
   }
@@ -424,7 +492,8 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
           gap: '1rem',
           backgroundColor: 'rgb(243 244 246 / var(--tw-bg-opacity))',
           border: 'none',
-          height: '100%'
+          height: '100%',
+          zIndex: '0'
         }}
       >
         {showCode && (
@@ -485,21 +554,25 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
         <div className="relative w-full">
           <div className="flex gap-2 justify-between">
             <div>
-              {recommendChanges?.map((a) => {
-                return (
-                  <motion.button
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    key={a.title}
-                    className="cursor-pointer rounded-full border p-2 text-xs hover:border-gray-300 hover:bg-gray-50"
-                    onClick={() => {
-                      setUserInput(a.value)
-                    }}
-                  >
-                    {a.title}
-                  </motion.button>
-                )
-              })}
+              {recommendLoading ? (
+                <LoadingDotsLottie className="h-[2rem]" />
+              ) : (
+                recommendChanges?.map((a) => {
+                  return (
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      key={a.title}
+                      className="cursor-pointer rounded-full border p-2 text-xs hover:border-gray-300 hover:bg-gray-50"
+                      onClick={() => {
+                        setUserInput(a.value)
+                      }}
+                    >
+                      {a.title}
+                    </motion.button>
+                  )
+                })
+              )}
             </div>
 
             <div className="flex gap-3 items-center">
@@ -512,14 +585,14 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
                   Connect
                 </span>
               </button>
-              <Dropdown
-                label={styleType + ' style'}
-                dismissOnClick={true}
-                size="xs"
-                color={'indigo'}
-              >
-                <Dropdown.Item onClick={() => setStyleType('inline')}>Inline style</Dropdown.Item>
-                <Dropdown.Item onClick={() => setStyleType('tailwind')}>Tailwind.css</Dropdown.Item>
+              <Dropdown label={styleType.label} dismissOnClick={true} size="xs" color={'indigo'}>
+                {supportedStyles[template]?.map((s) => {
+                  return (
+                    <Dropdown.Item key={s.value} onClick={() => setStyleType(s)}>
+                      {s.label}
+                    </Dropdown.Item>
+                  )
+                })}
               </Dropdown>
               <Tooltip content="show code" placement="bottom" animation="duration-500">
                 <ToggleSwitch
@@ -545,7 +618,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
           <textarea
             onCompositionStart={() => setIsComposing(true)}
             onCompositionEnd={() => setIsComposing(false)}
-            className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2`}
+            className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2 z-10`}
             placeholder="What kind of website will you create?"
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}

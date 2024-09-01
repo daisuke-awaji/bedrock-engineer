@@ -180,7 +180,7 @@ After that, send a message to the SQS queue for each delayed order.`
           <textarea
             onCompositionStart={() => setIsComposing(true)}
             onCompositionEnd={() => setIsComposing(false)}
-            className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2`}
+            className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2 z-10`}
             placeholder="What kind of step functions will you create?"
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
