@@ -68,6 +68,8 @@ https://github.com/user-attachments/assets/d28c2ab1-70f4-4ce0-9537-cf89a2c31ad4
 
 By connecting to the Knowledge base for Amazon Bedrock, you can generate a website using any design system, project source code, website styles, etc. as reference.
 
+You need to store source code and crawled web pages in the knowledge base in advance. When you register source code in the knowledge base, it is recommended that you convert it into a format that LLM can easily understand using a method such as gpt-repositoy-loader.
+
 ![knowledgebase-connect](./assets//knowledgebase-connect.gif)
 
 Click the "Connect" button at the bottom of the screen and enter your Knowledge base ID.
