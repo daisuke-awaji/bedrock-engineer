@@ -145,7 +145,9 @@ const templates = {
         '@emotion/react': 'latest',
         '@emotion/styled': 'latest',
         '@fontsource/roboto': 'latest',
-        '@mui/icons-material': 'latest'
+        '@mui/icons-material': 'latest',
+        '@cloudscape-design/components': 'latest',
+        '@cloudscape-design/global-styles': 'latest'
       }
     }
   },

@@ -113,6 +113,8 @@ ${
   ${props.styleType === 'mui' ? '- @mui/icons-material' : null}
   ${props.styleType === 'mui' ? '- @mui/material' : null}
   ${props.styleType === 'mui' ? '- @mui/material' : null}
+  - @cloudscape-design/components
+  - @cloudscape-design/global-styles
 - ONLY IF the user asks for a dashboard, graph or chart, the recharts library is available to be imported, e.g. \`import { LineChart, XAxis, ... } from "recharts"\` & \`<LineChart ...><XAxis dataKey="name"> ...\`. Please only use this when needed.
 - NO OTHER LIBRARIES (e.g. zod, hookform) ARE INSTALLED OR ABLE TO BE IMPORTED.
 - !Important Rule: Triple backticks or triple backquotes (\`\`\`) must not be output.

@@ -70,6 +70,10 @@ By connecting to the Knowledge base for Amazon Bedrock, you can generate a websi
 
 ![knowledgebase-connect](./assets//knowledgebase-connect.gif)
 
+Click the "Connect" button at the bottom of the screen and enter your Knowledge base ID.
+
+https://github.com/user-attachments/assets/23181de3-0ae1-43f3-8fe3-149f1f0108be
+
 The following styles are also supported as presets:
 
 - Inline styling
