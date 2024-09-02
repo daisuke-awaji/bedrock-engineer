@@ -64,6 +64,18 @@ https://github.com/user-attachments/assets/838fc854-f310-40dc-8237-f82ffd623ef3
 
 https://github.com/user-attachments/assets/d28c2ab1-70f4-4ce0-9537-cf89a2c31ad4
 
+## Connect datasource for your design system
+
+By connecting to the Knowledge base for Amazon Bedrock, you can generate a website using any design system, project source code, website styles, etc. as reference.
+
+![knowledgebase-connect](./assets//knowledgebase-connect.gif)
+
+The following styles are also supported as presets:
+
+- Inline styling
+- Tailwind.css
+- Material UI (React mode only)
+
 ### Step Function Generator
 
 https://github.com/user-attachments/assets/17756811-6314-438f-a13d-61af10c1963e
