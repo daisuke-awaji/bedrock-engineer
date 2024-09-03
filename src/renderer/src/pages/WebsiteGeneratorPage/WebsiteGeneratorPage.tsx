@@ -320,13 +320,14 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   }
 
   const { sandpack } = useSandpack()
+
   const { runSandpack } = sandpack
+
   const { updateCode } = useActiveCode()
   const [recommendChanges, setRecommendChanges] = useState(examplePrompts)
   const [recommendLoading, setRecommendLoading] = useState(false)
 
   const [showCode, setShowCode] = useState(true)
-  // const [loadingText, setLoadingText] = useState<string | undefined>()
   const [ragLoading, setRagLoading] = useState<boolean>(false)
   const [userInput, setUserInput] = useState('')
   const { llm } = useLLM()
@@ -385,14 +386,41 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     setLoading(true)
 
     setRagLoading(true)
+
+    // 必要となるコンポーネントの名称を取得
+    const components = await converse({
+      modelId: 'anthropic.claude-3-haiku-20240307-v1:0',
+      system: [
+        {
+          text: `You are an AI assistant that suggests the necessary web component elements according to the given requirements. Please create your answer according to the following rules.
+
+<rules>
+- Please answer the necessary web components in English, separated by commas, in the following format:
+Button, BreadCrumb, List, Checkbox, Divider, Input, Error Text, Label, Link, Radio Button
+</rules>
+`
+        }
+      ],
+      messages: [{ role: 'user', content: [{ text: input }] }]
+    })
     const promptTemplate = prompts.WebsiteGenerator.rag.promptTemplate
-    const inputText = `Consider the React component elements required to achieve the following requirements and provide relevant React source code examples.
+    const inputText = `Follow these instructions to create a website that conforms to the requirements described in <website-requirements>.
 
-Examples of React components: button, accordion, breadcrumb list, checkbox, divider, input, error text, label, link, radio button
+Please provide examples of the React source code needed to create the components described in <components> that achieve these requirements.
+If the data source contains programs written in a language other than React, please extract the source code equivalent for the web styles.
 
-Requirements: \n`
-    userInput
+<components>
+${components.output.message?.content[0]?.text}
+</components>
 
+<website-requirements>
+${input}
+</website-requirements>
+`
+
+    console.log(components.output.message?.content[0]?.text)
+
+    // Knowledge base から関連コードの取得
     const res = await retrieveAndGenerate({
       input: {
         text: inputText
@@ -420,15 +448,20 @@ Requirements: \n`
 
     setRagLoading(false)
 
-    await handleSubmit(
-      input +
-        '\nCreate website based on the example source code below.\n' +
-        '\n!Important: The style should follow the sample code as closely as possible, and exceptions should be avoided wherever possible.\n' +
-        '<code>\n' +
-        res?.output?.text +
-        '</code>\n',
-      messages
-    )
+    const prompt = `Create a website based on the sample source code below.
+Important: The style should follow the sample code as closely as possible. Even if the system prompts you about the style you should use, the style in the sample code should be your first priority. If there is a designated design system, use it.
+
+<code>
+${res?.output.text}
+</code>
+
+<website-requirements>
+${input}
+</website-requirements>
+
+!Important rule: Do not import modules with relative paths (e.g. import { Button } from './Button';) If you have required components, put them all in the same file.
+`
+    await handleSubmit(prompt, messages)
     setLoading(false)
   }
 
@@ -476,8 +509,9 @@ Requirements: \n`
     }
   }
 
-  const { kbId, DataSourceConnectModal, openModal } = useDataSourceConnectModal()
-  const ragEnabled = !!kbId
+  const { kbId, DataSourceConnectModal, openModal, enableKnowledgeBase } =
+    useDataSourceConnectModal()
+  const ragEnabled = !!kbId && enableKnowledgeBase
 
   return (
     <div className={'flex flex-col h-[calc(100vh-11rem)] overflow-y-auto'}>
@@ -568,7 +602,7 @@ Requirements: \n`
       </SandpackLayout>
 
       {/* Buttom Input Field Block */}
-      <div className="flex gap-2 fixed bottom-0 left-20 right-5 bottom-3">
+      <div className="flex gap-2 fixed bottom-0 left-20 right-5 bottom-3 z-10">
         <div className="relative w-full">
           <div className="flex gap-2 justify-between">
             <div>
@@ -636,7 +670,7 @@ Requirements: \n`
           <textarea
             onCompositionStart={() => setIsComposing(true)}
             onCompositionEnd={() => setIsComposing(false)}
-            className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2 z-10`}
+            className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2`}
             placeholder="What kind of website will you create?"
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
@@ -649,7 +683,8 @@ Requirements: \n`
             onClick={() =>
               ragEnabled ? ragSubmit(userInput, messages) : handleSubmit(userInput, messages)
             }
-            className="absolute end-2.5 bottom-2.5 rounded-lg hover:bg-gray-200 px-2 py-2"
+            className={`absolute end-2.5 bottom-2.5 rounded-lg hover:bg-gray-200 px-2 py-2`}
+            disabled={loading}
           >
             <FiSend className="text-xl" />
           </button>

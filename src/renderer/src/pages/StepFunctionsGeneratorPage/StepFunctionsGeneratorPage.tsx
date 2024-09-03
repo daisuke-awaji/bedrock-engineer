@@ -120,7 +120,7 @@ After that, send a message to the SQS queue for each delayed order.`
   ]
 
   return (
-    <div className={'flex flex-col h-[calc(100vh-11rem)] overflow-y-auto'}>
+    <div className={'flex flex-col h-[calc(100vh-11rem)] overflow-y-auto z-10'}>
       <div className="flex pb-2 justify-between">
         <span className="font-bold flex gap-2">
           <div className="content-center">
@@ -180,7 +180,7 @@ After that, send a message to the SQS queue for each delayed order.`
           <textarea
             onCompositionStart={() => setIsComposing(true)}
             onCompositionEnd={() => setIsComposing(false)}
-            className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2 z-10`}
+            className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2`}
             placeholder="What kind of step functions will you create?"
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}

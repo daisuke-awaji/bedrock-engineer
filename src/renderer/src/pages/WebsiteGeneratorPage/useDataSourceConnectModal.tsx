@@ -1,5 +1,6 @@
 import useModal from '@renderer/hooks/useModal'
 import useWebsiteGeneratorSettings from '@renderer/hooks/useWebsiteGeneratorSetting'
+import { ToggleSwitch } from 'flowbite-react'
 import { FiCpu, FiDatabase } from 'react-icons/fi'
 
 const RETRIVE_AND_GEN_MODEL_ARN =
@@ -7,7 +8,8 @@ const RETRIVE_AND_GEN_MODEL_ARN =
 
 const useDataSourceConnectModal = () => {
   const { Modal, openModal } = useModal()
-  const { kbId, setKnowledgeBaseId } = useWebsiteGeneratorSettings()
+  const { kbId, setKnowledgeBaseId, enableKnowledgeBase, setEnableKnowledgeBase } =
+    useWebsiteGeneratorSettings()
 
   const DataSourceConnectModal = () => (
     <Modal header="Connect Datasource">
@@ -32,6 +34,19 @@ const useDataSourceConnectModal = () => {
           />
         </div>
         <div className="grid grid-cols-3 items-center justify-center">
+          <div></div>
+          <div className="grid grid-cols-3 items-center justify-center">
+            <ToggleSwitch
+              checked={enableKnowledgeBase}
+              onChange={() => setEnableKnowledgeBase(!enableKnowledgeBase)}
+              color="gray"
+            ></ToggleSwitch>
+            <span className="col-span-1 text-sm text-gray-500">
+              {enableKnowledgeBase ? 'Enable' : 'Disable'}
+            </span>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 items-center justify-center">
           <label className="flex items-center gap-2 block mb-2 text-sm font-medium text-gray-900 dark:text-white">
             <FiCpu className="text-lg" />
             Model arn
@@ -52,7 +67,7 @@ const useDataSourceConnectModal = () => {
     </Modal>
   )
 
-  return { kbId, DataSourceConnectModal, openModal }
+  return { kbId, DataSourceConnectModal, openModal, enableKnowledgeBase }
 }
 
 export default useDataSourceConnectModal
