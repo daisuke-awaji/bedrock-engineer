@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { FcElectronics, FcFolder, FcSupport, FcVoicePresentation } from 'react-icons/fc'
 import { FiSend } from 'react-icons/fi'
 import { RiRobot2Line } from 'react-icons/ri'
@@ -9,6 +9,7 @@ import useAgentChatSetting from '@renderer/hooks/useAgentChatSetting'
 import useTavilySearch from '@renderer/hooks/useTavilySearch'
 import useAdvancedSetting from '@renderer/hooks/useAdvancedSetting'
 import useToolSettingModal from './useToolSettingModal'
+import useScroll from '@renderer/hooks/useScroll'
 
 const agents = [
   {
@@ -324,14 +325,20 @@ Finally, carefully describe any information required to use or develop this proj
       }
     ]
   }
+  const { scrollToBottom } = useScroll()
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [loading])
 
   return (
     <React.Fragment>
       <div
-        className={`flex flex-col h-[calc(100vh-8rem)] overflow-y-auto mx-auto min-w-[320px] max-w-[2048px]`}
+        className={`flex flex-col h-[calc(100vh-12rem)] overflow-y-auto mx-auto min-w-[320px] max-w-[2048px]`}
+        id="main"
       >
         <ToolSettingModal />
-        <div className="flex flex-col gap-2 ">
+        <div className="flex flex-col gap-2 h-full">
           {chatMessages.length === 0 && agents.length > 1 ? (
             <div className="justify-center flex flex-col items-center gap-2">
               <span className="text-gray-400 text-xs">Select agent</span>
@@ -350,7 +357,7 @@ Finally, carefully describe any information required to use or develop this proj
           ) : null}
 
           {chatMessages.length === 0 ? (
-            <div className="flex flex-col h-[calc(100vh-8rem)] w-full justify-center items-center content-center align-center gap-1">
+            <div className="flex flex-col pt-12 h-full w-full justify-center items-center content-center align-center gap-1">
               <div className="flex flex-row gap-2 items-center">
                 <h1 className="text-lg font-bold">Agent Chat</h1>
                 <RiRobot2Line className="text-[1.5rem] font-bold" />
