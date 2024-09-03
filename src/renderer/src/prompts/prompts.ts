@@ -248,7 +248,6 @@ ${
   $search_results$
 - Carefully consider the size, color, and other general accessibility recommendations for React components, and respond by following the documentation as closely as possible.
 - Give priority to searching the source code listed on GitHub.
-- Please also include the name of the design system.
 </rule>
 
 The structure of the JSON array and a sample are as follows.
@@ -273,8 +272,6 @@ A minimum of 5 and a maximum of 30 items are allowed.
 </schema-rule>
 
 <output-example>
-Design System Name: cloudscape design system
-
 [
   {
     "description": "Button component to add new tasks",

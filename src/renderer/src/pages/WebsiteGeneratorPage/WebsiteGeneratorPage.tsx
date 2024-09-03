@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { Dropdown, ToggleSwitch, Tooltip } from 'flowbite-react'
 import { GrClearOption } from 'react-icons/gr'
-import { FiDatabase, FiSend } from 'react-icons/fi'
+import { FiSend } from 'react-icons/fi'
+import { BsDatabaseCheck, BsDatabase } from 'react-icons/bs'
 import prompts from '../../prompts/prompts'
 import ReactLogo from '../../assets/images/icons/react.svg'
 import VueLogo from '../../assets/images/icons/vue.svg'
@@ -74,7 +75,7 @@ const TEMPLATES: SupportedTemplate[] = [
 
 const examplePrompts = [
   {
-    title: 'E-commerce site for plants',
+    title: 'EC site for plants',
     value: `Create the basic structure and layout of an e-commerce website that specializes in potted plants, with the following conditions:
 <Conditions>
 - The layout likes Amazon.com.
@@ -86,7 +87,7 @@ Following the previous output, create a function to add to the shopping cart.
 Following the previous output, create a function to check what is currently in the shopping cart and calculate the total amount.`
   },
   {
-    title: 'Health and fitness site',
+    title: 'Health & Fitness site',
     value: `Create the basic structure and layout of a health and fitness website, with the following conditions:
 <Conditions>
 - The layout likes Amazon.com.
@@ -98,7 +99,7 @@ Following the previous output, create a function to search for health and fitnes
 Following the previous output, create a function to add comments to the blog.`
   },
   {
-    title: 'Drawing a graph',
+    title: 'Drawing Graph',
     value: `Please visualize the following as a graph on your website.
 
 Purchase data CSV file
@@ -124,6 +125,47 @@ This CSV file contains the following information:
   {
     title: 'To-do app',
     value: `Create a simple to-do app website`
+  },
+  {
+    title: 'Code Transform',
+    value: `Transform the following code:
+
+using Android.App;
+using Android.OS;
+using Android.Support.V7.App;
+using Android.Runtime;
+using Android.Widget;
+using System.Data.SQLite;
+using System;
+using Xamarin.Essentials;
+using System.Linq;
+namespace App2
+{
+    [Activity(Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher = true)]
+    public class MainActivity : AppCompatActivity
+    {
+        protected override void OnCreate(Bundle savedInstanceState)
+        {
+            base.OnCreate(savedInstanceState);
+            Xamarin.Essentials.Platform.Init(this, savedInstanceState);
+            SetContentView(Resource.Layout.activity_main);
+            EditText input1 = FindViewById<EditText>(Resource.Id.Input1);
+            EditText input2 = FindViewById<EditText>(Resource.Id.Input2);
+            TextView total = FindViewById<TextView>(Resource.Id.Total);
+            Button totalButton = FindViewById<Button>(Resource.Id.TotalButton);
+            totalButton.Click += (sender, e) =>
+            {
+                total.Text = (int.Parse(input1.Text) + int.Parse(input2.Text)).ToString("#,0");
+            }
+        }
+        public override void OnRequestPermissionsResult(int requestCode, string[] permissions,
+            [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
+        {
+            Xamarin.Essentials.Platform.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+            base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
+}`
   }
 ]
 const templates = {
@@ -633,8 +675,12 @@ ${input}
                 className="flex items-center justify-center p-[2px] overflow-hidden text-xs text-gray-900 rounded-lg group bg-gradient-to-br from-red-200 via-red-300 to-yellow-200 group-hover:from-red-200 group-hover:via-red-300 group-hover:to-yellow-200 dark:text-white dark:hover:text-gray-900 focus:ring-4 focus:outline-none focus:ring-red-100 dark:focus:ring-red-400"
               >
                 <span className="items-center px-3 py-1.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0 flex gap-2">
-                  <FiDatabase className="text-sm" />
-                  Connect
+                  {enableKnowledgeBase ? (
+                    <BsDatabaseCheck className="text-sm" />
+                  ) : (
+                    <BsDatabase className="text-sm" />
+                  )}
+                  {enableKnowledgeBase ? 'Connected' : 'Connect'}
                 </span>
               </button>
               <Dropdown label={styleType.label} dismissOnClick={true} size="xs" color={'indigo'}>
@@ -650,7 +696,6 @@ ${input}
                 <ToggleSwitch
                   checked={showCode}
                   onChange={handleClickShowCode}
-                  // label="show code"
                   color="gray"
                 ></ToggleSwitch>
               </Tooltip>

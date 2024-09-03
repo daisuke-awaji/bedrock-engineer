@@ -1,7 +1,8 @@
 import useModal from '@renderer/hooks/useModal'
 import useWebsiteGeneratorSettings from '@renderer/hooks/useWebsiteGeneratorSetting'
 import { ToggleSwitch } from 'flowbite-react'
-import { FiCpu, FiDatabase } from 'react-icons/fi'
+import { BsDatabase } from 'react-icons/bs'
+import { FiCpu } from 'react-icons/fi'
 
 const RETRIVE_AND_GEN_MODEL_ARN =
   'arn:aws:bedrock:ap-northeast-1::foundation-model/anthropic.claude-3-haiku-20240307-v1:0'
@@ -21,7 +22,7 @@ const useDataSourceConnectModal = () => {
         </p>
         <div className="grid grid-cols-3 items-center justify-center">
           <label className="flex items-center gap-2 block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-            <FiDatabase className="text-lg" />
+            <BsDatabase className="text-lg" />
             Knowledge base ID
           </label>
           <input
@@ -35,13 +36,16 @@ const useDataSourceConnectModal = () => {
         </div>
         <div className="grid grid-cols-3 items-center justify-center">
           <div></div>
-          <div className="grid grid-cols-3 items-center justify-center">
+          <div className="grid grid-cols-3 items-center justify-center cursor-pointer">
             <ToggleSwitch
               checked={enableKnowledgeBase}
               onChange={() => setEnableKnowledgeBase(!enableKnowledgeBase)}
               color="gray"
             ></ToggleSwitch>
-            <span className="col-span-1 text-sm text-gray-500">
+            <span
+              className="col-span-1 text-sm text-gray-500"
+              onClick={() => setEnableKnowledgeBase(!enableKnowledgeBase)}
+            >
               {enableKnowledgeBase ? 'Enable' : 'Disable'}
             </span>
           </div>
