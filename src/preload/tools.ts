@@ -2,7 +2,6 @@ import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import * as fs from 'fs/promises'
 import * as path from 'path'
 import { store } from './store'
-import { applyPatch } from 'diff'
 
 export async function createFolder(folderPath: string): Promise<string> {
   try {
@@ -13,55 +12,29 @@ export async function createFolder(folderPath: string): Promise<string> {
   }
 }
 
-export async function createFile(filePath: string, content: string): Promise<string> {
+export async function writeToFiles(
+  files: { path: string; content: string | object }[]
+): Promise<string> {
   try {
-    await fs.writeFile(filePath, content)
-    return `File created: ${filePath}`
+    const results = await Promise.all(
+      files.map(async ({ path: filePath, content }) => {
+        const contentString = typeof content === 'string' ? content : JSON.stringify(content)
+        const dirPath = path.dirname(filePath)
+
+        // フォルダが存在しない場合は作成する
+        await fs.mkdir(dirPath, { recursive: true })
+
+        await fs.writeFile(filePath, contentString)
+        return `Content written to file: ${filePath}`
+      })
+    )
+    return results.join('\n')
   } catch (e: any) {
-    return `Error creating file: ${e.message}`
+    return `Error writing to multiple files: ${e.message}`
   }
 }
 
-export async function writeToFile(filePath: string, content: string): Promise<string> {
-  try {
-    await fs.writeFile(filePath, content)
-    return `Content written to file: ${filePath}`
-  } catch (e: any) {
-    return `Error writing to file: ${e.message}`
-  }
-}
-
-export async function applyPatchToFile(filePath: string, patch: string): Promise<string> {
-  try {
-    // ファイルの内容を読み込む
-    const originalContent = await fs.readFile(filePath, 'utf-8')
-
-    // パッチを適用
-    const patchedContent = applyPatch(originalContent, patch, { fuzzFactor: 2 })
-
-    if (typeof patchedContent !== 'string') {
-      throw new Error('Failed to apply patch')
-    }
-
-    // 変更された内容をファイルに書き込む
-    await fs.writeFile(filePath, patchedContent, 'utf-8')
-
-    return `Successfully applied patch to ${filePath}`
-  } catch (e: any) {
-    return `Error applying patch to ${filePath}: ${e.message}`
-  }
-}
-
-export async function readFile(filePath: string): Promise<string> {
-  try {
-    const content = await fs.readFile(filePath, 'utf-8')
-    return content
-  } catch (e: any) {
-    return `Error reading file: ${e.message}`
-  }
-}
-
-export async function readMultipleFiles(filePaths: string[]): Promise<string> {
+export async function readFiles(filePaths: string[]): Promise<string> {
   try {
     const fileContents = await Promise.all(
       filePaths.map(async (filePath) => {
@@ -82,25 +55,7 @@ export async function readMultipleFiles(filePaths: string[]): Promise<string> {
   }
 }
 
-export async function listFiles(dirPath = '.'): Promise<string> {
-  try {
-    const files = await fs.readdir(dirPath, { withFileTypes: true })
-    const result = files
-      .map((file) => {
-        const type = file.isDirectory() ? 'Dir' : 'File'
-        return `${type}: ${file.name}`
-      })
-      .join('\n')
-    return result
-  } catch (e: any) {
-    return `Error listing files and directories: ${e.message}`
-  }
-}
-
-export async function listDirectoryStructure(
-  dirPath: string,
-  prefix: string = ''
-): Promise<string> {
+export async function listFiles(dirPath: string, prefix: string = ''): Promise<string> {
   try {
     const files = await fs.readdir(dirPath, { withFileTypes: true })
     let result = ''
@@ -113,7 +68,7 @@ export async function listDirectoryStructure(
 
       if (file.isDirectory()) {
         result += `${currentPrefix}📁 ${file.name}\n`
-        result += await listDirectoryStructure(path.join(dirPath, file.name), nextPrefix)
+        result += await listFiles(path.join(dirPath, file.name), nextPrefix)
       } else {
         result += `${currentPrefix}📄 ${file.name}\n`
       }
@@ -196,20 +151,12 @@ export const executeTool = async (toolName: string | undefined, toolInput: any) 
   switch (toolName) {
     case 'createFolder':
       return createFolder(toolInput['path'])
-    case 'createFile':
-      return createFile(toolInput['path'], toolInput['content'])
-    case 'writeToFile':
-      return writeToFile(toolInput['path'], toolInput['content'])
-    case 'applyPatchToFile':
-      return applyPatchToFile(toolInput['path'], toolInput['patch'])
-    case 'readFile':
-      return readFile(toolInput['path'])
-    case 'readMultipleFiles':
-      return readMultipleFiles(toolInput['paths'])
+    case 'writeToFiles':
+      return writeToFiles(toolInput['files'])
+    case 'readFiles':
+      return readFiles(toolInput['paths'])
     case 'listFiles':
       return listFiles(toolInput['path'])
-    case 'listDirectoryStructure':
-      return listDirectoryStructure(toolInput['path'])
     case 'moveFile':
       return moveFile(toolInput['source'], toolInput['destination'])
     case 'copyFile':
@@ -243,102 +190,41 @@ export const tools: Tool[] = [
   },
   {
     toolSpec: {
-      name: 'createFile',
+      name: 'writeToFiles',
       description:
-        'Create a new file at the specified path with optional content. Use this when you need to create a new file in the project structure.',
+        "Write content to multiple files at once. Use this when you need to create or update multiple files simultaneously. You can also create the folder if it doesn't exist.",
       inputSchema: {
         json: {
           type: 'object',
           properties: {
-            path: {
-              type: 'string',
-              description: 'The path where the file should be created'
-            },
-            content: {
-              type: 'string',
-              description: 'The initial content of the file'
+            files: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  path: {
+                    type: 'string',
+                    description: 'The path of the file to write to'
+                  },
+                  content: {
+                    type: 'string',
+                    description:
+                      'The content to write to the file. This must be specified as a string even if the file is in JSON format. For example, "{ package: false }".'
+                  }
+                },
+                required: ['path', 'content']
+              },
+              description: 'An array of file objects containing path and content'
             }
           },
-          required: ['path', 'content']
+          required: ['files']
         }
       }
     }
   },
   {
     toolSpec: {
-      name: 'writeToFile',
-      description:
-        'Write content to an existing file at the specified path. Use this when you need to add or update content in an existing file.',
-      inputSchema: {
-        json: {
-          type: 'object',
-          properties: {
-            path: {
-              type: 'string',
-              description: 'The path of the file to write to'
-            },
-            content: {
-              type: 'string',
-              description: 'The content to write to the file'
-            }
-          },
-          required: ['path', 'content']
-        }
-      }
-    }
-  },
-  {
-    toolSpec: {
-      name: 'applyPatchToFile',
-      description:
-        'Apply a patch to an existing file at the specified path. Use this when you need to make specific changes to parts of an existing file.',
-      inputSchema: {
-        json: {
-          type: 'object',
-          properties: {
-            path: {
-              type: 'string',
-              description: 'The path of the file to apply the patch to'
-            },
-            patch: {
-              type: 'string',
-              description: `The patch content to apply. It must be a unified patch.
-<example>
-@@ -10,7 +10,7 @@
-function greeting(name: string) {
-- console.log("Hello, " + name);
-+ console.log(\`Hello, \${name}!\`);
-}
-</example>`
-            }
-          },
-          required: ['path', 'patch']
-        }
-      }
-    }
-  },
-  {
-    toolSpec: {
-      name: 'readFile',
-      description:
-        'Read the contents of a file at the specified path. Use this when you need to examine the contents of an existing file.',
-      inputSchema: {
-        json: {
-          type: 'object',
-          properties: {
-            path: {
-              type: 'string',
-              description: 'The path of the file to read'
-            }
-          },
-          required: ['path']
-        }
-      }
-    }
-  },
-  {
-    toolSpec: {
-      name: 'readMultipleFiles',
+      name: 'readFiles',
       description:
         'Read the contents of multiple files at the specified paths. Use this when you need to examine the contents of several existing files at once.',
       inputSchema: {
@@ -361,24 +247,6 @@ function greeting(name: string) {
   {
     toolSpec: {
       name: 'listFiles',
-      description:
-        'List all files and directories in the specified folder. Use this when you need to see the contents of a specific directory.',
-      inputSchema: {
-        json: {
-          type: 'object',
-          properties: {
-            path: {
-              type: 'string',
-              description: 'The path of the folder to list (default: current directory)'
-            }
-          }
-        }
-      }
-    }
-  },
-  {
-    toolSpec: {
-      name: 'listDirectoryStructure',
       description:
         'List the entire directory structure, including all subdirectories and files, in a hierarchical format. Use this when you need a comprehensive view of the project structure.',
       inputSchema: {

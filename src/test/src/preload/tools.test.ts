@@ -1,24 +1,39 @@
 import { expect, test } from '@jest/globals'
 import * as fs from 'fs/promises'
+import { applyPatch } from 'diff'
 
-async function listFiles(dirPath = '.'): Promise<string> {
+export async function applyPatchToFile(filePath: string, patch: string): Promise<string> {
   try {
-    const files = await fs.readdir(dirPath, { withFileTypes: true })
-    const result = files
-      .map((file) => {
-        const type = file.isDirectory() ? 'Dir' : 'File'
-        return `${type}: ${file.name}`
-      })
-      .join('\n')
-    return result
+    // ファイルの内容を読み込む
+    const originalContent = await fs.readFile(filePath, 'utf-8')
+
+    // パッチを適用
+    const patchedContent = applyPatch(originalContent, patch, { fuzzFactor: 2 })
+    console.log(patchedContent)
+    if (typeof patchedContent === 'string') {
+      // 変更された内容をファイルに書き込む
+      await fs.writeFile(filePath, patchedContent, 'utf-8')
+      return `Successfully applied patch to ${filePath}`
+    } else {
+      throw new Error(`Failed to apply patch. ${JSON.stringify(patchedContent)}`)
+    }
   } catch (e: any) {
-    return `Error listing files and directories: ${e.message}`
+    console.log(e)
+    return `Error applying patch to ${filePath}: ${e.message}`
   }
 }
 
-test('tool', async () => {
-  const files = await listFiles('/')
-  console.log(files)
+test('applyPatchToFile', async () => {
+  const patch = `--- a/greeting.ts
++++ b/greeting.ts
+@@ -1,3 +1,3 @@
+ function greeting(name: string) {
+-   console.log("Hello, " + name);
++   console.log("Hello, " + n);
+ }
+`
+
+  const res = await applyPatchToFile('/Users/geeawa/work/electron/bedrock-engineer/aaa.js', patch)
+  console.log(res)
   expect(1).toBe(1)
-  expect(2).toBe(2)
 })

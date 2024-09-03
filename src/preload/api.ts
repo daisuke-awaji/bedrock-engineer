@@ -5,9 +5,10 @@ import {
   ConverseCommandOutput,
   ConverseStreamCommand,
   ConverseStreamCommandOutput,
-  Message
+  Message,
+  ToolConfiguration
 } from '@aws-sdk/client-bedrock-runtime'
-import { executeTool, tools } from './tools'
+import { executeTool } from './tools'
 import * as Figma from 'figma-js'
 
 import NodeCache from 'node-cache'
@@ -23,36 +24,24 @@ const inferenceConfig = {
   topP: 0.9
 }
 
-const isSetTaihvilyApiKey = !!process.env.TAVILY_API_KEY
-const isSetPexelsApiKey = !!process.env.PEXELS_API_KEY
-
-const toolConfig = {
-  tools: tools.filter((value) => {
-    if (value.toolSpec?.name === 'tavilySearch') {
-      return isSetTaihvilyApiKey
-    } else if (value.toolSpec?.name === 'pexelsSearch') {
-      return isSetPexelsApiKey
-    }
-    return true
-  })
-}
-
 export type CallConverseAPIProps = {
   modelId: string
   messages: Message[]
   system: [{ text: string }]
+  toolConfig: ToolConfiguration | undefined
 }
 
 // sleep
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const converse = async (props: CallConverseAPIProps): Promise<ConverseCommandOutput> => {
-  const { modelId, messages, system } = props
+  const { modelId, messages, system, toolConfig } = props
+
   const command = new ConverseCommand({
     modelId,
     messages,
     system,
-    toolConfig,
+    toolConfig: toolConfig?.tools?.length === 0 ? undefined : toolConfig,
     inferenceConfig
   })
   const MAX_ATTEMPTS = 30

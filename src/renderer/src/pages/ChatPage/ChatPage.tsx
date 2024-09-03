@@ -2,14 +2,13 @@ import React, { useState } from 'react'
 import { FcElectronics, FcFolder, FcSupport, FcVoicePresentation } from 'react-icons/fc'
 import { FiSend } from 'react-icons/fi'
 import { RiRobot2Line } from 'react-icons/ri'
-import useModal from '../../hooks/useModal'
-import tools from './tools'
 import prompts from '@renderer/prompts/prompts'
 import useProject from '@renderer/hooks/useProject'
 import useLLM from '@renderer/hooks/useLLM'
 import useAgentChatSetting from '@renderer/hooks/useAgentChatSetting'
 import useTavilySearch from '@renderer/hooks/useTavilySearch'
 import useAdvancedSetting from '@renderer/hooks/useAdvancedSetting'
+import useToolSettingModal from './useToolSettingModal'
 
 const agents = [
   {
@@ -37,6 +36,8 @@ export default function ChatPage() {
 
   const { projectPath, selectDirectory } = useProject()
 
+  const { tools, ToolSettingModal, openModal } = useToolSettingModal()
+
   const handleClickPromptSubmit = async (input: string, messages) => {
     let loopCount = 0
     if (input) {
@@ -63,7 +64,17 @@ export default function ChatPage() {
               useTavilySearch: tavilySearchEnabled
             })
           }
-        ]
+        ],
+        toolConfig: {
+          tools: tools
+            ?.filter((v) => v.enabled)
+            .filter((value) => {
+              if (value.toolSpec?.name === 'tavilySearch') {
+                return tavilySearchEnabled
+              }
+              return true
+            })
+        }
       })
       console.log({ res })
       // assistant message
@@ -83,7 +94,7 @@ export default function ChatPage() {
           setMessages(msgs)
 
           const toolResult = await window.api.bedrock.executeTool(toolName, toolInput)
-          console.log({ toolResult })
+          console.log({ toolName, toolResult })
 
           msgs.push({
             role: 'user',
@@ -111,7 +122,17 @@ export default function ChatPage() {
                   workingDir: projectPath
                 })
               }
-            ]
+            ],
+            toolConfig: {
+              tools: tools
+                ?.filter((v) => v.enabled)
+                .filter((value) => {
+                  if (value.toolSpec?.name === 'tavilySearch') {
+                    return tavilySearchEnabled
+                  }
+                  return true
+                })
+            }
           })
           console.log({ toolResponse })
 
@@ -260,8 +281,6 @@ export default function ChatPage() {
     }
   }
 
-  const { Modal, openModal } = useModal()
-
   const exampleSenarios = {
     softwareAgent: [
       {
@@ -311,34 +330,7 @@ Finally, carefully describe any information required to use or develop this proj
       <div
         className={`flex flex-col h-[calc(100vh-8rem)] overflow-y-auto mx-auto min-w-[320px] max-w-[2048px]`}
       >
-        <Modal header="Available Tools">
-          <p className="text-gray-700 text-sm pb-2">
-            Currently, all tools are enabled and cannot be changed.
-          </p>
-          <div className="grid grid-cols-3 items-center justify-center">
-            {tools.map((tool) => {
-              return (
-                <label
-                  key={tool.toolSpec?.name}
-                  className="flex cursor-pointer content-center items-center h-10 w-[340px] gap-2"
-                >
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={true}
-                    disabled
-                    // onChange={() => setAutomode((a) => !a)}
-                  />
-                  <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                  <span className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300 hover:text-gray-500">
-                    {tool.toolSpec?.name}
-                  </span>
-                </label>
-              )
-            })}
-          </div>
-        </Modal>
-
+        <ToolSettingModal />
         <div className="flex flex-col gap-2 ">
           {chatMessages.length === 0 && agents.length > 1 ? (
             <div className="justify-center flex flex-col items-center gap-2">

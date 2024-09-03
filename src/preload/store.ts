@@ -1,11 +1,12 @@
 import Store from 'electron-store'
 import { LLM } from '../types/llm'
-import { AgentChatConfig, SendMsgKey } from '../types/agent-chat'
+import { AgentChatConfig, SendMsgKey, ToolState } from '../types/agent-chat'
 
 type StoreScheme = {
   projectPath?: string
   llm?: LLM
   agentChatConfig: AgentChatConfig
+  tools: ToolState[]
   figma: {
     personalAccessToken: string
   }

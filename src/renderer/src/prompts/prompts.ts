@@ -41,7 +41,8 @@ const prompts = {
     When asked to make edits or improvements:
     - Use the read_file tool to examine the contents of existing files.
     - Analyze the code and suggest improvements or make necessary edits.
-    - Use the write_to_file tool to implement changes.
+    - Use the writeToFiles tool to implement changes.
+      - When you use writeToFiles tool: content must be specified as a string even if the file is in JSON format. For example, "{ package: false }"
 
     When you use search:
     - Make sure you use the best query to get the most accurate and up-to-date information
