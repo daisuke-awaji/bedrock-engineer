@@ -241,6 +241,101 @@ ${
 </rules>
 `
     },
+    examples: [
+      {
+        title: 'EC site for plants',
+        value: `Create the basic structure and layout of an e-commerce website that specializes in potted plants, with the following conditions:
+<Conditions>
+- The layout likes Amazon.com.
+- The name of the e-commerce website is "Green Village".
+- Use a green color theme.
+</Conditions>
+Following the previous output, add a section that displays the plants in card format.
+Following the previous output, create a function to add to the shopping cart.
+Following the previous output, create a function to check what is currently in the shopping cart and calculate the total amount.`
+      },
+      {
+        title: 'Health & Fitness site',
+        value: `Create the basic structure and layout of a health and fitness website, with the following conditions:
+<Conditions>
+- The layout likes Amazon.com.
+- The name of the website is "FitLife".
+- Use a red color theme.
+</Conditions>
+Following the previous output, add a section that displays the health and fitness blogs.
+Following the previous output, create a function to search for health and fitness content based on keywords.
+Following the previous output, create a function to add comments to the blog.`
+      },
+      {
+        title: 'Drawing Graph',
+        value: `Please visualize the following as a graph on your website.
+
+Purchase data CSV file
+customer_id,product_id,purchase_date,purchase_amount
+C001,P001,2023-04-01,50.00
+C002,P002,2023-04-02,75.00
+C003,P003,2023-04-03,100.00
+C001,P002,2023-04-04,60.00
+C002,P001, 2023-04-05,40.00
+C003,P003,2023-04-06,90.00
+C001,P001,2023-04-07,30.00
+C002,P002,2023-04-08,80.00
+C003,P001,2023-04-09,45.00
+C001,P003,2023-04-10,120.00
+
+This CSV file contains the following information:
+
+- 'customer_id': Customer ID
+- 'product_id': Product ID
+- 'purchase_date': Purchase date
+- 'purchase_amount': Purchase amount`
+      },
+      {
+        title: 'To-do app',
+        value: `Create a simple to-do app website`
+      },
+      {
+        title: 'Code Transform',
+        value: `Transform the following code:
+
+using Android.App;
+using Android.OS;
+using Android.Support.V7.App;
+using Android.Runtime;
+using Android.Widget;
+using System.Data.SQLite;
+using System;
+using Xamarin.Essentials;
+using System.Linq;
+namespace App2
+{
+    [Activity(Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher = true)]
+    public class MainActivity : AppCompatActivity
+    {
+        protected override void OnCreate(Bundle savedInstanceState)
+        {
+            base.OnCreate(savedInstanceState);
+            Xamarin.Essentials.Platform.Init(this, savedInstanceState);
+            SetContentView(Resource.Layout.activity_main);
+            EditText input1 = FindViewById<EditText>(Resource.Id.Input1);
+            EditText input2 = FindViewById<EditText>(Resource.Id.Input2);
+            TextView total = FindViewById<TextView>(Resource.Id.Total);
+            Button totalButton = FindViewById<Button>(Resource.Id.TotalButton);
+            totalButton.Click += (sender, e) =>
+            {
+                total.Text = (int.Parse(input1.Text) + int.Parse(input2.Text)).ToString("#,0");
+            }
+        }
+        public override void OnRequestPermissionsResult(int requestCode, string[] permissions,
+            [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
+        {
+            Xamarin.Essentials.Platform.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+            base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
+}`
+      }
+    ],
     rag: {
       promptTemplate: `Based on the customer's inquiry and the contents of the design system provided as reference documents, output the React component source code and its description in the form of a JSON array.
 
