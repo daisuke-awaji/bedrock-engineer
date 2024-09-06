@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react'
-import { FcElectronics, FcFolder, FcSupport, FcVoicePresentation } from 'react-icons/fc'
+import { FcFolder, FcSupport, FcVoicePresentation } from 'react-icons/fc'
 import { FiSend } from 'react-icons/fi'
 import { RiRobot2Line } from 'react-icons/ri'
 import prompts from '@renderer/prompts/prompts'
 import useProject from '@renderer/hooks/useProject'
 import useLLM from '@renderer/hooks/useLLM'
-import useAgentChatSetting from '@renderer/hooks/useAgentChatSetting'
 import useTavilySearch from '@renderer/hooks/useTavilySearch'
 import useAdvancedSetting from '@renderer/hooks/useAdvancedSetting'
 import useToolSettingModal from './useToolSettingModal'
 import useScroll from '@renderer/hooks/useScroll'
+import { ContentBlock, ConversationRole, Message } from '@aws-sdk/client-bedrock-runtime'
+import { Accordion } from 'flowbite-react'
 
 const agents = [
   {
@@ -20,247 +21,203 @@ const agents = [
   }
 ]
 
+const renderAvator = (role?: ConversationRole) => {
+  // if (content.toolUse || content.toolResult) {
+  // return <FcElectronics />
+  // }
+
+  if (role === 'assistant') {
+    return <RiRobot2Line className="h-8" />
+  } else {
+    return <FcVoicePresentation />
+  }
+}
+
+type ChatAvatorProps = {
+  role?: ConversationRole
+}
+const ChatAvator: React.FC<ChatAvatorProps> = ({ role }) => {
+  return <div className="flex items-center justify-center w-10 h-10">{renderAvator(role)}</div>
+}
+
+type JSONCodeBlockProps = {
+  json: any
+}
+const JSONCodeBlock = (props: JSONCodeBlockProps) => {
+  return (
+    <pre className="bg-gray-800 text-white p-4 rounded-md overflow-x-auto whitespace-pre-wrap">
+      <code>{JSON.stringify(props.json, null, 2)}</code>
+    </pre>
+  )
+}
+
+const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
+  return (
+    <div className="flex gap-4">
+      <ChatAvator role={message.role} />
+      <div className="flex flex-col gap-2 w-full">
+        <span className="text-sm text-gray-500">{message.role}</span>
+        {message.content?.map((c, index) => {
+          if ('text' in c) {
+            return (
+              <div key={index} className="whitespace-pre-wrap">
+                {c.text}
+              </div>
+            )
+          } else if ('toolUse' in c) {
+            return (
+              <div key={index} className="flex flex-col gap-2">
+                <Accordion className="w-full" collapseAll>
+                  <Accordion.Panel>
+                    <Accordion.Title>
+                      <span>Tool Use</span>
+                      <span className="ml-2 border rounded-md bg-gray-200 px-2">
+                        {c.toolUse?.name}
+                      </span>
+                    </Accordion.Title>
+                    <Accordion.Content>
+                      <JSONCodeBlock json={c.toolUse?.input} />
+                    </Accordion.Content>
+                  </Accordion.Panel>
+                </Accordion>
+              </div>
+            )
+          } else if ('toolResult' in c) {
+            return (
+              <div key={index} className="flex flex-col gap-2">
+                <Accordion className="w-full" collapseAll>
+                  <Accordion.Panel>
+                    <Accordion.Title>
+                      <span>Tool Result</span>
+                      <span
+                        className={`ml-2 rounded-md px-2 ${c.toolResult?.status === 'success' ? 'bg-[#28a745] text-white' : 'bg-[#be1f1f] text-white'}`}
+                      >
+                        {c.toolResult?.status}
+                      </span>
+                    </Accordion.Title>
+                    <Accordion.Content className="w-full">
+                      <JSONCodeBlock json={c.toolResult?.content} />
+                    </Accordion.Content>
+                  </Accordion.Panel>
+                </Accordion>
+              </div>
+            )
+          } else {
+            throw new Error('Invalid message content')
+          }
+        })}
+      </div>
+    </div>
+  )
+}
+
 export default function ChatPage() {
   const [userInput, setUserInput] = useState('')
-  const [chatMessages, setMessages] = useState<any>([])
+  const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
-  const { automode, setAutomode, getAutomode } = useAgentChatSetting()
-  const { apikey } = useTavilySearch()
-  const tavilySearchEnabled = apikey !== 'tvly-xxxxxxxxxxxxxxxxxxx'
+  const { enabledTavilySearch } = useTavilySearch()
   const { llm } = useLLM()
   const modelId = llm?.modelId
 
   const [agent, setAgent] = useState('softwareAgent')
   const systemPrompt = prompts.Chat[agent]
 
-  const MAX_ITERATIONS = 10
-
   const { projectPath, selectDirectory } = useProject()
 
-  const { tools, ToolSettingModal, openModal } = useToolSettingModal()
+  const { enabledTools, ToolSettingModal, openModal } = useToolSettingModal()
 
-  const handleClickPromptSubmit = async (input: string, messages) => {
-    let loopCount = 0
-    if (input) {
-      const msgs = [
-        ...messages,
-        {
-          role: 'user',
-          content: [{ text: input }]
-        }
-      ]
-      setMessages(msgs)
-      setUserInput('')
+  const handleClickPromptSubmit = async (input: string, messages: Message[]) => {
+    if (!input) {
+      return alert('Please enter a prompt')
+    }
 
-      setLoading(true)
+    const msgs = [...messages]
+    const userInputMessage: Message = { role: 'user', content: [{ text: input }] }
+    msgs.push(userInputMessage)
+    setMessages((prev) => [...prev, userInputMessage])
+    setUserInput('')
+    setLoading(true)
 
-      const res = await window.api.bedrock.converse({
-        messages: msgs,
-        modelId,
-        system: [
-          {
-            text: systemPrompt({
-              automode: automode,
-              workingDir: projectPath,
-              useTavilySearch: tavilySearchEnabled
-            })
-          }
-        ],
-        toolConfig: {
-          tools: tools
-            ?.filter((v) => v.enabled)
-            .filter((value) => {
-              if (value.toolSpec?.name === 'tavilySearch') {
-                return tavilySearchEnabled
-              }
-              return true
-            })
-        }
-      })
-      console.log({ res })
-      // assistant message
-      let assistantResponse = ''
-      for (const contentBlock of res.output?.message?.content ?? []) {
-        if ('text' in contentBlock) {
-          assistantResponse += contentBlock?.text + '\n'
-        } else if ('toolUse' in contentBlock) {
-          const toolInput = contentBlock.toolUse?.input
-          const toolName = contentBlock.toolUse?.name
-          const toolUseId = contentBlock.toolUse?.toolUseId
+    const res = await window.api.bedrock.converse({
+      messages: msgs,
+      modelId,
+      system: [
+        { text: systemPrompt({ workingDir: projectPath, useTavilySearch: enabledTavilySearch }) }
+      ],
+      toolConfig: { tools: enabledTools }
+    })
+    const assistantMessage: Message = { role: 'assistant', content: res.output?.message?.content }
+    msgs.push(assistantMessage)
+    setMessages((prev) => [...prev, assistantMessage])
 
-          msgs.push({
-            role: 'assistant',
-            content: [contentBlock]
-          })
-          setMessages(msgs)
-
-          const toolResult = await window.api.bedrock.executeTool(toolName, toolInput)
-          console.log({ toolName, toolResult })
-
-          msgs.push({
-            role: 'user',
-            content: [
-              {
-                toolResult: {
-                  toolUseId,
-                  content: [{ text: toolResult }],
-                  status: 'success'
-                }
-              }
-            ]
-          })
-          console.log({ msgs })
-          setMessages(msgs)
-
-          const messages = msgs.filter((msg) => msg.content !== undefined)
-          const toolResponse = await window.api.bedrock.converse({
-            messages: messages,
-            modelId,
-            system: [
-              {
-                text: systemPrompt({
-                  automode: automode,
-                  workingDir: projectPath
-                })
-              }
-            ],
-            toolConfig: {
-              tools: tools
-                ?.filter((v) => v.enabled)
-                .filter((value) => {
-                  if (value.toolSpec?.name === 'tavilySearch') {
-                    return tavilySearchEnabled
-                  }
-                  return true
-                })
-            }
-          })
-          console.log({ toolResponse })
-
-          for (const contentBlock of toolResponse.output?.message?.content ?? []) {
-            if ('text' in contentBlock) {
-              assistantResponse += contentBlock?.text
-            }
-          }
-        }
-      }
-      msgs.push({
-        role: 'assistant',
-        content: [{ text: assistantResponse === '' ? 'complete' : assistantResponse }]
-      })
-      setMessages(msgs)
-      setLoading(false)
-      if (agent === 'softwareAgent') {
-        setUserInput('つづけてください')
+    const lastMessage = msgs[msgs.length - 1]
+    const toolUse = res.output?.message?.content?.find((v) => v.toolUse)
+    if (toolUse) {
+      if (!lastMessage.content) {
+        console.warn(lastMessage)
+        return null
       }
 
-      // 再帰処理の中から判断したいので、React のステートではなく、electron の store から参照する
-      if (getAutomode()) {
-        const complete = msgs.slice(-1)[0]?.content[0]?.text.includes('AUTOMODE_COMPLETE')
-        loopCount++
-        if (complete || loopCount > MAX_ITERATIONS) {
-          setAutomode(false)
+      const recursivelyExecTool = async (contentBlocks: ContentBlock[]) => {
+        const contentBlock = contentBlocks.find((block) => block.toolUse)
+        if (!contentBlock) {
           return
         }
+        if (Object.keys(contentBlock).includes('toolUse')) {
+          const toolUse = contentBlock.toolUse
+          if (toolUse) {
+            let toolResult: string
+            let hasError = false
+            try {
+              toolResult = await window.api.bedrock.executeTool(toolUse.name, toolUse.input)
+            } catch (e: any) {
+              console.error(e)
+              toolResult = e
+              hasError = true
+            }
 
-        handleClickPromptSubmit(
-          'Continue the process until the goal is reached or 10 iterations have been completed. When the goal is reached, say AUTOMODE_COMPLETE.',
-          msgs
-        )
-      }
-    } else {
-      alert('Please enter a prompt')
-    }
-  }
+            const toolResultMessage: Message = {
+              role: 'user',
+              content: [
+                {
+                  toolResult: {
+                    toolUseId: toolUse.toolUseId,
+                    content: [{ text: toolResult }],
+                    status: hasError ? 'error' : 'success'
+                  }
+                }
+              ]
+            }
+            msgs.push(toolResultMessage)
+            setMessages((prev) => [...prev, toolResultMessage])
 
-  const color = {
-    user: '',
-    toolResult: 'bg-[#E5BA73]',
+            const toolResponse = await window.api.bedrock.converse({
+              messages: msgs,
+              modelId,
+              system: [{ text: systemPrompt({ workingDir: projectPath }) }],
+              toolConfig: { tools: enabledTools }
+            })
+            const toolResponseMessage: Message = {
+              role: 'assistant',
+              content: toolResponse.output?.message?.content
+            }
+            msgs.push(toolResponseMessage)
+            setMessages((prev) => [...prev, toolResponseMessage])
 
-    assistant: '', // "bg-[#F7E7DC]",
-    toolUse: 'bg-[#E5BA73]' // "bg-[#FFF8F3]",
-  }
-  const switchColor = (message: any) => {
-    if (message.role === 'user') {
-      for (const c of message.content) {
-        if ('text' in c) return color.user
-        if ('toolResult' in c) return color.toolResult
-      }
-
-      return color.user
-    }
-    if (message.role === 'assistant') {
-      // if message.content object has key "text"
-      for (const c of message.content) {
-        if ('text' in c) return color.assistant
-        if ('toolUse' in c) return color.toolUse
-      }
-      return color.assistant
-    }
-
-    return color.user
-  }
-
-  const renderMessageContent = (message: { content: any }) => {
-    // 一旦 message.content の配列要素が１つであると仮定して実装する
-    for (const c of message.content) {
-      if ('text' in c) {
-        return <div className="whitespace-pre-line">{c.text}</div>
-      } else if ('toolUse' in c) {
-        return (
-          <div className="flex flex-col">
-            <span className="flex gap-2 items-center">
-              <span>ToolUse</span>
-              <span className="border rounded-md bg-gray-200 px-2">{c.toolUse.name}</span>
-              <span>toolUseId: {c.toolUse.toolUseId}</span>
-            </span>
-
-            <div>input</div>
-
-            <span>{JSON.stringify(c.toolUse.input, null, 2)}</span>
-          </div>
-        )
-      } else if ('toolResult' in c) {
-        return (
-          <div className="flex flex-col">
-            <span className="flex gap-2 items-center">
-              <span>ToolResult</span>
-              <span className="bg-[#28a745] rounded-md px-2 text-white">{c.toolResult.status}</span>
-            </span>
-
-            <span className="whitespace-pre-line mt-4 border p-2 rounded-md">
-              {c.toolResult.content[0].text}
-            </span>
-          </div>
-        )
-      } else {
-        throw new Error('Invalid message content')
-      }
-    }
-    return null
-  }
-
-  const renderAvator = (message: { role: string; content: any }) => {
-    if (message.role === 'user') {
-      for (const c of message.content) {
-        if ('toolResult' in c) {
-          return <FcElectronics />
-        } else {
-          return <FcVoicePresentation />
+            const nextContent = toolResponse.output?.message?.content
+            if (nextContent) {
+              return recursivelyExecTool(nextContent)
+            }
+            return
+          }
         }
       }
-    } else if (message.role === 'assistant') {
-      for (const c of message.content) {
-        if ('toolUse' in c) {
-          return <FcElectronics />
-        } else {
-          return <RiRobot2Line className="h-8" />
-        }
-      }
-    } else {
-      throw new Error('Invalid message role')
+
+      await recursivelyExecTool(lastMessage.content)
     }
-    return null
+
+    // assistant messa
+    setLoading(false)
   }
 
   const [isComposing, setIsComposing] = useState(false)
@@ -278,7 +235,7 @@ export default function ChatPage() {
 
     if ((sendMsgKey === 'Enter' && enter) || (sendMsgKey === 'Cmd+Enter' && cmdenter)) {
       e.preventDefault()
-      handleClickPromptSubmit(userInput, chatMessages)
+      handleClickPromptSubmit(userInput, messages)
     }
   }
 
@@ -338,8 +295,8 @@ Finally, carefully describe any information required to use or develop this proj
         id="main"
       >
         <ToolSettingModal />
-        <div className="flex flex-col gap-2 h-full">
-          {chatMessages.length === 0 && agents.length > 1 ? (
+        <div className="flex flex-col gap-4 h-full">
+          {messages.length === 0 && agents.length > 1 ? (
             <div className="justify-center flex flex-col items-center gap-2">
               <span className="text-gray-400 text-xs">Select agent</span>
               <select
@@ -356,7 +313,7 @@ Finally, carefully describe any information required to use or develop this proj
             </div>
           ) : null}
 
-          {chatMessages.length === 0 ? (
+          {messages.length === 0 ? (
             <div className="flex flex-col pt-12 h-full w-full justify-center items-center content-center align-center gap-1">
               <div className="flex flex-row gap-2 items-center">
                 <h1 className="text-lg font-bold">Agent Chat</h1>
@@ -382,15 +339,8 @@ Finally, carefully describe any information required to use or develop this proj
           ) : null}
 
           {/* CHAT HISTORY */}
-          {chatMessages.map((message, index) => (
-            <div key={index} className={`my-2 p-2 rounded`}>
-              <div className="flex gap-2">
-                <div className="text-[28px] pt-2 items-center">{renderAvator(message)}</div>
-                <div className={`p-2 rounded-md w-full ${switchColor(message)}`}>
-                  {renderMessageContent(message)}
-                </div>
-              </div>
-            </div>
+          {messages.map((message, index) => (
+            <ChatMessage message={message} key={index} />
           ))}
 
           {loading && (
@@ -433,7 +383,7 @@ Finally, carefully describe any information required to use or develop this proj
               </div>
 
               {/* right */}
-              <div className="flex flex-col justify-end">
+              {/* <div className="flex flex-col justify-end">
                 <label className="inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
@@ -446,7 +396,7 @@ Finally, carefully describe any information required to use or develop this proj
                     Automode (Max iterations: {MAX_ITERATIONS})
                   </span>
                 </label>
-              </div>
+               </div> */}
             </div>
 
             {/* prompt input form */}
@@ -454,12 +404,12 @@ Finally, carefully describe any information required to use or develop this proj
               onCompositionStart={() => setIsComposing(true)}
               onCompositionEnd={() => setIsComposing(false)}
               className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2 ${
-                automode && loading ? 'bg-gray-300' : 'bg-gray-50'
+                loading ? 'bg-gray-300' : 'bg-gray-50'
               }`}
               placeholder="Type your message... "
-              disabled={automode && loading}
+              disabled={loading}
               value={
-                automode && loading
+                loading
                   ? 'Continue the process until the goal is reached or 10 iterations have been completed. When the goal is reached, say AUTOMODE_COMPLETE.'
                   : userInput
               }
@@ -470,7 +420,7 @@ Finally, carefully describe any information required to use or develop this proj
             />
 
             <button
-              onClick={() => handleClickPromptSubmit(userInput, chatMessages)}
+              onClick={() => handleClickPromptSubmit(userInput, messages)}
               className="absolute end-2.5 bottom-2.5 rounded-lg hover:bg-gray-200 px-2 py-2"
             >
               <FiSend className="text-xl" />

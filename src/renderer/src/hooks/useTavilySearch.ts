@@ -22,9 +22,12 @@ const useTavilySearch = () => {
     })
   }
 
+  const enabledTavilySearch = apikey !== 'tvly-xxxxxxxxxxxxxxxxxxx'
+
   return {
     apikey,
-    setApiKey
+    setApiKey,
+    enabledTavilySearch
   }
 }
 

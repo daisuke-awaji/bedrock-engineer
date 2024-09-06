@@ -20,7 +20,7 @@ const runtimeClient = new BedrockRuntimeClient()
 
 const inferenceConfig = {
   maxTokens: 4096, // 8192,
-  temperature: 0.5,
+  temperature: 0,
   topP: 0.9
 }
 
@@ -28,7 +28,7 @@ export type CallConverseAPIProps = {
   modelId: string
   messages: Message[]
   system: [{ text: string }]
-  toolConfig: ToolConfiguration | undefined
+  toolConfig?: ToolConfiguration
 }
 
 // sleep

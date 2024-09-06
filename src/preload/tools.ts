@@ -2,35 +2,23 @@ import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import * as fs from 'fs/promises'
 import * as path from 'path'
 import { store } from './store'
+import * as diff from 'diff'
 
 export async function createFolder(folderPath: string): Promise<string> {
   try {
     await fs.mkdir(folderPath, { recursive: true })
     return `Folder created: ${folderPath}`
   } catch (e: any) {
-    return `Error creating folder: ${e.message}`
+    throw `Error creating folder: ${e.message}`
   }
 }
 
-export async function writeToFiles(
-  files: { path: string; content: string | object }[]
-): Promise<string> {
+export async function writeToFile(filePath: string, content: string): Promise<string> {
   try {
-    const results = await Promise.all(
-      files.map(async ({ path: filePath, content }) => {
-        const contentString = typeof content === 'string' ? content : JSON.stringify(content)
-        const dirPath = path.dirname(filePath)
-
-        // フォルダが存在しない場合は作成する
-        await fs.mkdir(dirPath, { recursive: true })
-
-        await fs.writeFile(filePath, contentString)
-        return `Content written to file: ${filePath}`
-      })
-    )
-    return results.join('\n')
+    await fs.writeFile(filePath, content)
+    return `Content written to file: ${filePath}`
   } catch (e: any) {
-    return `Error writing to multiple files: ${e.message}`
+    throw `Error writing to file: ${e.message}`
   }
 }
 
@@ -51,7 +39,7 @@ export async function readFiles(filePaths: string[]): Promise<string> {
 
     return result
   } catch (e: any) {
-    return `Error reading multiple files: ${e.message}`
+    throw `Error reading multiple files: ${e.message}`
   }
 }
 
@@ -76,7 +64,7 @@ export async function listFiles(dirPath: string, prefix: string = ''): Promise<s
 
     return result
   } catch (e: any) {
-    return `Error listing directory structure: ${e.message}`
+    throw `Error listing directory structure: ${e.message}`
   }
 }
 export async function moveFile(source: string, destination: string): Promise<string> {
@@ -84,7 +72,7 @@ export async function moveFile(source: string, destination: string): Promise<str
     await fs.rename(source, destination)
     return `File moved: ${source} to ${destination}`
   } catch (e: any) {
-    return `Error moving file: ${e.message}`
+    throw `Error moving file: ${e.message}`
   }
 }
 
@@ -93,7 +81,7 @@ export async function copyFile(source: string, destination: string): Promise<str
     await fs.copyFile(source, destination)
     return `File copied: ${source} to ${destination}`
   } catch (e: any) {
-    return `Error copying file: ${e.message}`
+    throw `Error copying file: ${e.message}`
   }
 }
 
@@ -120,7 +108,7 @@ export async function tavilySearch(query: string): Promise<string> {
     const body = await response.text()
     return body
   } catch (e: any) {
-    return `Error searching: ${e.message}`
+    throw `Error searching: ${e.message}`
   }
 }
 
@@ -130,7 +118,7 @@ export async function fetchAPI(url: string, options?: RequestInit): Promise<stri
     const text = await res.text()
     return text
   } catch (e: any) {
-    return `Error fetchAPI: ${JSON.stringify(e)}`
+    throw `Error fetchAPI: ${JSON.stringify(e)}`
   }
 }
 
@@ -143,7 +131,28 @@ export async function pexelsSearch(query: string): Promise<string> {
     })
     return JSON.stringify(res)
   } catch (e: any) {
-    return `Error pexelsSearch: ${JSON.stringify(e)}`
+    throw `Error pexelsSearch: ${JSON.stringify(e)}`
+  }
+}
+
+export async function applyUnifiedDiff(filePath: string, unifiedDiff: string): Promise<string> {
+  try {
+    // ファイルの現在の内容を読み取る
+    const currentContent = await fs.readFile(filePath, 'utf-8')
+
+    // 差分を適用する
+    const patched = diff.applyPatch(currentContent, unifiedDiff)
+
+    if (patched === false) {
+      throw new Error('Failed to apply patch')
+    }
+
+    // 更新された内容をファイルに書き込む
+    await fs.writeFile(filePath, patched)
+
+    return `Successfully applied unified diff to ${filePath}`
+  } catch (e: any) {
+    throw `Error applying unified diff: ${e.message}`
   }
 }
 
@@ -151,10 +160,10 @@ export const executeTool = async (toolName: string | undefined, toolInput: any) 
   switch (toolName) {
     case 'createFolder':
       return createFolder(toolInput['path'])
-    case 'writeToFiles':
-      return writeToFiles(toolInput['files'])
     case 'readFiles':
       return readFiles(toolInput['paths'])
+    case 'writeToFile':
+      return writeToFile(toolInput['path'], toolInput['content'])
     case 'listFiles':
       return listFiles(toolInput['path'])
     case 'moveFile':
@@ -163,6 +172,8 @@ export const executeTool = async (toolName: string | undefined, toolInput: any) 
       return copyFile(toolInput['source'], toolInput['destination'])
     case 'tavilySearch':
       return tavilySearch(toolInput['query'])
+    case 'applyUnifiedDiff':
+      return applyUnifiedDiff(toolInput['filePath'], toolInput['unifiedDiff'])
     default:
       throw new Error(`Unknown tool: ${toolName}`)
   }
@@ -190,34 +201,23 @@ export const tools: Tool[] = [
   },
   {
     toolSpec: {
-      name: 'writeToFiles',
+      name: 'writeToFile',
       description:
-        "Write content to multiple files at once. Use this when you need to create or update multiple files simultaneously. You can also create the folder if it doesn't exist.",
+        'Write content to an existing file at the specified path. Use this when you need to add or update content in an existing file.',
       inputSchema: {
         json: {
           type: 'object',
           properties: {
-            files: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  path: {
-                    type: 'string',
-                    description: 'The path of the file to write to'
-                  },
-                  content: {
-                    type: 'string',
-                    description:
-                      'The content to write to the file. This must be specified as a string even if the file is in JSON format. For example, "{ package: false }".'
-                  }
-                },
-                required: ['path', 'content']
-              },
-              description: 'An array of file objects containing path and content'
+            path: {
+              type: 'string',
+              description: 'The path of the file to write to'
+            },
+            content: {
+              type: 'string',
+              description: 'The content to write to the file'
             }
           },
-          required: ['files']
+          required: ['path', 'content']
         }
       }
     }
@@ -324,6 +324,28 @@ export const tools: Tool[] = [
             }
           },
           required: ['query']
+        }
+      }
+    }
+  },
+  {
+    toolSpec: {
+      name: 'applyUnifiedDiff',
+      description: 'Apply a unified diff to a file, modifying its contents accordingly.',
+      inputSchema: {
+        json: {
+          type: 'object',
+          properties: {
+            filePath: {
+              type: 'string',
+              description: 'The path of the file to modify'
+            },
+            unifiedDiff: {
+              type: 'string',
+              description: 'The unified diff to apply to the file'
+            }
+          },
+          required: ['filePath', 'unifiedDiff']
         }
       }
     }

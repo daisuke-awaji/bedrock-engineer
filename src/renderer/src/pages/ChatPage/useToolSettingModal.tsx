@@ -1,4 +1,5 @@
 import useModal from '@renderer/hooks/useModal'
+import useTavilySearch from '@renderer/hooks/useTavilySearch'
 import { useEffect, useState } from 'react'
 import { ToolState } from 'src/types/agent-chat'
 
@@ -9,7 +10,9 @@ const useToolSettingModal = () => {
     const tools = window.store.get('tools')
     if (tools) {
       setStateTools(tools)
-    } else {
+    }
+
+    if (window.tools.length !== tools.length) {
       const t = window.tools
         .map((tool) => {
           if (!tool.toolSpec?.name) return
@@ -17,7 +20,8 @@ const useToolSettingModal = () => {
         })
         .filter((item) => item !== undefined)
 
-      setTools(t)
+      console.log({ toolUpdated: t })
+      window.store.set('tools', t)
     }
   }, [])
 
@@ -69,7 +73,18 @@ const useToolSettingModal = () => {
     )
   }
 
-  return { tools, setTools, ToolSettingModal, openModal }
+  const { apikey } = useTavilySearch()
+  const tavilySearchEnabled = apikey !== 'tvly-xxxxxxxxxxxxxxxxxxx'
+  const enabledTools = tools
+    ?.filter((v) => v.enabled)
+    .filter((value) => {
+      if (value.toolSpec?.name === 'tavilySearch') {
+        return tavilySearchEnabled
+      }
+      return true
+    })
+
+  return { tools, enabledTools, setTools, ToolSettingModal, openModal }
 }
 
 export default useToolSettingModal
