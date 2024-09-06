@@ -11,6 +11,7 @@ import useToolSettingModal from './useToolSettingModal'
 import useScroll from '@renderer/hooks/useScroll'
 import { ContentBlock, ConversationRole, Message } from '@aws-sdk/client-bedrock-runtime'
 import { Accordion } from 'flowbite-react'
+import MD from './MD'
 
 const agents = [
   {
@@ -27,9 +28,9 @@ const renderAvator = (role?: ConversationRole) => {
   // }
 
   if (role === 'assistant') {
-    return <RiRobot2Line className="h-8" />
+    return <RiRobot2Line className="h-8 w-8" />
   } else {
-    return <FcVoicePresentation />
+    return <FcVoicePresentation className="h-8 w-8" />
   }
 }
 
@@ -59,11 +60,7 @@ const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
         <span className="text-sm text-gray-500">{message.role}</span>
         {message.content?.map((c, index) => {
           if ('text' in c) {
-            return (
-              <div key={index} className="whitespace-pre-wrap">
-                {c.text}
-              </div>
-            )
+            return <MD key={index}>{c.text}</MD>
           } else if ('toolUse' in c) {
             return (
               <div key={index} className="flex flex-col gap-2">
@@ -114,6 +111,9 @@ const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
 export default function ChatPage() {
   const [userInput, setUserInput] = useState('')
   const [messages, setMessages] = useState<Message[]>([])
+  useEffect(() => {
+    console.table(messages)
+  }, [messages])
   const [loading, setLoading] = useState(false)
   const { enabledTavilySearch } = useTavilySearch()
   const { llm } = useLLM()
@@ -344,12 +344,15 @@ Finally, carefully describe any information required to use or develop this proj
           ))}
 
           {loading && (
-            <div key="loading-robot" className={`my-2 p-2 rounded`}>
-              <div className="flex gap-2">
-                <div className="text-[28px] pt-2 items-center">
-                  <RiRobot2Line className="h-8 animate-bounce" />
-                </div>
-                <div className={`p-2 rounded-md w-full`}></div>
+            <div key="loading-robot" className="flex gap-4">
+              <div className="flex items-center justify-center w-10 h-10">
+                <RiRobot2Line className="h-8 w-8 animate-bounce" />
+              </div>
+              <div className="flex flex-col gap-2 w-full">
+                <span className="text-sm text-gray-500">
+                  {messages[messages.length - 1]?.role === 'user' ? 'assistant' : 'user'}
+                </span>
+                <div className="flex gap-2">...</div>
               </div>
             </div>
           )}
@@ -408,11 +411,7 @@ Finally, carefully describe any information required to use or develop this proj
               }`}
               placeholder="Type your message... "
               disabled={loading}
-              value={
-                loading
-                  ? 'Continue the process until the goal is reached or 10 iterations have been completed. When the goal is reached, say AUTOMODE_COMPLETE.'
-                  : userInput
-              }
+              value={loading ? 'Continue until the goal is achieved' : userInput}
               onChange={(e) => setUserInput(e.target.value)}
               onKeyDown={(e) => onkeydown(e)}
               required

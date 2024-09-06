@@ -1,0 +1,80 @@
+.reactMarkDown {
+  font-size: 14px;
+}
+
+.reactMarkDown * {
+  margin-bottom: 10px;
+}
+
+.reactMarkDown h1 {
+  font-size: 2em;
+  margin: 0.67em 0;
+}
+
+.reactMarkDown h2 {
+  font-size: 1.5em;
+  margin: 0.83em 0;
+}
+
+.reactMarkDown h3 {
+  font-size: 1.17em;
+  margin: 1em 0;
+}
+
+.reactMarkDown ul {
+  margin-top: 1em;
+  margin-bottom: 1em;
+  list-style: disc outside none;
+}
+
+.reactMarkDown ul li {
+  margin-left: 2em;
+  display: list-item;
+  text-align: -webkit-match-parent;
+}
+.reactMarkDown p {
+  font-size: 14px;
+  font-weight: 400;
+  white-space: pre-wrap;
+}
+
+.reactMarkDown pre {
+  padding: 8px;
+  border: 1px black solid;
+  border-radius: 0.3rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  background-color: #f2f2f2;
+  overflow-x: auto;
+  font-size: 14px;
+  font-family: Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+}
+
+.reactMarkDown table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.reactMarkDown table th {
+  font-weight: bold;
+  padding: 6px;
+  background-color: #f2f2f2;
+  border: 1px solid #ddd;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+  min-width: 100px;
+}
+
+.reactMarkDown table td {
+  padding: 6px;
+  border: 1px solid #ddd;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+  min-width: 100px;
+}
