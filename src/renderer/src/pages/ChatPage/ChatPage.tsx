@@ -112,7 +112,7 @@ export default function ChatPage() {
   const [userInput, setUserInput] = useState('')
   const [messages, setMessages] = useState<Message[]>([])
   useEffect(() => {
-    console.table(messages)
+    console.log(messages)
   }, [messages])
   const [loading, setLoading] = useState(false)
   const { enabledTavilySearch } = useTavilySearch()
@@ -163,54 +163,62 @@ export default function ChatPage() {
         if (!contentBlock) {
           return
         }
-        if (Object.keys(contentBlock).includes('toolUse')) {
-          const toolUse = contentBlock.toolUse
-          if (toolUse) {
-            let toolResult: string
-            let hasError = false
-            try {
-              toolResult = await window.api.bedrock.executeTool(toolUse.name, toolUse.input)
-            } catch (e: any) {
-              console.error(e)
-              toolResult = e
-              hasError = true
-            }
 
-            const toolResultMessage: Message = {
-              role: 'user',
-              content: [
-                {
+        const toolResults: any = []
+        for (const contentBlock of contentBlocks) {
+          if (Object.keys(contentBlock).includes('toolUse')) {
+            const toolUse = contentBlock.toolUse
+            if (toolUse) {
+              try {
+                const toolResult = await window.api.bedrock.executeTool(toolUse.name, toolUse.input)
+                toolResults.push({
                   toolResult: {
                     toolUseId: toolUse.toolUseId,
                     content: [{ text: toolResult }],
-                    status: hasError ? 'error' : 'success'
+                    status: 'success'
                   }
-                }
-              ]
+                })
+              } catch (e: any) {
+                console.error(e)
+                toolResults.push({
+                  toolResult: {
+                    toolUseId: toolUse.toolUseId,
+                    content: [{ text: e }],
+                    status: 'error'
+                  }
+                })
+              }
             }
-            msgs.push(toolResultMessage)
-            setMessages((prev) => [...prev, toolResultMessage])
-
-            const toolResponse = await window.api.bedrock.converse({
-              messages: msgs,
-              modelId,
-              system: [{ text: systemPrompt({ workingDir: projectPath }) }],
-              toolConfig: { tools: enabledTools }
-            })
-            const toolResponseMessage: Message = {
-              role: 'assistant',
-              content: toolResponse.output?.message?.content
-            }
-            msgs.push(toolResponseMessage)
-            setMessages((prev) => [...prev, toolResponseMessage])
-
-            const nextContent = toolResponse.output?.message?.content
-            if (nextContent) {
-              return recursivelyExecTool(nextContent)
-            }
-            return
           }
         }
+
+        console.log(toolResults)
+
+        const toolResultMessage: Message = {
+          role: 'user',
+          content: toolResults
+        }
+        msgs.push(toolResultMessage)
+        setMessages((prev) => [...prev, toolResultMessage])
+
+        const toolResponse = await window.api.bedrock.converse({
+          messages: msgs,
+          modelId,
+          system: [{ text: systemPrompt({ workingDir: projectPath }) }],
+          toolConfig: { tools: enabledTools }
+        })
+        const toolResponseMessage: Message = {
+          role: 'assistant',
+          content: toolResponse.output?.message?.content
+        }
+        msgs.push(toolResponseMessage)
+        setMessages((prev) => [...prev, toolResponseMessage])
+
+        const nextContent = toolResponse.output?.message?.content
+        if (nextContent) {
+          return recursivelyExecTool(nextContent)
+        }
+        return
       }
 
       await recursivelyExecTool(lastMessage.content)
