@@ -45,9 +45,18 @@ type JSONCodeBlockProps = {
   json: any
 }
 const JSONCodeBlock = (props: JSONCodeBlockProps) => {
+  const json = JSON.stringify(props.json, null, 2)
   return (
-    <pre className="bg-gray-800 text-white p-4 rounded-md overflow-x-auto whitespace-pre-wrap">
-      <code>{JSON.stringify(props.json, null, 2)}</code>
+    <pre className="bg-gray-800 text-white p-4 rounded-md overflow-x-auto whitespace-pre-wrap max-h-[50vh] max-w-[90vw]">
+      <code>{json}</code>
+    </pre>
+  )
+}
+
+const TextCodeBlock = (props: { text: string }) => {
+  return (
+    <pre className="bg-gray-800 text-white p-4 rounded-md overflow-x-auto whitespace-pre-wrap max-h-[50vh] max-w-[90vw]">
+      <code>{props.text}</code>
     </pre>
   )
 }
@@ -57,13 +66,27 @@ const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
     <div className="flex gap-4">
       <ChatAvator role={message.role} />
       <div className="flex flex-col gap-2 w-full">
-        <span className="text-sm text-gray-500">{message.role}</span>
+        <span className="text-xs text-gray-500">{message.role}</span>
         {message.content?.map((c, index) => {
           if ('text' in c) {
+            const htmlStart = c.text?.indexOf('```html')
+            if (htmlStart && htmlStart > 0) {
+              const htmlEnd = c.text?.indexOf('```', htmlStart + 6)
+              if (htmlEnd) {
+                const html = c.text?.substring(htmlStart + 7, htmlEnd)
+                return (
+                  <div key={index} className="grid grid-cols-2 gap-2">
+                    <MD>{c.text}</MD>
+                    <iframe srcDoc={html} className="h-full w-full"></iframe>
+                  </div>
+                )
+              }
+            }
+
             return <MD key={index}>{c.text}</MD>
           } else if ('toolUse' in c) {
             return (
-              <div key={index} className="flex flex-col gap-2">
+              <div key={index} className="flex flex-col gap-2 text-xs">
                 <Accordion className="w-full" collapseAll>
                   <Accordion.Panel>
                     <Accordion.Title>
@@ -71,6 +94,7 @@ const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
                       <span className="ml-2 border rounded-md bg-gray-200 px-2">
                         {c.toolUse?.name}
                       </span>
+                      <span className="ml-2">{c.toolUse?.toolUseId}</span>
                     </Accordion.Title>
                     <Accordion.Content>
                       <JSONCodeBlock json={c.toolUse?.input} />
@@ -81,7 +105,7 @@ const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
             )
           } else if ('toolResult' in c) {
             return (
-              <div key={index} className="flex flex-col gap-2">
+              <div key={index} className="flex flex-col gap-2 text-xs">
                 <Accordion className="w-full" collapseAll>
                   <Accordion.Panel>
                     <Accordion.Title>
@@ -91,9 +115,16 @@ const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
                       >
                         {c.toolResult?.status}
                       </span>
+                      <span className="ml-2">{c.toolResult?.toolUseId}</span>
                     </Accordion.Title>
                     <Accordion.Content className="w-full">
-                      <JSONCodeBlock json={c.toolResult?.content} />
+                      {c.toolResult?.content?.map((content, index) => {
+                        if ('text' in content) {
+                          return <TextCodeBlock key={index} text={content.text ?? ''} />
+                        } else {
+                          return <JSONCodeBlock key={index} json={content} />
+                        }
+                      })}
                     </Accordion.Content>
                   </Accordion.Panel>
                 </Accordion>
@@ -146,6 +177,7 @@ export default function ChatPage() {
       ],
       toolConfig: { tools: enabledTools }
     })
+    console.log({ tokenUsage: res.usage })
     const assistantMessage: Message = { role: 'assistant', content: res.output?.message?.content }
     msgs.push(assistantMessage)
     setMessages((prev) => [...prev, assistantMessage])
@@ -207,6 +239,7 @@ export default function ChatPage() {
           system: [{ text: systemPrompt({ workingDir: projectPath }) }],
           toolConfig: { tools: enabledTools }
         })
+        console.log({ tokenUsage: toolResponse.usage })
         const toolResponseMessage: Message = {
           role: 'assistant',
           content: toolResponse.output?.message?.content
@@ -224,7 +257,6 @@ export default function ChatPage() {
       await recursivelyExecTool(lastMessage.content)
     }
 
-    // assistant messa
     setLoading(false)
   }
 
