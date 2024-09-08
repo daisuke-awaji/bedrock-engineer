@@ -9,9 +9,15 @@ import useTavilySearch from '@renderer/hooks/useTavilySearch'
 import useAdvancedSetting from '@renderer/hooks/useAdvancedSetting'
 import useToolSettingModal from './useToolSettingModal'
 import useScroll from '@renderer/hooks/useScroll'
-import { ContentBlock, ConversationRole, Message } from '@aws-sdk/client-bedrock-runtime'
+import {
+  ContentBlock,
+  ConversationRole,
+  Message,
+  ToolUseBlockStart
+} from '@aws-sdk/client-bedrock-runtime'
 import { Accordion } from 'flowbite-react'
 import MD from './MD'
+import { streamChatCompletion, StreamChatCompletionProps } from '@renderer/lib/api'
 
 const agents = [
   {
@@ -142,10 +148,11 @@ const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
 export default function ChatPage() {
   const [userInput, setUserInput] = useState('')
   const [messages, setMessages] = useState<Message[]>([])
+  const [loading, setLoading] = useState(false)
   useEffect(() => {
     console.log(messages)
-  }, [messages])
-  const [loading, setLoading] = useState(false)
+  }, [messages.length])
+
   const { enabledTavilySearch } = useTavilySearch()
   const { llm } = useLLM()
   const modelId = llm?.modelId
@@ -157,19 +164,19 @@ export default function ChatPage() {
 
   const { enabledTools, ToolSettingModal, openModal } = useToolSettingModal()
 
-  const handleClickPromptSubmit = async (input: string, messages: Message[]) => {
-    if (!input) {
+  const handleClickPromptSubmit = async (userInput: string, messages: Message[]) => {
+    if (!userInput) {
       return alert('Please enter a prompt')
     }
 
     const msgs = [...messages]
-    const userInputMessage: Message = { role: 'user', content: [{ text: input }] }
+    const userInputMessage: Message = { role: 'user', content: [{ text: userInput }] }
     msgs.push(userInputMessage)
     setMessages((prev) => [...prev, userInputMessage])
     setUserInput('')
     setLoading(true)
 
-    const res = await window.api.bedrock.converse({
+    await streamChat({
       messages: msgs,
       modelId,
       system: [
@@ -177,87 +184,171 @@ export default function ChatPage() {
       ],
       toolConfig: { tools: enabledTools }
     })
-    console.log({ tokenUsage: res.usage })
-    const assistantMessage: Message = { role: 'assistant', content: res.output?.message?.content }
-    msgs.push(assistantMessage)
-    setMessages((prev) => [...prev, assistantMessage])
 
     const lastMessage = msgs[msgs.length - 1]
-    const toolUse = res.output?.message?.content?.find((v) => v.toolUse)
-    if (toolUse) {
+    console.log({ lastMessageContent: lastMessage.content })
+    console.log(lastMessage.content?.find((v) => v.toolUse))
+    if (lastMessage.content?.find((v) => v.toolUse)) {
       if (!lastMessage.content) {
         console.warn(lastMessage)
         return null
-      }
-
-      const recursivelyExecTool = async (contentBlocks: ContentBlock[]) => {
-        const contentBlock = contentBlocks.find((block) => block.toolUse)
-        if (!contentBlock) {
-          return
-        }
-
-        const toolResults: any = []
-        for (const contentBlock of contentBlocks) {
-          if (Object.keys(contentBlock).includes('toolUse')) {
-            const toolUse = contentBlock.toolUse
-            if (toolUse) {
-              try {
-                const toolResult = await window.api.bedrock.executeTool(toolUse.name, toolUse.input)
-                toolResults.push({
-                  toolResult: {
-                    toolUseId: toolUse.toolUseId,
-                    content: [{ text: toolResult }],
-                    status: 'success'
-                  }
-                })
-              } catch (e: any) {
-                console.error(e)
-                toolResults.push({
-                  toolResult: {
-                    toolUseId: toolUse.toolUseId,
-                    content: [{ text: e }],
-                    status: 'error'
-                  }
-                })
-              }
-            }
-          }
-        }
-
-        console.log(toolResults)
-
-        const toolResultMessage: Message = {
-          role: 'user',
-          content: toolResults
-        }
-        msgs.push(toolResultMessage)
-        setMessages((prev) => [...prev, toolResultMessage])
-
-        const toolResponse = await window.api.bedrock.converse({
-          messages: msgs,
-          modelId,
-          system: [{ text: systemPrompt({ workingDir: projectPath }) }],
-          toolConfig: { tools: enabledTools }
-        })
-        console.log({ tokenUsage: toolResponse.usage })
-        const toolResponseMessage: Message = {
-          role: 'assistant',
-          content: toolResponse.output?.message?.content
-        }
-        msgs.push(toolResponseMessage)
-        setMessages((prev) => [...prev, toolResponseMessage])
-
-        const nextContent = toolResponse.output?.message?.content
-        if (nextContent) {
-          return recursivelyExecTool(nextContent)
-        }
-        return
       }
 
       await recursivelyExecTool(lastMessage.content)
     }
 
     setLoading(false)
+
+    async function recursivelyExecTool(contentBlocks: ContentBlock[]) {
+      const contentBlock = contentBlocks.find((block) => block.toolUse)
+      if (!contentBlock) {
+        return
+      }
+
+      const toolResults: any = []
+      for (const contentBlock of contentBlocks) {
+        if (Object.keys(contentBlock).includes('toolUse')) {
+          const toolUse = contentBlock.toolUse
+          if (toolUse) {
+            try {
+              const toolResult = await window.api.bedrock.executeTool(toolUse.name, toolUse.input)
+              toolResults.push({
+                toolResult: {
+                  toolUseId: toolUse.toolUseId,
+                  content: [{ text: toolResult }],
+                  status: 'success'
+                }
+              })
+            } catch (e: any) {
+              console.error(e)
+              toolResults.push({
+                toolResult: {
+                  toolUseId: toolUse.toolUseId,
+                  content: [{ text: e }],
+                  status: 'error'
+                }
+              })
+            }
+          }
+        }
+      }
+
+      console.log({ toolResults })
+
+      const toolResultMessage: Message = {
+        role: 'user',
+        content: toolResults
+      }
+      msgs.push(toolResultMessage)
+      setMessages((prev) => [...prev, toolResultMessage])
+
+      const stopReason = await streamChat({
+        messages: msgs,
+        modelId,
+        system: [
+          {
+            text: systemPrompt({ workingDir: projectPath, useTavilySearch: enabledTavilySearch })
+          }
+        ],
+        toolConfig: { tools: enabledTools }
+      })
+
+      if (stopReason === 'tool_use') {
+        const a = msgs[msgs.length - 1].content
+        if (a !== undefined) {
+          return recursivelyExecTool(a)
+        }
+      }
+
+      return
+    }
+
+    async function streamChat(props: StreamChatCompletionProps) {
+      const generator = streamChatCompletion(props)
+
+      let s = ''
+      let input = ''
+      let role: ConversationRole | undefined = undefined
+      let toolUse: ToolUseBlockStart | undefined = undefined
+      const content: ContentBlock[] = []
+      // handling bedrock converse stream response
+      for await (const json of generator) {
+        // for debug
+        // if (!json.contentBlockDelta) {
+        //   console.log(json)
+        // }
+
+        try {
+          if (json.messageStart) {
+            role = json.messageStart.role
+          }
+
+          if (json.messageStop) {
+            // handle message stop
+            setMessages([...msgs, { role, content }])
+            msgs.push({ role, content })
+
+            const stopReason = json.messageStop.stopReason
+            return stopReason
+          }
+
+          if (json.contentBlockStart) {
+            toolUse = json.contentBlockStart.start?.toolUse
+          }
+
+          if (json.contentBlockStop) {
+            if (toolUse) {
+              let parseInput: string
+              try {
+                parseInput = JSON.parse(input)
+              } catch (e) {
+                parseInput = input
+              }
+
+              content.push({
+                toolUse: { name: toolUse?.name, toolUseId: toolUse?.toolUseId, input: parseInput }
+              })
+            } else {
+              content.push({ text: s })
+            }
+            input = ''
+          }
+
+          if (json.contentBlockDelta) {
+            const text = json.contentBlockDelta.delta?.text
+            if (text) {
+              s = s + text
+              setMessages([...msgs, { role, content: [{ text: s }] }])
+            }
+
+            if (toolUse) {
+              input = input + json.contentBlockDelta.delta?.toolUse?.input
+
+              setMessages([
+                ...msgs,
+                {
+                  role,
+                  content: [
+                    { text: s },
+                    {
+                      toolUse: { name: toolUse?.name, toolUseId: toolUse?.toolUseId, input: input }
+                    }
+                  ]
+                }
+              ])
+            }
+          }
+
+          if (json.metadata) {
+            // token usage handler
+            // todo
+          }
+        } catch (error) {
+          console.error(error)
+        }
+      }
+      throw new Error('unexpected end of stream')
+    }
   }
 
   const [isComposing, setIsComposing] = useState(false)
