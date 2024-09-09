@@ -1,14 +1,7 @@
 import React from 'react'
 import { FiGithub } from 'react-icons/fi'
 import { Tooltip } from 'flowbite-react'
-import {
-  createHashRouter,
-  Link,
-  Outlet,
-  RouterProvider,
-  useLocation,
-  useRouteError
-} from 'react-router-dom'
+import { createHashRouter, Link, Outlet, RouterProvider, useLocation } from 'react-router-dom'
 import CmdK from './command-palette'
 import { routes } from './routes'
 import HomePage from './pages/HomePage/HomePage'
@@ -74,16 +67,9 @@ const Layout: React.FC = () => {
   )
 }
 
-function ErrorBoundary() {
-  const error = useRouteError()
-  console.error(error)
-  return <code>{JSON.stringify(error, null, 2)}</code>
-}
-
 const router = createHashRouter([
   {
     path: '/',
-    errorElement: <ErrorBoundary />,
     element: <Layout />,
     children: [
       ...routes.map((route) => ({
