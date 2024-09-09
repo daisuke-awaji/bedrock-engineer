@@ -42,11 +42,7 @@ api.post(
     res.setHeader('X-Accel-Buffering', 'no')
 
     try {
-      const result = await bedrock.converseStream({
-        modelId: req.body.modelId,
-        system: req.body.system,
-        messages: req.body.messages
-      })
+      const result = await bedrock.converseStream(req.body)
 
       if (!result.stream) {
         return res.end()

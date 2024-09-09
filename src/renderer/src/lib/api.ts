@@ -1,10 +1,11 @@
 import { RetrieveAndGenerateCommandInput } from '@aws-sdk/client-bedrock-agent-runtime'
-import { ConverseStreamOutput } from '@aws-sdk/client-bedrock-runtime'
+import { ConverseStreamOutput, Message, ToolConfiguration } from '@aws-sdk/client-bedrock-runtime'
 
-type StreamChatCompletionProps = {
+export type StreamChatCompletionProps = {
   modelId: string
   system: { text: string }[] | undefined
-  messages: { role: string; content: { text: string }[] }[]
+  messages: Message[]
+  toolConfig?: ToolConfiguration
 }
 
 const API_ENDPOINT = window.store.get('apiEndpoint')

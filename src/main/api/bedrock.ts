@@ -37,16 +37,26 @@ const converse = async (props: CallConverseAPIProps): Promise<ConverseCommandOut
   return runtimeClient.send(command)
 }
 
+const MAX_RETRIES = 30 // 最大再試行回数
+const RETRY_DELAY = 5000 // 再試行間隔 (ミリ秒)
 const converseStream = async (
-  props: CallConverseAPIProps
+  props: CallConverseAPIProps,
+  retries = 0
 ): Promise<ConverseStreamCommandOutput> => {
-  const { modelId, messages, system } = props
-  const command = new ConverseStreamCommand({
-    modelId,
-    messages,
-    system
-  })
-  return runtimeClient.send(command)
+  try {
+    const command = new ConverseStreamCommand(props)
+    return await runtimeClient.send(command)
+  } catch (error) {
+    console.log({ retry: retries })
+    if (retries >= MAX_RETRIES) {
+      // 最大再試行回数に達した場合はエラーをスローする
+      throw error
+    }
+
+    // 一定時間待ってから再試行
+    await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY))
+    return converseStream(props, retries + 1)
+  }
 }
 
 const listModels = async (): Promise<FoundationModelSummary[] | undefined> => {

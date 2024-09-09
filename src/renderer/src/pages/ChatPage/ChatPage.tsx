@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { FcFolder, FcSupport, FcVoicePresentation } from 'react-icons/fc'
+import { FcFolder, FcSupport } from 'react-icons/fc'
 import { FiSend } from 'react-icons/fi'
-import { RiRobot2Line } from 'react-icons/ri'
 import prompts from '@renderer/prompts/prompts'
 import useProject from '@renderer/hooks/useProject'
 import useLLM from '@renderer/hooks/useLLM'
@@ -9,9 +8,17 @@ import useTavilySearch from '@renderer/hooks/useTavilySearch'
 import useAdvancedSetting from '@renderer/hooks/useAdvancedSetting'
 import useToolSettingModal from './useToolSettingModal'
 import useScroll from '@renderer/hooks/useScroll'
-import { ContentBlock, ConversationRole, Message } from '@aws-sdk/client-bedrock-runtime'
+import {
+  ContentBlock,
+  ConversationRole,
+  Message,
+  ToolUseBlockStart
+} from '@aws-sdk/client-bedrock-runtime'
 import { Accordion } from 'flowbite-react'
 import MD from './MD'
+import { streamChatCompletion, StreamChatCompletionProps } from '@renderer/lib/api'
+import AILogo from '../../assets/images/icons/ai.svg'
+import { LiaUserCircleSolid } from 'react-icons/lia'
 
 const agents = [
   {
@@ -28,9 +35,19 @@ const renderAvator = (role?: ConversationRole) => {
   // }
 
   if (role === 'assistant') {
-    return <RiRobot2Line className="h-8 w-8" />
+    return (
+      <div className="h-8 w-8 flex justify-center items-center">
+        <div className="h-4 w-4">
+          <AILogo />
+        </div>
+      </div>
+    )
   } else {
-    return <FcVoicePresentation className="h-8 w-8" />
+    return (
+      <div className="flex justify-center items-center">
+        <LiaUserCircleSolid className="h-6 w-6" />
+      </div>
+    )
   }
 }
 
@@ -86,7 +103,7 @@ const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
             return <MD key={index}>{c.text}</MD>
           } else if ('toolUse' in c) {
             return (
-              <div key={index} className="flex flex-col gap-2 text-xs">
+              <div key={index} className="flex flex-col gap-2 text-xs w-full">
                 <Accordion className="w-full" collapseAll>
                   <Accordion.Panel>
                     <Accordion.Title>
@@ -105,7 +122,7 @@ const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
             )
           } else if ('toolResult' in c) {
             return (
-              <div key={index} className="flex flex-col gap-2 text-xs">
+              <div key={index} className="flex flex-col gap-2 text-xs w-full">
                 <Accordion className="w-full" collapseAll>
                   <Accordion.Panel>
                     <Accordion.Title>
@@ -142,10 +159,11 @@ const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
 export default function ChatPage() {
   const [userInput, setUserInput] = useState('')
   const [messages, setMessages] = useState<Message[]>([])
+  const [loading, setLoading] = useState(false)
   useEffect(() => {
     console.log(messages)
-  }, [messages])
-  const [loading, setLoading] = useState(false)
+  }, [messages.length])
+
   const { enabledTavilySearch } = useTavilySearch()
   const { llm } = useLLM()
   const modelId = llm?.modelId
@@ -157,19 +175,19 @@ export default function ChatPage() {
 
   const { enabledTools, ToolSettingModal, openModal } = useToolSettingModal()
 
-  const handleClickPromptSubmit = async (input: string, messages: Message[]) => {
-    if (!input) {
+  const handleClickPromptSubmit = async (userInput: string, messages: Message[]) => {
+    if (!userInput) {
       return alert('Please enter a prompt')
     }
 
     const msgs = [...messages]
-    const userInputMessage: Message = { role: 'user', content: [{ text: input }] }
+    const userInputMessage: Message = { role: 'user', content: [{ text: userInput }] }
     msgs.push(userInputMessage)
     setMessages((prev) => [...prev, userInputMessage])
     setUserInput('')
     setLoading(true)
 
-    const res = await window.api.bedrock.converse({
+    await streamChat({
       messages: msgs,
       modelId,
       system: [
@@ -177,87 +195,171 @@ export default function ChatPage() {
       ],
       toolConfig: { tools: enabledTools }
     })
-    console.log({ tokenUsage: res.usage })
-    const assistantMessage: Message = { role: 'assistant', content: res.output?.message?.content }
-    msgs.push(assistantMessage)
-    setMessages((prev) => [...prev, assistantMessage])
 
     const lastMessage = msgs[msgs.length - 1]
-    const toolUse = res.output?.message?.content?.find((v) => v.toolUse)
-    if (toolUse) {
+    console.log({ lastMessageContent: lastMessage.content })
+    console.log(lastMessage.content?.find((v) => v.toolUse))
+    if (lastMessage.content?.find((v) => v.toolUse)) {
       if (!lastMessage.content) {
         console.warn(lastMessage)
         return null
-      }
-
-      const recursivelyExecTool = async (contentBlocks: ContentBlock[]) => {
-        const contentBlock = contentBlocks.find((block) => block.toolUse)
-        if (!contentBlock) {
-          return
-        }
-
-        const toolResults: any = []
-        for (const contentBlock of contentBlocks) {
-          if (Object.keys(contentBlock).includes('toolUse')) {
-            const toolUse = contentBlock.toolUse
-            if (toolUse) {
-              try {
-                const toolResult = await window.api.bedrock.executeTool(toolUse.name, toolUse.input)
-                toolResults.push({
-                  toolResult: {
-                    toolUseId: toolUse.toolUseId,
-                    content: [{ text: toolResult }],
-                    status: 'success'
-                  }
-                })
-              } catch (e: any) {
-                console.error(e)
-                toolResults.push({
-                  toolResult: {
-                    toolUseId: toolUse.toolUseId,
-                    content: [{ text: e }],
-                    status: 'error'
-                  }
-                })
-              }
-            }
-          }
-        }
-
-        console.log(toolResults)
-
-        const toolResultMessage: Message = {
-          role: 'user',
-          content: toolResults
-        }
-        msgs.push(toolResultMessage)
-        setMessages((prev) => [...prev, toolResultMessage])
-
-        const toolResponse = await window.api.bedrock.converse({
-          messages: msgs,
-          modelId,
-          system: [{ text: systemPrompt({ workingDir: projectPath }) }],
-          toolConfig: { tools: enabledTools }
-        })
-        console.log({ tokenUsage: toolResponse.usage })
-        const toolResponseMessage: Message = {
-          role: 'assistant',
-          content: toolResponse.output?.message?.content
-        }
-        msgs.push(toolResponseMessage)
-        setMessages((prev) => [...prev, toolResponseMessage])
-
-        const nextContent = toolResponse.output?.message?.content
-        if (nextContent) {
-          return recursivelyExecTool(nextContent)
-        }
-        return
       }
 
       await recursivelyExecTool(lastMessage.content)
     }
 
     setLoading(false)
+
+    async function recursivelyExecTool(contentBlocks: ContentBlock[]) {
+      const contentBlock = contentBlocks.find((block) => block.toolUse)
+      if (!contentBlock) {
+        return
+      }
+
+      const toolResults: any = []
+      for (const contentBlock of contentBlocks) {
+        if (Object.keys(contentBlock).includes('toolUse')) {
+          const toolUse = contentBlock.toolUse
+          if (toolUse) {
+            try {
+              const toolResult = await window.api.bedrock.executeTool(toolUse.name, toolUse.input)
+              toolResults.push({
+                toolResult: {
+                  toolUseId: toolUse.toolUseId,
+                  content: [{ text: toolResult }],
+                  status: 'success'
+                }
+              })
+            } catch (e: any) {
+              console.error(e)
+              toolResults.push({
+                toolResult: {
+                  toolUseId: toolUse.toolUseId,
+                  content: [{ text: e }],
+                  status: 'error'
+                }
+              })
+            }
+          }
+        }
+      }
+
+      console.log({ toolResults })
+
+      const toolResultMessage: Message = {
+        role: 'user',
+        content: toolResults
+      }
+      msgs.push(toolResultMessage)
+      setMessages((prev) => [...prev, toolResultMessage])
+
+      const stopReason = await streamChat({
+        messages: msgs,
+        modelId,
+        system: [
+          {
+            text: systemPrompt({ workingDir: projectPath, useTavilySearch: enabledTavilySearch })
+          }
+        ],
+        toolConfig: { tools: enabledTools }
+      })
+
+      if (stopReason === 'tool_use') {
+        const a = msgs[msgs.length - 1].content
+        if (a !== undefined) {
+          return recursivelyExecTool(a)
+        }
+      }
+
+      return
+    }
+
+    async function streamChat(props: StreamChatCompletionProps) {
+      const generator = streamChatCompletion(props)
+
+      let s = ''
+      let input = ''
+      let role: ConversationRole | undefined = undefined
+      let toolUse: ToolUseBlockStart | undefined = undefined
+      const content: ContentBlock[] = []
+      // handling bedrock converse stream response
+      for await (const json of generator) {
+        // for debug
+        // if (!json.contentBlockDelta) {
+        //   console.log(json)
+        // }
+
+        try {
+          if (json.messageStart) {
+            role = json.messageStart.role
+          }
+
+          if (json.messageStop) {
+            // handle message stop
+            setMessages([...msgs, { role, content }])
+            msgs.push({ role, content })
+
+            const stopReason = json.messageStop.stopReason
+            return stopReason
+          }
+
+          if (json.contentBlockStart) {
+            toolUse = json.contentBlockStart.start?.toolUse
+          }
+
+          if (json.contentBlockStop) {
+            if (toolUse) {
+              let parseInput: string
+              try {
+                parseInput = JSON.parse(input)
+              } catch (e) {
+                parseInput = input
+              }
+
+              content.push({
+                toolUse: { name: toolUse?.name, toolUseId: toolUse?.toolUseId, input: parseInput }
+              })
+            } else {
+              content.push({ text: s })
+            }
+            input = ''
+          }
+
+          if (json.contentBlockDelta) {
+            const text = json.contentBlockDelta.delta?.text
+            if (text) {
+              s = s + text
+              setMessages([...msgs, { role, content: [{ text: s }] }])
+            }
+
+            if (toolUse) {
+              input = input + json.contentBlockDelta.delta?.toolUse?.input
+
+              setMessages([
+                ...msgs,
+                {
+                  role,
+                  content: [
+                    { text: s },
+                    {
+                      toolUse: { name: toolUse?.name, toolUseId: toolUse?.toolUseId, input: input }
+                    }
+                  ]
+                }
+              ])
+            }
+          }
+
+          if (json.metadata) {
+            // token usage handler
+            // todo
+          }
+        } catch (error) {
+          console.error(error)
+        }
+      }
+      throw new Error('unexpected end of stream')
+    }
   }
 
   const [isComposing, setIsComposing] = useState(false)
@@ -355,9 +457,11 @@ Finally, carefully describe any information required to use or develop this proj
 
           {messages.length === 0 ? (
             <div className="flex flex-col pt-12 h-full w-full justify-center items-center content-center align-center gap-1">
-              <div className="flex flex-row gap-2 items-center">
+              <div className="flex flex-row gap-3 items-center mb-2">
+                <div className="h-6 w-6">
+                  <AILogo />
+                </div>
                 <h1 className="text-lg font-bold">Agent Chat</h1>
-                <RiRobot2Line className="text-[1.5rem] font-bold" />
               </div>
               <div className="text-gray-400">
                 This AI agent understands software project structures and creates files and folders.
@@ -386,13 +490,23 @@ Finally, carefully describe any information required to use or develop this proj
           {loading && (
             <div key="loading-robot" className="flex gap-4">
               <div className="flex items-center justify-center w-10 h-10">
-                <RiRobot2Line className="h-8 w-8 animate-bounce" />
+                <div className="h-4 w-4 animate-pulse">
+                  <AILogo />
+                </div>
               </div>
               <div className="flex flex-col gap-2 w-full">
-                <span className="text-sm text-gray-500">
-                  {messages[messages.length - 1]?.role === 'user' ? 'assistant' : 'user'}
+                <span className="animate-pulse h-2 w-12 bg-slate-200 rounded">
+                  {/* {messages[messages.length - 1]?.role === 'user' ? 'assistant' : 'user'} */}
                 </span>
-                <div className="flex gap-2">...</div>
+                <div className="flex-1 space-y-6 py-1">
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="h-2 bg-slate-200 rounded col-span-2"></div>
+                      <div className="h-2 bg-slate-200 rounded col-span-1"></div>
+                    </div>
+                    <div className="h-2 bg-slate-200 rounded"></div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
