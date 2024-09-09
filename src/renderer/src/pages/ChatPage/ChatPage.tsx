@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { FcFolder, FcSupport, FcVoicePresentation } from 'react-icons/fc'
+import { FcFolder, FcSupport } from 'react-icons/fc'
 import { FiSend } from 'react-icons/fi'
-import { RiRobot2Line } from 'react-icons/ri'
 import prompts from '@renderer/prompts/prompts'
 import useProject from '@renderer/hooks/useProject'
 import useLLM from '@renderer/hooks/useLLM'
@@ -18,6 +17,8 @@ import {
 import { Accordion } from 'flowbite-react'
 import MD from './MD'
 import { streamChatCompletion, StreamChatCompletionProps } from '@renderer/lib/api'
+import AILogo from '../../assets/images/icons/ai.svg'
+import { LiaUserCircleSolid } from 'react-icons/lia'
 
 const agents = [
   {
@@ -34,9 +35,19 @@ const renderAvator = (role?: ConversationRole) => {
   // }
 
   if (role === 'assistant') {
-    return <RiRobot2Line className="h-8 w-8" />
+    return (
+      <div className="h-8 w-8 flex justify-center items-center">
+        <div className="h-4 w-4">
+          <AILogo />
+        </div>
+      </div>
+    )
   } else {
-    return <FcVoicePresentation className="h-8 w-8" />
+    return (
+      <div className="flex justify-center items-center">
+        <LiaUserCircleSolid className="h-6 w-6" />
+      </div>
+    )
   }
 }
 
@@ -92,7 +103,7 @@ const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
             return <MD key={index}>{c.text}</MD>
           } else if ('toolUse' in c) {
             return (
-              <div key={index} className="flex flex-col gap-2 text-xs">
+              <div key={index} className="flex flex-col gap-2 text-xs w-full">
                 <Accordion className="w-full" collapseAll>
                   <Accordion.Panel>
                     <Accordion.Title>
@@ -111,7 +122,7 @@ const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
             )
           } else if ('toolResult' in c) {
             return (
-              <div key={index} className="flex flex-col gap-2 text-xs">
+              <div key={index} className="flex flex-col gap-2 text-xs w-full">
                 <Accordion className="w-full" collapseAll>
                   <Accordion.Panel>
                     <Accordion.Title>
@@ -446,9 +457,11 @@ Finally, carefully describe any information required to use or develop this proj
 
           {messages.length === 0 ? (
             <div className="flex flex-col pt-12 h-full w-full justify-center items-center content-center align-center gap-1">
-              <div className="flex flex-row gap-2 items-center">
+              <div className="flex flex-row gap-3 items-center mb-2">
+                <div className="h-6 w-6">
+                  <AILogo />
+                </div>
                 <h1 className="text-lg font-bold">Agent Chat</h1>
-                <RiRobot2Line className="text-[1.5rem] font-bold" />
               </div>
               <div className="text-gray-400">
                 This AI agent understands software project structures and creates files and folders.
@@ -477,13 +490,23 @@ Finally, carefully describe any information required to use or develop this proj
           {loading && (
             <div key="loading-robot" className="flex gap-4">
               <div className="flex items-center justify-center w-10 h-10">
-                <RiRobot2Line className="h-8 w-8 animate-bounce" />
+                <div className="h-4 w-4 animate-pulse">
+                  <AILogo />
+                </div>
               </div>
               <div className="flex flex-col gap-2 w-full">
-                <span className="text-sm text-gray-500">
-                  {messages[messages.length - 1]?.role === 'user' ? 'assistant' : 'user'}
+                <span className="animate-pulse h-2 w-12 bg-slate-200 rounded">
+                  {/* {messages[messages.length - 1]?.role === 'user' ? 'assistant' : 'user'} */}
                 </span>
-                <div className="flex gap-2">...</div>
+                <div className="flex-1 space-y-6 py-1">
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="h-2 bg-slate-200 rounded col-span-2"></div>
+                      <div className="h-2 bg-slate-200 rounded col-span-1"></div>
+                    </div>
+                    <div className="h-2 bg-slate-200 rounded"></div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
