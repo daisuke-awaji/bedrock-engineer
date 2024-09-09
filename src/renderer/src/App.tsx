@@ -1,7 +1,7 @@
 import React from 'react'
 import { FiGithub } from 'react-icons/fi'
 import { Tooltip } from 'flowbite-react'
-import { createBrowserRouter, Link, Outlet, RouterProvider, useLocation } from 'react-router-dom'
+import { createHashRouter, Link, Outlet, RouterProvider, useLocation } from 'react-router-dom'
 import CmdK from './command-palette'
 import { routes } from './routes'
 import HomePage from './pages/HomePage/HomePage'
@@ -67,7 +67,7 @@ const Layout: React.FC = () => {
   )
 }
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     path: '/',
     element: <Layout />,
