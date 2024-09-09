@@ -1,5 +1,6 @@
 import Lottie from 'lottie-react'
 import robotAnimation from './Robot.json'
+import { Kbd } from 'flowbite-react'
 
 const HomePage = () => {
   return (
@@ -8,9 +9,13 @@ const HomePage = () => {
       <Lottie animationData={robotAnimation} className="w-[12rem]" />
 
       <span className="text-gray-400 text-lg">Welcome to Bedrock Engineer 👋</span>
-      <div className="flex flex-col gap-1 justify-center align-center items-center">
+      <div className="flex flex-col gap-2 justify-center align-center items-center">
         <span className="text-gray-400 text-sm">
           This is AI assistant of software development tasks
+        </span>
+        <span className="text-gray-400 text-xs">
+          Start by the menu on the left or <Kbd className="bg-gray-200">⌘</Kbd> +{' '}
+          <Kbd className="bg-gray-200">K</Kbd>.
         </span>
       </div>
     </div>
