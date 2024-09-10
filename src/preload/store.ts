@@ -5,6 +5,7 @@ import { AgentChatConfig, SendMsgKey, ToolState } from '../types/agent-chat'
 type StoreScheme = {
   projectPath?: string
   llm?: LLM
+  language: 'ja' | 'en'
   agentChatConfig: AgentChatConfig
   tools: ToolState[]
   figma: {

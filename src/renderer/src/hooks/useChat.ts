@@ -50,7 +50,7 @@ export const useChat = (props: UseChatProps) => {
       const msgsToset = [...msgs, { role: 'assistant', content: [{ text: s }] }]
       setMessages(msgsToset)
     },
-    [props.modelId, props.systemPrompt]
+    [props.modelId, props.systemPrompt, messages]
   )
 
   const initChat = () => {

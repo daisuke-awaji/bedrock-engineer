@@ -11,17 +11,27 @@ import { useChat } from '@renderer/hooks/useChat'
 import { Loader } from '../../components/Loader'
 import useLLM from '@renderer/hooks/useLLM'
 import useAdvancedSetting from '@renderer/hooks/useAdvancedSetting'
-
-const systemPrompt = `You are an AI assistant that generates AWS Step Functions ASL (Amazon States Language). Follow the given sentences and rules to output JSON format ASL.
-
-<rules>
-- No explanation is required.
-- There is no prefix such as * \`\`\` json.
-- Please generate only ASL text
-</rules>
-`
+import { useTranslation } from 'react-i18next'
 
 function StepFunctionsGeneratorPage() {
+  const {
+    t,
+    i18n: { language: lng }
+  } = useTranslation()
+
+  const systemPrompt = `You are an AI assistant that generates AWS Step Functions ASL (Amazon States Language). Follow the given sentences and rules to output JSON format ASL.
+
+  <rules>
+  - No explanation is required.
+  - There is no prefix such as * \`\`\` json.
+  - Please generate only ASL text
+  </rules>
+
+  <language>
+  ${lng}
+  </language>
+  `
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_asl, setAsl] = useState(SAMPLE_ASL_PARALLEL)
   const [editorValue, setEditorValue] = useState(JSON.stringify(SAMPLE_ASL_PARALLEL, null, 2))
@@ -77,12 +87,14 @@ function StepFunctionsGeneratorPage() {
 
   const examples = [
     {
-      title: 'Order processing workflow',
-      value: `Create order processing workflow`
+      title: t('Order processing workflow'),
+      value: t('Create order processing workflow')
     },
     {
-      title: '7 types of State',
-      value: `Please implement a workflow that combines the following seven types.
+      title: t('7 types of State'),
+      value:
+        t('Please implement a workflow that combines the following seven types') +
+        `
 
 - Task
 - Wait
@@ -93,29 +105,16 @@ function StepFunctionsGeneratorPage() {
 - Parallel`
     },
     {
-      title: 'Nested Workflow',
-      value: `Create Nested Workflow example`
+      title: t('Nested Workflow'),
+      value: t('Create Nested Workflow example')
     },
     {
-      title: 'User registration process',
-      value: `Implement the workflow for user registration processing.
-
-First, use Lambda to verify the input contents.
-
-Next, if there is no problem with the input content, save the information to Dynamodb.
-Finally, send an email. The email uses AMAAON SNS.
-
-If Lambda's input content fails, dynamodb will not save information and will notify the user by e -mail.
-
-When using dynamodb or SNS, do not use Lambda and weigh AWS native integration.
-`
+      title: t('User registration process'),
+      value: t('Implement the workflow for user registration processing')
     },
     {
-      title: 'Distributed Map to process CSV in S3',
-      value: `Use the distributed map to repeat the row of the CSV file generated in S3.
-Each line has orders and shipping information.
-The distributed map processor repeats the batch of these rows and uses the Lambda function to detect the delayed order.
-After that, send a message to the SQS queue for each delayed order.`
+      title: t('Distributed Map to process CSV in S3'),
+      value: t('Use the distributed map to repeat the row of the CSV file generated in S3')
     }
   ]
 
@@ -181,7 +180,7 @@ After that, send a message to the SQS queue for each delayed order.`
             onCompositionStart={() => setIsComposing(true)}
             onCompositionEnd={() => setIsComposing(false)}
             className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2`}
-            placeholder="What kind of step functions will you create?"
+            placeholder={t('What kind of step functions will you create?')}
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
             onKeyDown={onkeydown}

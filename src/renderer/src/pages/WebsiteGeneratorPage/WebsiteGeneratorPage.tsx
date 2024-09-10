@@ -4,10 +4,7 @@ import { GrClearOption } from 'react-icons/gr'
 import { FiSend } from 'react-icons/fi'
 import { BsDatabaseCheck, BsDatabase } from 'react-icons/bs'
 import prompts from '../../prompts/prompts'
-import ReactLogo from '../../assets/images/icons/react.svg'
-import VueLogo from '../../assets/images/icons/vue.svg'
-import VanillaLogo from '../../assets/images/icons/vanilla.svg'
-import SvelteLogo from '../../assets/images/icons/svelte.svg'
+
 import { useChat } from '@renderer/hooks/useChat'
 import useLLM from '@renderer/hooks/useLLM'
 import useAdvancedSetting from '@renderer/hooks/useAdvancedSetting'
@@ -16,7 +13,6 @@ import { autocompletion, completionKeymap } from '@codemirror/autocomplete'
 import {
   SandpackCodeEditor,
   SandpackLayout,
-  SandpackPredefinedTemplate,
   SandpackPreview,
   SandpackProvider,
   useActiveCode,
@@ -28,176 +24,14 @@ import { FiMaximize } from 'react-icons/fi'
 import { Loader } from '@renderer/components/Loader'
 import { sleep } from '@renderer/lib/util'
 import useDataSourceConnectModal from './useDataSourceConnectModal'
-import {
-  DEFAULT_INDEX_HTML,
-  DEFAULT_APP_TSX,
-  DEFAULT_APP_VUE,
-  DEFAULT_VUE_INDEX_HTML,
-  DEFAULT_SVELTE_APP_SVELTE,
-  DEFAULT_SVELTE_INDEX_HTML,
-  DEFAULT_VANILLA_INDEX_HTML
-} from './DEFAULT_CODES'
 
 import { converse } from '../../lib/api'
 import { motion } from 'framer-motion'
 import LoadingDotsLottie from './LoadingDots.lottie'
 import LoadingDataBaseLottie from './LoadingDataBase.lottie'
 import LazyVisibleMessage from './LazyVisibleMessage'
-
-type SupportedTemplate = {
-  id: SandpackPredefinedTemplate
-  name: string
-  logo: React.ReactNode
-}
-
-const TEMPLATES: SupportedTemplate[] = [
-  {
-    id: 'react-ts',
-    name: 'React',
-    logo: <ReactLogo />
-  },
-  {
-    id: 'vue-ts',
-    name: 'Vue',
-    logo: <VueLogo />
-  },
-  {
-    id: 'svelte',
-    name: 'Svelte',
-    logo: <SvelteLogo />
-  },
-  {
-    id: 'static',
-    name: 'Vanilla',
-    logo: <VanillaLogo />
-  }
-]
-
-const templates = {
-  'react-ts': {
-    files: {
-      '/public/index.html': {
-        code: DEFAULT_INDEX_HTML
-      },
-      'App.tsx': { code: DEFAULT_APP_TSX }
-    },
-    mainFile: 'App.tsx',
-    customSetup: {
-      dependencies: {
-        recharts: '2.9.0',
-        'react-router-dom': 'latest',
-        'react-icons': 'latest',
-        'date-fns': 'latest',
-        '@mui/material': 'latest',
-        '@emotion/react': 'latest',
-        '@emotion/styled': 'latest',
-        '@fontsource/roboto': 'latest',
-        '@mui/icons-material': 'latest',
-        '@cloudscape-design/components': 'latest',
-        '@cloudscape-design/global-styles': 'latest'
-      }
-    }
-  },
-  'vue-ts': {
-    files: {
-      'src/App.vue': { code: DEFAULT_APP_VUE },
-      '/public/index.html': {
-        code: DEFAULT_VUE_INDEX_HTML
-      }
-    },
-    mainFile: 'src/App.vue',
-    customSetup: {
-      dependencies: {
-        recharts: '2.9.0',
-        'date-fns': 'latest',
-        'vue-chartjs': 'latest',
-        'chart.js': 'latest',
-        'vue-router': 'latest'
-      }
-    }
-  },
-  svelte: {
-    files: {
-      'App.svelte': { code: DEFAULT_SVELTE_APP_SVELTE },
-      '/public/index.html': {
-        code: DEFAULT_SVELTE_INDEX_HTML
-      }
-    },
-    mainFile: 'App.svelte',
-    customSetup: {
-      dependencies: {
-        d3: 'latest',
-        'd3-scale': 'latest',
-        'd3-color': 'latest',
-        'd3-interpolate': 'latest',
-        'd3-fetch': 'latest'
-      }
-    }
-  },
-  static: {
-    files: {
-      'index.html': {
-        code: DEFAULT_VANILLA_INDEX_HTML
-      }
-    },
-    mainFile: 'index.html',
-    customSetup: {
-      dependencies: {}
-    }
-  }
-}
-
-type Style = {
-  label: string
-  value: string
-}
-
-const supportedStyles = {
-  'react-ts': [
-    {
-      label: 'Inline style',
-      value: 'inline'
-    },
-    {
-      label: 'Tailwind.css',
-      value: 'tailwind'
-    },
-    {
-      label: 'Material UI',
-      value: 'mui'
-    }
-  ],
-  'vue-ts': [
-    {
-      label: 'Inline style',
-      value: 'inline'
-    },
-    {
-      label: 'Tailwind.css',
-      value: 'tailwind'
-    }
-  ],
-  svelte: [
-    {
-      label: 'Inline style',
-      value: 'inline'
-    },
-    {
-      label: 'Tailwind.css',
-      value: 'tailwind'
-    }
-  ],
-  static: [
-    {
-      label: 'Inline style',
-      value: 'inline'
-    },
-    {
-      label: 'Tailwind.css',
-      value: 'tailwind'
-    }
-  ]
-}
+import { Style, SupportedTemplate, templates, TEMPLATES, supportedStyles } from './templates'
+import { useTranslation } from 'react-i18next'
 
 export default function WebsiteGeneratorPage() {
   const [template, setTemplate] = useState<SupportedTemplate['id']>('react-ts')
@@ -271,7 +105,32 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   const { runSandpack } = sandpack
 
   const { updateCode } = useActiveCode()
-  const examplePrompts = prompts.WebsiteGenerator.examples
+  const {
+    t,
+    i18n: { language }
+  } = useTranslation()
+  const examplePrompts = [
+    {
+      title: t('ecSiteTitle'),
+      value: t('ecSiteValue')
+    },
+    {
+      title: t('healthFitnessSiteTitle'),
+      value: t('healthFitnessSiteValue')
+    },
+    {
+      title: t('drawingGraphTitle'),
+      value: t('drawingGraphValue')
+    },
+    {
+      title: t('todoAppTitle'),
+      value: t('todoAppValue')
+    },
+    {
+      title: t('codeTransformTitle'),
+      value: t('codeTransformValue')
+    }
+  ]
   const [recommendChanges, setRecommendChanges] = useState(examplePrompts)
   const [recommendLoading, setRecommendLoading] = useState(false)
 
@@ -302,8 +161,8 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     }
     setRecommendLoading(true)
     const result = await converse({
-      modelId: 'anthropic.claude-3-haiku-20240307-v1:0',
-      system: [{ text: prompts.WebsiteGenerator.recommend.system }],
+      modelId: 'anthropic.claude-3-sonnet-20240229-v1:0',
+      system: [{ text: t(prompts.WebsiteGenerator.recommend.system, { language }) }],
       messages: [{ role: 'user', content: [{ text: websiteCode }] }]
     })
 
@@ -407,6 +266,10 @@ ${res?.output.text}
 <website-requirements>
 ${input}
 </website-requirements>
+
+<language>
+${language}
+</language>
 
 !Important rule: Do not import modules with relative paths (e.g. import { Button } from './Button';) If you have required components, put them all in the same file.
 `
