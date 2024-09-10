@@ -22,17 +22,8 @@ export const Mermaid = ({ chart, id }: { chart: string; id: string }) => {
     }
   }, [chart, id])
 
-  const handleClick = () => {
-    const ele = document.getElementById(id)
-    ele?.requestFullscreen()
-  }
-
   return (
-    <div
-      className="mermaid w-full cursor-pointer bg-gray-100"
-      id={id}
-      onClick={() => handleClick()}
-    >
+    <div className="mermaid w-full cursor-pointer bg-gray-100" id={id}>
       {chart}
     </div>
   )

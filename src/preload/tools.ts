@@ -99,7 +99,7 @@ export async function tavilySearch(query: string): Promise<string> {
         include_answer: true,
         include_images: false,
         include_raw_content: true,
-        max_results: 1,
+        max_results: 3,
         include_domains: [],
         exclude_domains: []
       })

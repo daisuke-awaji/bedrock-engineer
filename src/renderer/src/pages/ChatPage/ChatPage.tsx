@@ -419,7 +419,7 @@ Finally, carefully describe any information required to use or develop this proj
 
   useEffect(() => {
     scrollToBottom()
-  }, [loading])
+  }, [loading, messages])
 
   return (
     <React.Fragment>
