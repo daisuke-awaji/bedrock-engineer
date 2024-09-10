@@ -19,6 +19,7 @@ import { streamChatCompletion, StreamChatCompletionProps } from '@renderer/lib/a
 import AILogo from '../../assets/images/icons/ai.svg'
 import { LiaUserCircleSolid } from 'react-icons/lia'
 import CodeRenderer from './CodeRenderer'
+import { useTranslation } from 'react-i18next'
 
 const agents = [
   {
@@ -146,6 +147,7 @@ const ChatMessage: React.FC<{ message: Message; showCodePreview: boolean }> = ({
 }
 
 export default function ChatPage() {
+  const { t } = useTranslation()
   const [userInput, setUserInput] = useState('')
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
@@ -375,43 +377,42 @@ export default function ChatPage() {
   const exampleSenarios = {
     softwareAgent: [
       {
-        title: 'Create a new file',
-        content:
+        title: t('Create a new file'),
+        content: t(
           'Create a new file called "test.txt" in the current directory with the content "Hello, World!"'
+        )
       },
       {
-        title: `Yesterday's News`,
-        content: `What news happened in the world yesterday (${new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() - 1).toLocaleDateString('ja')})?`
+        title: t("Yesterday's News"),
+        content: t('What news happened in the world yesterday ({{date}})', {
+          date: new Date(
+            new Date().getFullYear(),
+            new Date().getMonth(),
+            new Date().getDate() - 1
+          ).toLocaleDateString('ja')
+        })
       },
       {
-        title: 'Simple website',
-        content: 'Create a cool website for an IT company using HTML, CSS, and JavaScript.'
+        title: t('Simple website'),
+        content: t('Create a cool website for an IT company using HTML, CSS, and JavaScript.')
       },
       {
-        title: 'Organizing folders',
-        content: `Extract only the png files contained in the ${projectPath} folder and copy them to the ${projectPath}/images folder.`
+        title: t('Organizing folders'),
+        content: t(
+          'Extract only the png files contained in the {{projectPath}} folder and copy them to the {{imagePath}} folder.',
+          {
+            projectPath: projectPath,
+            imagePath: `${projectPath}/images`
+          }
+        )
       },
       {
-        title: 'Simple Web API',
-        content: `To deploy AWS Lambda with Node.js runtime, please create the source code of lambda.handler written in Node.js and the template file of AWS SAM (YAML format).
-
-This Lambda will be integrated with API Gateway and proxy and will be exposed to the Internet.
-The logic written in the source code should be a simple implementation that returns the string "Hello World from AWS Lambda".
-
-## Additional information
-Node.js runtime version: nodejs18.x
-Deployment region: Tokyo region
-`
+        title: t('Simple Web API'),
+        content: t('simpleWebAPIContent')
       },
       {
-        title: 'CDK Project',
-        content: `Use AWS CDK to create an S3 bucket and create code to upload a file into it.
-
-This set of source code will be created as a cdk project, so create the project structure according to best practices.
-Don't forget to create configuration files such as package.json and requirement.yaml.
-Implement the code to upload the file in a shell script using bash.
-Finally, carefully describe any information required to use or develop this project in README.md.
-`
+        title: t('CDK Project'),
+        content: t('cdkProjectContent')
       }
     ]
   }
@@ -455,7 +456,9 @@ Finally, carefully describe any information required to use or develop this proj
                 <h1 className="text-lg font-bold">Agent Chat</h1>
               </div>
               <div className="text-gray-400">
-                This AI agent understands software project structures and creates files and folders.
+                {t(
+                  'This AI agent understands software project structures and creates files and folders.'
+                )}
               </div>
               <div className="grid grid-cols-3 gap-2 pt-6 text-xs">
                 {exampleSenarios[agent]?.map((senario) => {
