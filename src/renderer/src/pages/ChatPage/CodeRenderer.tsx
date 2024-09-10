@@ -26,7 +26,9 @@ const CodeRenderer = (props: CodeRendererProps) => {
     const htmlMatches = text?.match(/```html([\s\S]*?)```/g) || []
     const mermaidMatches = text?.match(/```mermaid([\s\S]*?)```/g) || []
 
-    return showCodePreview ? (
+    const match = htmlMatches.length || mermaidMatches.length
+
+    return showCodePreview && match ? (
       <div className="grid grid-cols-2 gap-2">
         <MD>{text}</MD>
         <div className="grid gap-2">
@@ -44,7 +46,7 @@ const CodeRenderer = (props: CodeRendererProps) => {
             const code = match.replace(/^```mermaid\n?|\n?```$/g, '').trim()
             return (
               <div className="flex justify-center align-center" key={`mermaid-${index}`}>
-                <Mermaid chart={code} id={`mermaid-${index}}-${convertToId(code)}`} />
+                <Mermaid chart={code} id={`mermaid-${index}-${convertToId(code)}`} />
               </div>
             )
           })}

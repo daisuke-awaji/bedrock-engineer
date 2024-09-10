@@ -15,12 +15,7 @@ mermaid.registerIconPacks([
 
 export const Mermaid = ({ chart, id }: { chart: string; id: string }) => {
   useEffect(() => {
-    const ele = document.getElementById(id)
-    if (ele) {
-      mermaid.run({
-        nodes: [ele]
-      })
-    }
+    mermaid.contentLoaded()
 
     mermaid.parseError = (err: any, hash: any) => {
       console.error(err, hash)
@@ -33,7 +28,11 @@ export const Mermaid = ({ chart, id }: { chart: string; id: string }) => {
   }
 
   return (
-    <div className="mermaid cursor-pointer bg-gray-100" id={id} onClick={() => handleClick()}>
+    <div
+      className="mermaid w-full cursor-pointer bg-gray-100"
+      id={id}
+      onClick={() => handleClick()}
+    >
       {chart}
     </div>
   )
