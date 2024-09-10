@@ -202,15 +202,15 @@ base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
       'Implement the workflow for user registration processing': `ユーザー登録処理のワークフローを実装する
 
 まず、Lambda を使って入力内容を確認します。
-次に、入力内容に問題がなければ、情報を Dynamodb に保存します。
-最後に、メールを送信します。メールは AMAAON SNS を使用します。
-Lambda の入力内容が失敗した場合、dynamodb は情報を保存せず、ユーザーにメールで通知します。
-dynamodb または SNS を使用する場合は、Lambda を使用せず、AWS ネイティブ統合を検討してください。
+次に、入力内容に問題がなければ、情報を DynamoDB に保存します。
+最後に、メールを送信します。メールの送信は Amazon SNS を使用します。
+Lambda の入力内容が失敗した場合、DynamoDB は情報を保存せず、ユーザーにメールで通知します。
+DynamoDB または SNS を使用する場合は、Lambda を使用せず、AWS ネイティブ統合を検討してください。
 `,
       'Use the distributed map to repeat the row of the CSV file generated in S3': `S3で生成されたCSVファイルの行を繰り返すために分散マップを使用する
 各行には注文と配送情報があります。
-分散マッププロセッサはこれらの行のバッチを繰り返し、Lambda 関数を使用して遅延注文を検出します。
-その後、遅延注文ごとに SQS キューにメッセージを送信します。`,
+分散マッププロセッサはこれらの行のバッチを繰り返し、Lambda 関数を使用して注文を検出します。
+その後、注文ごとに SQS キューにメッセージを送信します。`,
       // ChatPage
       'This AI agent understands software project structures and creates files and folders.':
         'ソフトウェアプロジェクトの構造を理解し、ファイルとフォルダーを作成します',
