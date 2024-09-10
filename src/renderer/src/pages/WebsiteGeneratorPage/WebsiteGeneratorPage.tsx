@@ -31,6 +31,7 @@ import LoadingDotsLottie from './LoadingDots.lottie'
 import LoadingDataBaseLottie from './LoadingDataBase.lottie'
 import LazyVisibleMessage from './LazyVisibleMessage'
 import { Style, SupportedTemplate, templates, TEMPLATES, supportedStyles } from './templates'
+import { useTranslation } from 'react-i18next'
 
 export default function WebsiteGeneratorPage() {
   const [template, setTemplate] = useState<SupportedTemplate['id']>('react-ts')
@@ -104,7 +105,32 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   const { runSandpack } = sandpack
 
   const { updateCode } = useActiveCode()
-  const examplePrompts = prompts.WebsiteGenerator.examples
+  const {
+    t,
+    i18n: { language }
+  } = useTranslation()
+  const examplePrompts = [
+    {
+      title: t('ecSiteTitle'),
+      value: t('ecSiteValue')
+    },
+    {
+      title: t('healthFitnessSiteTitle'),
+      value: t('healthFitnessSiteValue')
+    },
+    {
+      title: t('drawingGraphTitle'),
+      value: t('drawingGraphValue')
+    },
+    {
+      title: t('todoAppTitle'),
+      value: t('todoAppValue')
+    },
+    {
+      title: t('codeTransformTitle'),
+      value: t('codeTransformValue')
+    }
+  ]
   const [recommendChanges, setRecommendChanges] = useState(examplePrompts)
   const [recommendLoading, setRecommendLoading] = useState(false)
 
@@ -135,8 +161,8 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     }
     setRecommendLoading(true)
     const result = await converse({
-      modelId: 'anthropic.claude-3-haiku-20240307-v1:0',
-      system: [{ text: prompts.WebsiteGenerator.recommend.system }],
+      modelId: 'anthropic.claude-3-sonnet-20240229-v1:0',
+      system: [{ text: t(prompts.WebsiteGenerator.recommend.system, { language }) }],
       messages: [{ role: 'user', content: [{ text: websiteCode }] }]
     })
 
@@ -240,6 +266,10 @@ ${res?.output.text}
 <website-requirements>
 ${input}
 </website-requirements>
+
+<language>
+${language}
+</language>
 
 !Important rule: Do not import modules with relative paths (e.g. import { Button } from './Button';) If you have required components, put them all in the same file.
 `

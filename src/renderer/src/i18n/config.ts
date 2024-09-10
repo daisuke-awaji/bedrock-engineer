@@ -77,7 +77,87 @@ After that, send a message to the SQS queue for each delayed order.`,
         'Create a simple RESTful API using Node.js and Express that allows users to perform CRUD operations on a "users" resource. The API should store data in memory (no database required for this example).',
       'CDK Project': 'CDK Project',
       cdkProjectContent:
-        'Create a new CDK project that deploys a Lambda function and an API Gateway. The Lambda function should return a simple "Hello, World!" message when invoked through the API Gateway.'
+        'Create a new CDK project that deploys a Lambda function and an API Gateway. The Lambda function should return a simple "Hello, World!" message when invoked through the API Gateway.',
+      // WebsiteGeneratorPage
+      ecSiteTitle: 'EC site for plants',
+      ecSiteValue: `Create the basic structure and layout of an e-commerce website that specializes in potted plants, with the following conditions:
+<Conditions>
+- The layout likes Amazon.com.
+- The name of the e-commerce website is "Green Village".
+- Use a green color theme.
+</Conditions>
+Following the previous output, add a section that displays the plants in card format.
+Following the previous output, create a function to add to the shopping cart.
+Following the previous output, create a function to check what is currently in the shopping cart and calculate the total amount.`,
+      healthFitnessSiteTitle: 'Health & Fitness site',
+      healthFitnessSiteValue: `Create the basic structure and layout of a health and fitness website, with the following conditions:
+<Conditions>
+- The layout likes Amazon.com.
+- The name of the website is "FitLife".
+- Use a red color theme.
+</Conditions>
+Following the previous output, add a section that displays the health and fitness blogs.
+Following the previous output, create a function to search for health and fitness content based on keywords.
+Following the previous output, create a function to add comments to the blog.`,
+      drawingGraphTitle: 'Drawing Graph',
+      drawingGraphValue: `Please visualize the following as a graph on your website.
+Purchase data CSV file
+customer_id,product_id,purchase_date,purchase_amount
+C001,P001,2023-04-01,50.00
+C002,P002,2023-04-02,75.00
+C003,P003,2023-04-03,100.00
+C001,P002,2023-04-04,60.00
+C002,P001, 2023-04-05,40.00
+C003,P003,2023-04-06,90.00
+C001,P001,2023-04-07,30.00
+C002,P002,2023-04-08,80.00
+C003,P001,2023-04-09,45.00
+C001,P003,2023-04-10,120.00
+This CSV file contains the following information:
+- 'customer_id': Customer ID
+- 'product_id': Product ID
+- 'purchase_date': Purchase date
+- 'purchase_amount': Purchase amount`,
+      todoAppTitle: 'To-do app',
+      todoAppValue: 'Create a simple to-do app website',
+      codeTransformTitle: 'Code Transform',
+      codeTransformValue: `Transform the following code:
+using Android.App;
+using Android.OS;
+using Android.Support.V7.App;
+using Android.Runtime;
+using Android.Widget;
+using System.Data.SQLite;
+using System;
+using Xamarin.Essentials;
+using System.Linq;
+namespace App2
+{
+[Activity(Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher = true)]
+public class MainActivity : AppCompatActivity
+{
+protected override void OnCreate(Bundle savedInstanceState)
+{
+base.OnCreate(savedInstanceState);
+Xamarin.Essentials.Platform.Init(this, savedInstanceState);
+SetContentView(Resource.Layout.activity_main);
+EditText input1 = FindViewById<EditText>(Resource.Id.Input1);
+EditText input2 = FindViewById<EditText>(Resource.Id.Input2);
+TextView total = FindViewById<TextView>(Resource.Id.Total);
+Button totalButton = FindViewById<Button>(Resource.Id.TotalButton);
+totalButton.Click += (sender, e) =>
+{
+total.Text = (int.Parse(input1.Text) + int.Parse(input2.Text)).ToString("#,0");
+}
+}
+public override void OnRequestPermissionsResult(int requestCode, string[] permissions,
+[GeneratedEnum] Android.Content.PM.Permission[] grantResults)
+{
+Xamarin.Essentials.Platform.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+}
+}
+}`
     }
   },
   ja: {
@@ -151,7 +231,91 @@ dynamodb または SNS を使用する場合は、Lambda を使用せず、AWS �
         'Node.jsとExpressを使用して、ユーザーが"users"リソースに対してCRUD操作を実行できるシンプルなRESTful APIを作成してください。このAPIはデータをメモリに保存します（このサンプルではデータベースは不要です）。',
       'CDK Project': 'CDKプロジェクト',
       cdkProjectContent:
-        'Lambda関数とAPI Gatewayをデプロイする新しいCDKプロジェクトを作成してください。Lambda関数は、API Gatewayを通じて呼び出されたときに単純な"Hello, World!"メッセージを返すようにしてください。'
+        'Lambda関数とAPI Gatewayをデプロイする新しいCDKプロジェクトを作成してください。Lambda関数は、API Gatewayを通じて呼び出されたときに単純な"Hello, World!"メッセージを返すようにしてください。',
+      // WebsiteGenerator
+      ecSiteTitle: '観葉植物のECサイト',
+      ecSiteValue: `次の条件で、鉢植えの植物に特化した EC ウェブサイトの基本構造とレイアウトを作成してください。
+<Conditions>
+- レイアウトは Amazon.com のようなものにする。
+- EC ウェブサイトの名前は "Green Village" とする。
+- グリーンの配色テーマを使用する。
+</Conditions>
+植物をカード形式で表示するセクションを追加する。
+ショッピングカートに追加する機能を作成する。
+現在のショッピングカートの中身を確認し、合計金額を計算する機能を作成する。
+`,
+      healthFitnessSiteTitle: 'フィットネスサイト',
+      healthFitnessSiteValue: `次の条件で、健康とフィットネスのウェブサイトの基本構造とレイアウトを作成してください。
+<Conditions>
+- レイアウトは Amazon.com のようなものにする。
+- ウェブサイトの名前は "FitLife" とする。
+- 赤い配色テーマを使用する。
+</Conditions>
+健康とフィットネスのブログを表示するセクションを追加する。
+キーワードで健康とフィットネスのコンテンツを検索する機能を作成する。
+ブログにコメントを追加する機能を作成する。`,
+      drawingGraphTitle: 'グラフの描画',
+      drawingGraphValue: `ウェブサイト上で、次のデータをグラフで可視化してください。
+
+購入データ CSV ファイル
+customer_id,product_id,purchase_date,purchase_amount
+C001,P001,2023-04-01,50.00
+C002,P002,2023-04-02,75.00
+C003,P003,2023-04-03,100.00
+C001,P002,2023-04-04,60.00
+C002,P001,2023-04-05,40.00
+C003,P003,2023-04-06,90.00
+C001,P001,2023-04-07,30.00
+C002,P002,2023-04-08,80.00
+C003,P001,2023-04-09,45.00
+C001,P003,2023-04-10,120.00
+
+このCSVファイルには以下の情報が含まれています。
+- 'customer_id': 顧客 ID
+- 'product_id': 製品 ID
+- 'purchase_date': 購入日
+- 'purchase_amount': 購入金額`,
+      todoAppTitle: 'Todoアプリ',
+      todoAppValue: 'シンプルな Todo アプリのウェブサイトを作成してください。',
+      codeTransformTitle: 'コード変換',
+      codeTransformValue: `以下のコードを変換してください。
+
+using Android.App;
+using Android.OS;
+using Android.Support.V7.App;
+using Android.Runtime;
+using Android.Widget;
+using System.Data.SQLite;
+using System;
+using Xamarin.Essentials;
+using System.Linq;
+namespace App2
+{
+[Activity(Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher = true)]
+public class MainActivity : AppCompatActivity
+{
+protected override void OnCreate(Bundle savedInstanceState)
+{
+base.OnCreate(savedInstanceState);
+Xamarin.Essentials.Platform.Init(this, savedInstanceState);
+SetContentView(Resource.Layout.activity_main);
+EditText input1 = FindViewById<EditText>(Resource.Id.Input1);
+EditText input2 = FindViewById<EditText>(Resource.Id.Input2);
+TextView total = FindViewById<TextView>(Resource.Id.Total);
+Button totalButton = FindViewById<Button>(Resource.Id.TotalButton);
+totalButton.Click += (sender, e) =>
+{
+total.Text = (int.Parse(input1.Text) + int.Parse(input2.Text)).ToString("#,0");
+}
+}
+public override void OnRequestPermissionsResult(int requestCode, string[] permissions,
+[GeneratedEnum] Android.Content.PM.Permission[] grantResults)
+{
+Xamarin.Essentials.Platform.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+}
+}
+}`
     }
   }
 }
