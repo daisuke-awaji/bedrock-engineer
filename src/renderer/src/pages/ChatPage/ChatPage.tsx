@@ -15,10 +15,10 @@ import {
   ToolUseBlockStart
 } from '@aws-sdk/client-bedrock-runtime'
 import { Accordion } from 'flowbite-react'
-import MD from './MD'
 import { streamChatCompletion, StreamChatCompletionProps } from '@renderer/lib/api'
 import AILogo from '../../assets/images/icons/ai.svg'
 import { LiaUserCircleSolid } from 'react-icons/lia'
+import CodeRenderer from './CodeRenderer'
 
 const agents = [
   {
@@ -78,7 +78,10 @@ const TextCodeBlock = (props: { text: string }) => {
   )
 }
 
-const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
+const ChatMessage: React.FC<{ message: Message; showCodePreview: boolean }> = ({
+  message,
+  showCodePreview
+}) => {
   return (
     <div className="flex gap-4">
       <ChatAvator role={message.role} />
@@ -86,21 +89,7 @@ const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
         <span className="text-xs text-gray-500">{message.role}</span>
         {message.content?.map((c, index) => {
           if ('text' in c) {
-            const htmlStart = c.text?.indexOf('```html')
-            if (htmlStart && htmlStart > 0) {
-              const htmlEnd = c.text?.indexOf('```', htmlStart + 6)
-              if (htmlEnd) {
-                const html = c.text?.substring(htmlStart + 7, htmlEnd)
-                return (
-                  <div key={index} className="grid grid-cols-2 gap-2">
-                    <MD>{c.text}</MD>
-                    <iframe srcDoc={html} className="h-full w-full"></iframe>
-                  </div>
-                )
-              }
-            }
-
-            return <MD key={index}>{c.text}</MD>
+            return <CodeRenderer key={index} text={c.text} showCodePreview={showCodePreview} />
           } else if ('toolUse' in c) {
             return (
               <div key={index} className="flex flex-col gap-2 text-xs w-full">
@@ -174,6 +163,8 @@ export default function ChatPage() {
   const { projectPath, selectDirectory } = useProject()
 
   const { enabledTools, ToolSettingModal, openModal } = useToolSettingModal()
+
+  const [showCodePreview, setShowCodePreview] = useState(false)
 
   const handleClickPromptSubmit = async (userInput: string, messages: Message[]) => {
     if (!userInput) {
@@ -484,7 +475,7 @@ Finally, carefully describe any information required to use or develop this proj
 
           {/* CHAT HISTORY */}
           {messages.map((message, index) => (
-            <ChatMessage message={message} key={index} />
+            <ChatMessage message={message} key={index} showCodePreview={showCodePreview} />
           ))}
 
           {loading && (
@@ -540,20 +531,20 @@ Finally, carefully describe any information required to use or develop this proj
               </div>
 
               {/* right */}
-              {/* <div className="flex flex-col justify-end">
+              <div className="flex flex-col justify-end">
                 <label className="inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={automode}
+                    checked={showCodePreview}
                     className="sr-only peer"
-                    onChange={() => setAutomode(!automode)}
+                    onChange={() => setShowCodePreview(!showCodePreview)}
                   />
                   <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                   <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
-                    Automode (Max iterations: {MAX_ITERATIONS})
+                    code previewer
                   </span>
                 </label>
-               </div> */}
+              </div>
             </div>
 
             {/* prompt input form */}

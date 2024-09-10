@@ -45,6 +45,10 @@ const prompts = {
 
     Be sure to consider the type of project (e.g., Python, JavaScript, web application) when determining the appropriate structure and files to include.
 
+    If you need a visual explanation:
+    - Express it in Mermaid.js format.
+    - Unless otherwise specified, please draw no more than two at a time.
+
     You can now read files, list the contents of the root folder where this script is being run, and perform web searches. Use these capabilities when:
     - The user asks for edits or improvements to existing files
     - You need to understand the current state of the project
