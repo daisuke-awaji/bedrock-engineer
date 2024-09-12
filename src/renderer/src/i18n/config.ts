@@ -82,6 +82,7 @@ After that, send a message to the SQS queue for each delayed order.`,
       cdkProjectContent:
         'Create a new CDK project that deploys a Lambda function and an API Gateway. The Lambda function should return a simple "Hello, World!" message when invoked through the API Gateway.',
       // WebsiteGeneratorPage
+      addRecommend: 'Considering additional recommended features',
       ecSiteTitle: 'EC site for plants',
       ecSiteValue: `Create the basic structure and layout of an e-commerce website that specializes in potted plants, with the following conditions:
 <Conditions>
@@ -239,6 +240,7 @@ DynamoDB または SNS を使用する場合は、Lambda を使用せず、AWS �
       cdkProjectContent:
         'Lambda関数とAPI Gatewayをデプロイする新しいCDKプロジェクトを作成してください。Lambda関数は、API Gatewayを通じて呼び出されたときに単純な"Hello, World!"メッセージを返すようにしてください。',
       // WebsiteGenerator
+      addRecommend: 'おすすめの追加機能を考え中',
       ecSiteTitle: '観葉植物のECサイト',
       ecSiteValue: `次の条件で、鉢植えの植物に特化した EC ウェブサイトの基本構造とレイアウトを作成してください。
 <Conditions>

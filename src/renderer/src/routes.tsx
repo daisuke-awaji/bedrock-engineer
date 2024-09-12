@@ -49,4 +49,12 @@ export const routes = [
     position: 'top',
     element: <SettingPage />
   }
+  // for debug
+  // {
+  //   name: 'Error',
+  //   href: '/error',
+  //   icon: FiSettings,
+  //   position: 'top',
+  //   element: <ErrorPage />
+  // }
 ]
