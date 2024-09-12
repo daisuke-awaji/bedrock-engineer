@@ -50,6 +50,12 @@
   font-family: Consolas, 'Liberation Mono', Menlo, Courier, monospace;
 }
 
+@media (prefers-color-scheme: dark) {
+  .reactMarkDown pre {
+    background-color: #000;
+  }
+}
+
 .reactMarkDown table {
   border-collapse: collapse;
   width: 100%;

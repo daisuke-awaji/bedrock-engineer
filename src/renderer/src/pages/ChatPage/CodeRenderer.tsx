@@ -58,7 +58,7 @@ const CodeRenderer = (props: CodeRendererProps) => {
   }, [text, showCodePreview])
 
   return (
-    <div className="w-full">
+    <div className="w-full dark:text-white">
       <MDAndCodePreview />
     </div>
   )
