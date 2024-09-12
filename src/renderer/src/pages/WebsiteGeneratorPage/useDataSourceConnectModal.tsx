@@ -15,7 +15,7 @@ const useDataSourceConnectModal = () => {
   const DataSourceConnectModal = () => (
     <Modal header="Connect Datasource">
       <div className="flex flex-col gap-3">
-        <p className="text-gray-700 text-sm pb-2">
+        <p className="text-gray-700 text-sm pb-2 dark:text-white">
           Currently, only support Knowledge base for Amazon Bedrock. <br />
           In advance, store the source code of your design system or existing github projects in the
           knowledge base. If you do not want to connect, leave the field blank.

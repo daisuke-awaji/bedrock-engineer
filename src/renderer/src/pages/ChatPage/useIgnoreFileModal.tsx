@@ -7,7 +7,7 @@ const useIgnoreFileModal = () => {
   const ModalWrapper = ({ children }: { children: React.ReactNode }) => {
     return (
       <Modal header="Ignore Files">
-        <p className="text-gray-700 text-sm pb-2">
+        <p className="text-gray-700 text-sm pb-2 dark:text-white">
           The files and folders listed below will not be read by various tools. Enter each file and
           folder on a new line.
         </p>
@@ -39,7 +39,7 @@ const useIgnoreFileModal = () => {
     return (
       <ModalWrapper>
         <textarea
-          className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2`}
+          className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2 dark:bg-gray-800 dark:text-white`}
           placeholder={`.git\n.vscode\nor other files...`}
           value={ignoreFiles}
           onChange={(e) => setIgnoreFiles(e.target.value)}

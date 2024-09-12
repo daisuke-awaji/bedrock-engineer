@@ -65,6 +65,12 @@ export const templates = {
         '@mui/icons-material': 'latest',
         '@cloudscape-design/components': 'latest',
         '@cloudscape-design/global-styles': 'latest'
+        // 'react-dnd': 'latest',
+        // 'react-dnd-html5-backend': 'latest',
+        // three: 'latest',
+        // '@react-three/xr': 'latest',
+        // '@react-three/drei': 'latest',
+        // '@react-three/fiber': 'latest'
       }
     }
   },

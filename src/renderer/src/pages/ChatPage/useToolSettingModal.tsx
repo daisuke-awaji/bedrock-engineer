@@ -47,7 +47,9 @@ const useToolSettingModal = () => {
   const ToolSettingModal = () => {
     return (
       <Modal header="Available Tools">
-        <p className="text-gray-700 text-sm pb-2">Choose the tool you want to use</p>
+        <p className="text-gray-700 text-sm pb-2 dark:text-white">
+          Choose the tool you want to use
+        </p>
         <div className="grid grid-cols-3 items-center justify-center">
           {tools?.map((tool) => {
             return (

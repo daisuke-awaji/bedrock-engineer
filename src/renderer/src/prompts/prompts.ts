@@ -6,6 +6,7 @@ type SystemPromptProps = {
 
 type WebsiteGeneratorPromptProps = {
   styleType: 'tailwind' | 'inline' | 'mui'
+  libraries?: string[]
 }
 
 const prompts = {
@@ -107,12 +108,13 @@ ${
     </example>
   - @cloudscape-design/global-styles
     Do not use unless specifically instructed to do so
+  - Other libraries: ${props.libraries?.join(',')}
 
 - ONLY IF the user asks for a dashboard, graph or chart, the recharts library is available to be imported, e.g. \`import { LineChart, XAxis, ... } from "recharts"\` & \`<LineChart ...><XAxis dataKey="name"> ...\`. Please only use this when needed.
 - NO OTHER LIBRARIES (e.g. zod, hookform) ARE INSTALLED OR ABLE TO BE IMPORTED.
 - !Important Rule: Triple backticks or triple backquotes (\`\`\`) must not be output.
 - !Important rule: Do not import modules with relative paths (e.g. import { Button } from './Button';) If you have required components, put them all in the same file.
-- Please ONLY return the full React code starting with the imports, nothing else. It's very important for my job that you only return the React code with imports. DO NOT START WITH \`\`\`typescript or \`\`\`javascript or \`\`\`tsx or \`\`\`.
+- !MOST IMPORTANT RULE: ONLY return the full React code starting with the imports, nothing else. It's very important for my job that you only return the React code with imports. DO NOT START WITH \`\`\`typescript or \`\`\`javascript or \`\`\`tsx or \`\`\`.
 - Any text other than the source code is strictly prohibited. Greetings, chatting, explanations of rules, etc. are strictly prohibited.
 - The generated application will be displayed to the full screen, but this may be changed if specified.
 - If necessary, source code that fetches and displays the API will also be generated.
@@ -298,6 +300,7 @@ The value property should contain the recommended content. The recommended conte
   ]
 </schema>
 
+!Important: JSON keys should not be in any language other than English.
 !Important: Respond in the following languages:
 
 <language>

@@ -38,6 +38,7 @@ export default function WebsiteGeneratorPage() {
   const [template, setTemplate] = useState<SupportedTemplate['id']>('react-ts')
 
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+
   return (
     <SandpackProvider
       template={template}
@@ -51,7 +52,7 @@ export default function WebsiteGeneratorPage() {
         initMode: 'user-visible',
         recompileMode: 'delayed',
         autorun: true,
-        autoReload: true
+        autoReload: false
       }}
       customSetup={{
         dependencies: templates[template].customSetup.dependencies
@@ -68,6 +69,7 @@ type WebsiteGeneratorPageContentsProps = {
 }
 function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) {
   const { template, setTemplate } = props
+
   const TemplateButton: React.FC<SupportedTemplate> = (t) => {
     return (
       <button
@@ -156,7 +158,8 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   })
   const { handleSubmit, messages, loading, lastText, initChat, setLoading } = useChat({
     systemPrompt: prompts.WebsiteGenerator.system[template]({
-      styleType: styleType.value
+      styleType: styleType.value,
+      libraries: Object.keys(templates[template].customSetup.dependencies)
     }),
     modelId: llm.modelId
   })
@@ -195,31 +198,35 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     }
   }, [loading, messages])
 
+  const { kbId, DataSourceConnectModal, openModal, enableKnowledgeBase } =
+    useDataSourceConnectModal()
+  const ragEnabled = !!kbId && enableKnowledgeBase
   const RETRIVE_AND_GEN_MODEL_ARN =
     'arn:aws:bedrock:ap-northeast-1::foundation-model/anthropic.claude-3-haiku-20240307-v1:0'
-  const ragSubmit = async (input: string, messages) => {
-    setLoading(true)
+  const ragSubmit = useCallback(
+    async (input: string, messages) => {
+      setLoading(true)
 
-    setRagLoading(true)
+      setRagLoading(true)
 
-    // 必要となるコンポーネントの名称を取得
-    const components = await converse({
-      modelId: 'anthropic.claude-3-haiku-20240307-v1:0',
-      system: [
-        {
-          text: `You are an AI assistant that suggests the necessary web component elements according to the given requirements. Please create your answer according to the following rules.
+      // 必要となるコンポーネントの名称を取得
+      const components = await converse({
+        modelId: 'anthropic.claude-3-haiku-20240307-v1:0',
+        system: [
+          {
+            text: `You are an AI assistant that suggests the necessary web component elements according to the given requirements. Please create your answer according to the following rules.
 
 <rules>
 - Please answer the necessary web components in English, separated by commas, in the following format:
 Button, BreadCrumb, List, Checkbox, Divider, Input, Error Text, Label, Link, Radio Button
 </rules>
 `
-        }
-      ],
-      messages: [{ role: 'user', content: [{ text: input }] }]
-    })
-    const promptTemplate = prompts.WebsiteGenerator.rag.promptTemplate
-    const inputText = `Follow these instructions to create a website that conforms to the requirements described in <website-requirements>.
+          }
+        ],
+        messages: [{ role: 'user', content: [{ text: input }] }]
+      })
+      const promptTemplate = prompts.WebsiteGenerator.rag.promptTemplate
+      const inputText = `Follow these instructions to create a website that conforms to the requirements described in <website-requirements>.
 
 Please provide examples of the React source code needed to create the components described in <components> that achieve these requirements.
 If the data source contains programs written in a language other than React, please extract the source code equivalent for the web styles.
@@ -233,37 +240,37 @@ ${input}
 </website-requirements>
 `
 
-    console.log(components.output.message?.content[0]?.text)
+      console.log(components.output.message?.content[0]?.text)
 
-    // Knowledge base から関連コードの取得
-    const res = await retrieveAndGenerate({
-      input: {
-        text: inputText
-      },
-      retrieveAndGenerateConfiguration: {
-        type: 'KNOWLEDGE_BASE',
-        knowledgeBaseConfiguration: {
-          knowledgeBaseId: kbId,
-          modelArn: RETRIVE_AND_GEN_MODEL_ARN,
-          generationConfiguration: {
-            promptTemplate: {
-              textPromptTemplate: promptTemplate
-            }
-          },
-          retrievalConfiguration: {
-            vectorSearchConfiguration: {
-              numberOfResults: 5
+      // Knowledge base から関連コードの取得
+      const res = await retrieveAndGenerate({
+        input: {
+          text: inputText
+        },
+        retrieveAndGenerateConfiguration: {
+          type: 'KNOWLEDGE_BASE',
+          knowledgeBaseConfiguration: {
+            knowledgeBaseId: kbId,
+            modelArn: RETRIVE_AND_GEN_MODEL_ARN,
+            generationConfiguration: {
+              promptTemplate: {
+                textPromptTemplate: promptTemplate
+              }
+            },
+            retrievalConfiguration: {
+              vectorSearchConfiguration: {
+                numberOfResults: 5
+              }
             }
           }
         }
-      }
-    })
+      })
 
-    console.log(res?.output?.text)
+      console.log(res?.output?.text)
 
-    setRagLoading(false)
+      setRagLoading(false)
 
-    const prompt = `Create a website based on the sample source code below.
+      const prompt = `Create a website based on the sample source code below.
 Important: The style should follow the sample code as closely as possible. Even if the system prompts you about the style you should use, the style in the sample code should be your first priority. If there is a designated design system, use it.
 
 <code>
@@ -280,9 +287,11 @@ ${language}
 
 !Important rule: Do not import modules with relative paths (e.g. import { Button } from './Button';) If you have required components, put them all in the same file.
 `
-    await handleSubmit(prompt, messages)
-    setLoading(false)
-  }
+      await handleSubmit(prompt, messages)
+      setLoading(false)
+    },
+    [kbId, language]
+  )
 
   const { refresh } = useSandpackNavigation()
 
@@ -301,22 +310,18 @@ ${language}
     runSandpack()
   }, [template, updateCode, initChat, runSandpack])
 
+  const [version, setVersion] = useState(0)
+
   useEffect(() => {
     if (messages?.length > 0) {
       updateCode(lastText)
-    }
-  }, [lastText])
-
-  useEffect(() => {
-    if (messages?.length > 0 && !loading) {
-      console.log('runSandpack')
-      sleep(500).then(() => runSandpack())
+      if (!loading) {
+        console.log('runSandpack')
+        runSandpack()
+        setVersion(messages.length)
+      }
     }
   }, [loading, lastText])
-
-  const { kbId, DataSourceConnectModal, openModal, enableKnowledgeBase } =
-    useDataSourceConnectModal()
-  const ragEnabled = !!kbId && enableKnowledgeBase
 
   const [isComposing, setIsComposing] = useState(false)
   const { sendMsgKey } = useAdvancedSetting()
@@ -343,6 +348,38 @@ ${language}
 
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
 
+  const Preview = useCallback(
+    () => (
+      <SandpackPreview
+        id="sandpack-preview"
+        style={{
+          height: '100%',
+          borderRadius: '8px',
+          border: isDark ? '2px solid black' : '2px solid white'
+        }}
+        showRestartButton={true}
+        showOpenNewtab={true}
+        showSandpackErrorOverlay={true}
+        showOpenInCodeSandbox={false}
+        showNavigator={true}
+        actionsChildren={
+          <button
+            onClick={() => {
+              const iframe = document.getElementById('sandpack-preview')
+              if (iframe) {
+                iframe?.requestFullscreen()
+              }
+            }}
+            className="border rounded-full bg-[#EFEFEF] p-2 text-gray-500 hover:text-gray-800"
+          >
+            <FiMaximize className="text-gray" />
+          </button>
+        }
+      />
+    ),
+    [version]
+  )
+
   return (
     <div className={'flex flex-col h-[calc(100vh-11rem)] overflow-y-auto'}>
       <div className="flex pb-2 justify-between">
@@ -353,17 +390,48 @@ ${language}
               {TEMPLATES.map((fw) => (
                 <TemplateButton {...fw} key={fw.id} />
               ))}
+              <div className="ml-8 flex gap-2 items-center max-w-[30%] overflow-x-auto">
+                {messages.map((m, index) => {
+                  if (index % 2 == 0) {
+                    return (
+                      <motion.span
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 1 }}
+                        key={index}
+                        className="p-2 bg-gray-200 rounded text-gray-500 cursor-pointer hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white"
+                        onClick={async () => {
+                          const code = messages[index + 1]?.content[0].text
+                          if (code) {
+                            setVersion(index + 1)
+                            updateCode(code, true)
+                            runSandpack()
+                          }
+                        }}
+                      >
+                        <Tooltip
+                          content={m.content[0].text}
+                          placement="bottom"
+                          animation="duration-500"
+                        >
+                          v{index / 2 + 1}
+                        </Tooltip>
+                      </motion.span>
+                    )
+                  }
+                  return null
+                })}
+              </div>
             </div>
-            <div>
-              <Tooltip content="re:run" placement="bottom" animation="duration-500">
-                <button
-                  className="cursor-pointer rounded-md py-1.5 px-2 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                  onClick={runSandpack}
-                >
-                  <AiOutlineReload className="text-xl" />
-                </button>
-              </Tooltip>
-            </div>
+
+            <Tooltip content="re:run" placement="bottom" animation="duration-500">
+              <button
+                className="cursor-pointer rounded-md py-1.5 px-2 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                onClick={runSandpack}
+              >
+                <AiOutlineReload className="text-xl" />
+              </button>
+            </Tooltip>
           </div>
         </span>
       </div>
@@ -386,12 +454,13 @@ ${language}
           <SandpackCodeEditor
             style={{
               height: '100%',
-              borderRadius: '8px',
+              borderRadius: '0px 8px 8px 0px',
               overflowX: 'scroll',
-              maxWidth: '50vw'
+              maxWidth: '50vw',
+              gridColumn: '2 / 4'
             }}
             showInlineErrors={true}
-            showTabs
+            showTabs={true}
             showLineNumbers
             showRunButton={true}
             extensions={[autocompletion()]}
@@ -416,32 +485,7 @@ ${language}
             )}
           </div>
         ) : (
-          <SandpackPreview
-            id="sandpack-preview"
-            style={{
-              height: '100%',
-              borderRadius: '8px',
-              border: isDark ? '2px solid black' : '2px solid white'
-            }}
-            showRestartButton={true}
-            showOpenNewtab={true}
-            showSandpackErrorOverlay={true}
-            showOpenInCodeSandbox={false}
-            showNavigator={true}
-            actionsChildren={
-              <button
-                onClick={() => {
-                  const iframe = document.getElementById('sandpack-preview')
-                  if (iframe) {
-                    iframe?.requestFullscreen()
-                  }
-                }}
-                className="border rounded-full bg-[#EFEFEF] p-2 text-gray-500 hover:text-gray-800"
-              >
-                <FiMaximize className="text-gray" />
-              </button>
-            }
-          />
+          <Preview />
         )}
       </SandpackLayout>
 
@@ -451,7 +495,10 @@ ${language}
           <div className="flex gap-2 justify-between">
             <div>
               {recommendLoading ? (
-                <LoadingDotsLottie className="h-[2rem]" />
+                <div className="flex gap-1 justify-center items-center dark:text-white">
+                  <LoadingDotsLottie className="h-[2rem]" />
+                  <span className="dark:text-white">{t('addRecommend')}</span>
+                </div>
               ) : (
                 recommendChanges?.map((a) => {
                   return (
@@ -517,7 +564,7 @@ ${language}
           <textarea
             onCompositionStart={() => setIsComposing(true)}
             onCompositionEnd={() => setIsComposing(false)}
-            className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2 dark:text-white dark:bg-gray-800`}
+            className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2 dark:text-white dark:bg-gray-800 z-9`}
             placeholder="What kind of website will you create?"
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
