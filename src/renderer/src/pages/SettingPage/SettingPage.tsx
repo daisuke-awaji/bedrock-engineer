@@ -58,7 +58,7 @@ export default function SettingPage() {
 
   return (
     <React.Fragment>
-      <div className="flex flex-col gap-4 min-w-[320px] max-w-[1024px] mx-auto h-full overflow-y-auto">
+      <div className="flex flex-col gap-4 min-w-[320px] max-w-[1024px] mx-auto h-full overflow-y-auto dark:text-white">
         <h1 className="text-lg font-bold">{t('Setting')}</h1>
 
         <h2 className="text-lg">{t('Project Setting')}</h2>
@@ -134,7 +134,7 @@ export default function SettingPage() {
           <label className="block text-sm font-medium leading-6 text-gray-900">
             <div className="flex gap-2 items-center">
               <FcMindMap className="text-lg" />
-              <span>{t('Inference Parameters')}</span>
+              <span className="dark:text-white">{t('Inference Parameters')}</span>
             </div>
           </label>
 
@@ -185,7 +185,7 @@ export default function SettingPage() {
               <span className="h-3 w-3">
                 <FigmaLogo />
               </span>
-              <span>{t('Connect to Figma')}</span>
+              <span className="dark:text-white">{t('Connect to Figma')}</span>
             </div>
           </label>
           <InputWithLabel
@@ -203,7 +203,7 @@ export default function SettingPage() {
         <h2 className="text-lg">{t('Advanced Setting')}</h2>
 
         <div className="flex flex-col gap-2">
-          <label className="block text-sm font-medium leading-6 text-gray-900">
+          <label className="block text-sm font-medium leading-6 text-gray-900 dark:text-white">
             <div className="flex gap-2 items-center">
               <span>
                 {t('When writing a message, press')} <Kbd className="bg-gray-200">Enter</Kbd>{' '}

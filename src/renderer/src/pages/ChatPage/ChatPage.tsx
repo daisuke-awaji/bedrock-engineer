@@ -456,7 +456,7 @@ export default function ChatPage() {
                 <div className="h-6 w-6">
                   <AILogo />
                 </div>
-                <h1 className="text-lg font-bold">Agent Chat</h1>
+                <h1 className="text-lg font-bold dark:text-white">Agent Chat</h1>
               </div>
               <div className="text-gray-400">
                 {t(
@@ -537,7 +537,7 @@ export default function ChatPage() {
                   </label>
                   <label
                     onClick={openIgnoreFileModal}
-                    className="block text-sm font-medium text-gray-500 dark:text-white cursor-pointer hover:text-gray-500 hover:text-gray-900"
+                    className="block text-sm font-medium text-gray-500 dark:text-white cursor-pointer hover:text-gray-500"
                   >
                     .ignore
                   </label>
@@ -567,7 +567,7 @@ export default function ChatPage() {
               onCompositionEnd={() => setIsComposing(false)}
               className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2 ${
                 loading ? 'bg-gray-300' : 'bg-gray-50'
-              }`}
+              } dark:text-white dark:bg-gray-800`}
               placeholder="Type your message... "
               disabled={loading}
               value={loading ? 'Continue until the goal is achieved' : userInput}
@@ -579,7 +579,7 @@ export default function ChatPage() {
 
             <button
               onClick={() => handleClickPromptSubmit(userInput, messages)}
-              className="absolute end-2.5 bottom-2.5 rounded-lg hover:bg-gray-200 px-2 py-2"
+              className="absolute end-2.5 bottom-2.5 rounded-lg hover:bg-gray-200 px-2 py-2 dark:text-white dark:hover:bg-gray-700"
             >
               <FiSend className="text-xl" />
             </button>

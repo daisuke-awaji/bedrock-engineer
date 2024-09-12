@@ -36,9 +36,11 @@ import { useTranslation } from 'react-i18next'
 export default function WebsiteGeneratorPage() {
   const [template, setTemplate] = useState<SupportedTemplate['id']>('react-ts')
 
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
   return (
     <SandpackProvider
       template={template}
+      theme={isDark ? 'dark' : 'light'}
       files={templates[template].files}
       style={{
         height: 'calc(100vh - 16rem)'
@@ -87,6 +89,10 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     items-center
     flex
     gap-2
+    dark:bg-gray-800
+    dark:text-white
+    dark:border-gray-600
+    dark:hover:bg-gray-700
     `}
         onClick={async () => {
           setTemplate(t.id)
@@ -147,7 +153,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     label: 'Tailwind.css',
     value: 'tailwind'
   })
-  const { handleSubmit, messages, loading, lastText, initChat, setLoading, stopReason } = useChat({
+  const { handleSubmit, messages, loading, lastText, initChat, setLoading } = useChat({
     systemPrompt: prompts.WebsiteGenerator.system[template]({
       styleType: styleType.value
     }),
@@ -334,6 +340,8 @@ ${language}
     [isComposing, sendMsgKey, ragEnabled, userInput, messages]
   )
 
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+
   return (
     <div className={'flex flex-col h-[calc(100vh-11rem)] overflow-y-auto'}>
       <div className="flex pb-2 justify-between">
@@ -353,7 +361,9 @@ ${language}
         style={{
           display: 'flex',
           gap: '1rem',
-          backgroundColor: 'rgb(243 244 246 / var(--tw-bg-opacity))',
+          backgroundColor: isDark
+            ? 'rgb(17 24 39 / var(--tw-bg-opacity))'
+            : 'rgb(243 244 246 / var(--tw-bg-opacity))',
           border: 'none',
           height: '100%',
           zIndex: '0'
@@ -398,7 +408,7 @@ ${language}
             style={{
               height: '100%',
               borderRadius: '8px',
-              border: '2px solid white'
+              border: isDark ? '2px solid black' : '2px solid white'
             }}
             showRestartButton={true}
             showOpenNewtab={true}
@@ -436,7 +446,7 @@ ${language}
                       initial={{ opacity: 0, scale: 0 }}
                       animate={{ opacity: 1, scale: 1 }}
                       key={a.title}
-                      className="cursor-pointer rounded-full border p-2 text-xs hover:border-gray-300 hover:bg-gray-50"
+                      className="cursor-pointer rounded-full border p-2 text-xs hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:hover:border-gray-600"
                       onClick={() => {
                         setUserInput(a.value)
                       }}
@@ -481,7 +491,7 @@ ${language}
 
               <Tooltip content="clear" placement="bottom" animation="duration-500">
                 <button
-                  className="cursor-pointer rounded-md py-1.5 px-2 hover:border-gray-300 hover:bg-gray-50"
+                  className="cursor-pointer rounded-md py-1.5 px-2 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                   onClick={handleRefresh}
                 >
                   <GrClearOption className="text-xl" />
@@ -494,7 +504,7 @@ ${language}
           <textarea
             onCompositionStart={() => setIsComposing(true)}
             onCompositionEnd={() => setIsComposing(false)}
-            className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2`}
+            className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2 dark:text-white dark:bg-gray-800`}
             placeholder="What kind of website will you create?"
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
@@ -507,7 +517,7 @@ ${language}
             onClick={() =>
               ragEnabled ? ragSubmit(userInput, messages) : handleSubmit(userInput, messages)
             }
-            className={`absolute end-2.5 bottom-2.5 rounded-lg hover:bg-gray-200 px-2 py-2`}
+            className={`absolute end-2.5 bottom-2.5 rounded-lg hover:bg-gray-200 px-2 py-2 dark:text-white dark:hover:bg-gray-700`}
             disabled={loading}
           >
             <FiSend className="text-xl" />

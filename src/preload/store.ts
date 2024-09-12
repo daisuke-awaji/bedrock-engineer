@@ -45,6 +45,11 @@ const init = () => {
       }
     })
   }
+
+  const language = electronStore.get('language')
+  if (language === undefined) {
+    electronStore.set('language', 'en')
+  }
 }
 
 init()

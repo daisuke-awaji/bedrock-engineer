@@ -24,13 +24,15 @@ export const ASLEditor: React.FC<ASLEditorProps> = ({ value, setValue }) => {
     // model markers
     // markers.forEach(marker => console.log('onValidate:', marker.message));
   }
+
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
   return (
     <>
       <Editor
         language="json"
         defaultValue={value}
         value={value}
-        theme="light" // or "vs-dark"
+        theme={isDark ? 'vs-dark' : 'light'}
         onChange={handleEditorChange}
         onMount={handleEditorDidMount}
         beforeMount={handleEditorWillMount}
