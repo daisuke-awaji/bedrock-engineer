@@ -125,7 +125,7 @@ function StepFunctionsGeneratorPage() {
           <div className="content-center">
             <StepFunctionLogo />
           </div>
-          <h1 className="content-center">AWS Step Functions Generator</h1>
+          <h1 className="content-center dark:text-white">AWS Step Functions Generator</h1>
         </span>
         <button className="hover:bg-gray-100 p-3 rounded-full">
           <BsGear />
@@ -134,17 +134,17 @@ function StepFunctionsGeneratorPage() {
 
       <div className="grid grid-cols-2 gap-2">
         {/* LEFT */}
-        <div className="border h-[80vh] flex flex-col resize-x bg-white rounded-md">
+        <div className="border h-[80vh] flex flex-col resize-x bg-white rounded-md dark:bg-gray-800 dark:border-black">
           <div className="border-b p-1">
-            <h1 className="text-xs italic">Editor</h1>
+            <h1 className="text-xs italic dark:text-gray-200">Editor</h1>
           </div>
           <ASLEditor value={editorValue} setValue={setEditorValue} />
         </div>
 
         {/* RIGHT */}
-        <div className="border h-[80vh] flex flex-col resize-x bg-white rounded-md">
+        <div className="border h-[80vh] flex flex-col resize-x bg-white rounded-md dark:bg-gray-800 dark:border-black">
           <div className="border-b p-1 flex justify-between">
-            <h1 className="text-xs italic">Visualizer</h1>
+            <h1 className="text-xs italic dark:text-gray-200">Visualizer</h1>
           </div>
           <div>
             <div className="h-[80vh] w-full flex justify-center items-center">
@@ -163,7 +163,7 @@ function StepFunctionsGeneratorPage() {
                 return (
                   <button
                     key={e.title}
-                    className="cursor-pointer rounded-full border p-2 text-xs hover:border-gray-300 hover:bg-gray-50"
+                    className="cursor-pointer rounded-full border p-2 text-xs hover:border-gray-300 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700 "
                     onClick={() => {
                       setUserInput(e.value)
                     }}
@@ -179,7 +179,7 @@ function StepFunctionsGeneratorPage() {
           <textarea
             onCompositionStart={() => setIsComposing(true)}
             onCompositionEnd={() => setIsComposing(false)}
-            className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2`}
+            className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2 dark:text-white dark:bg-gray-800`}
             placeholder={t('What kind of step functions will you create?')}
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
@@ -190,7 +190,7 @@ function StepFunctionsGeneratorPage() {
           />
           <button
             onClick={() => handleSubmit(userInput, messages)}
-            className="absolute end-2.5 bottom-2.5 rounded-lg hover:bg-gray-200 px-2 py-2"
+            className="absolute end-2.5 bottom-2.5 rounded-lg hover:bg-gray-200 px-2 py-2 dark:hover:bg-gray-700 dark:text-white"
           >
             <FiSend className="text-xl" />
           </button>

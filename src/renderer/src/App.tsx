@@ -30,9 +30,9 @@ const Layout: React.FC = () => {
   const location = useLocation()
 
   return (
-    <div className="bg-gray-100">
+    <div className="bg-gray-100 dark:bg-gray-900">
       <div className="flex min-h-screen h-screen">
-        <div className="bg-opacity-80 bg-white m-2 border rounded-md">
+        <div className="bg-opacity-80 bg-white dark:bg-gray-900 m-2 border rounded-md dark:border-gray-400">
           <nav className="flex flex-col justify-between h-full">
             <ul>
               {routes.map((page, index) => {
@@ -43,7 +43,7 @@ const Layout: React.FC = () => {
                     href={page.href}
                     toolTipContent={page.name + ' ⌘ ' + (index + 1)}
                   >
-                    <page.icon className="text-xl" />
+                    <page.icon className="text-xl dark:text-white" />
                   </ListItem>
                 )
               })}
@@ -51,7 +51,7 @@ const Layout: React.FC = () => {
             <ul>
               <div onClick={() => open('https://github.com/daisuke-awaji/bedrock-engineer')}>
                 <ListItem href="#">
-                  <FiGithub className="text-xl" />
+                  <FiGithub className="text-xl dark:text-white" />
                 </ListItem>
               </div>
             </ul>
@@ -59,7 +59,7 @@ const Layout: React.FC = () => {
         </div>
         <CmdK />
 
-        <div className="flex-1 p-4 bg-gray-100 overflow-x-auto">
+        <div className="flex-1 p-4 bg-gray-100 overflow-x-auto dark:bg-gray-900">
           <Outlet />
         </div>
       </div>
