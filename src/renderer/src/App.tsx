@@ -1,10 +1,19 @@
 import React from 'react'
 import { FiGithub } from 'react-icons/fi'
 import { Tooltip } from 'flowbite-react'
-import { createHashRouter, Link, Outlet, RouterProvider, useLocation } from 'react-router-dom'
+import {
+  createHashRouter,
+  isRouteErrorResponse,
+  Link,
+  Outlet,
+  RouterProvider,
+  useLocation,
+  useRouteError
+} from 'react-router-dom'
 import CmdK from './command-palette'
 import { routes } from './routes'
 import HomePage from './pages/HomePage/HomePage'
+import { Toaster } from 'react-hot-toast'
 
 const ListItem: React.FC<{
   children: any
@@ -67,10 +76,33 @@ const Layout: React.FC = () => {
   )
 }
 
+const ErrorElement = () => {
+  const error = useRouteError()
+  console.error({ error })
+  if (isRouteErrorResponse(error)) {
+    return (
+      <div>
+        <h1>Oops!</h1>
+        <h2>{error.status}</h2>
+        <p>{error.statusText}</p>
+        {error.data?.message && <p>{error.data.message}</p>}
+      </div>
+    )
+  } else {
+    return (
+      <div>
+        <h1>Oops!</h1>
+        <p>error: {JSON.stringify(error, null, 2)}</p>
+      </div>
+    )
+  }
+}
+
 const router = createHashRouter([
   {
     path: '/',
     element: <Layout />,
+    errorElement: <ErrorElement />,
     children: [
       ...routes.map((route) => ({
         path: route.href,
@@ -86,7 +118,12 @@ const router = createHashRouter([
 ])
 
 function App(): JSX.Element {
-  return <RouterProvider router={router} />
+  return (
+    <div>
+      <Toaster position="top-right" />
+      <RouterProvider router={router} />
+    </div>
+  )
 }
 
 export default App

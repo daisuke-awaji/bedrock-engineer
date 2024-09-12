@@ -22,7 +22,6 @@ const useIgnoreFileModal = () => {
     useEffect(() => {
       const config = window.store.get('agentChatConfig')
       if (config?.ignoreFiles) {
-        console.log(config?.ignoreFiles)
         setStateIgnoreFiles(config.ignoreFiles.join('\n'))
       }
     }, [])

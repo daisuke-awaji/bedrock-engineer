@@ -2,9 +2,20 @@ import Lottie from 'lottie-react'
 import robotAnimation from './Robot.json'
 import { Kbd } from 'flowbite-react'
 import { useTranslation } from 'react-i18next'
+import useLLM from '@renderer/hooks/useLLM'
+import toast from 'react-hot-toast'
+import { useEffect } from 'react'
 
 const HomePage = () => {
   const { t } = useTranslation()
+  const { error } = useLLM()
+  useEffect(() => {
+    if (error) {
+      if (error.message === 'Region is missing') {
+        toast.error(t('set your aws credential'))
+      }
+    }
+  }, [error])
 
   return (
     <div className="flex flex-col gap-3 justify-center align-center items-center h-full">

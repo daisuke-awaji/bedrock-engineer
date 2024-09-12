@@ -21,6 +21,7 @@ import { LiaUserCircleSolid } from 'react-icons/lia'
 import CodeRenderer from './CodeRenderer'
 import { useTranslation } from 'react-i18next'
 import useIgnoreFileModal from './useIgnoreFileModal'
+import toast from 'react-hot-toast'
 
 const agents = [
   {
@@ -277,13 +278,13 @@ export default function ChatPage() {
       let toolUse: ToolUseBlockStart | undefined = undefined
       const content: ContentBlock[] = []
       // handling bedrock converse stream response
-      for await (const json of generator) {
-        // for debug
-        // if (!json.contentBlockDelta) {
-        //   console.log(json)
-        // }
+      try {
+        for await (const json of generator) {
+          // for debug
+          // if (!json.contentBlockDelta) {
+          //   console.log(json)
+          // }
 
-        try {
           if (json.messageStart) {
             role = json.messageStart.role
           }
@@ -348,9 +349,13 @@ export default function ChatPage() {
             // token usage handler
             // todo
           }
-        } catch (error) {
-          console.error(error)
         }
+      } catch (error: any) {
+        console.error({ streamChatRequestError: error })
+        toast.error(t('request error'))
+        setMessages([...msgs, { role: 'assistant', content: [{ text: error.message }] }])
+
+        setLoading(false)
       }
       throw new Error('unexpected end of stream')
     }

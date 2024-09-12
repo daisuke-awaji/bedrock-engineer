@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { LLM } from 'src/types/llm'
 
 const useLLM = () => {
+  const [error, setError] = useState<any>()
   const [llm, setStateLlm] = useState<LLM>({
     modelId: 'anthropic.claude-3-haiku-20240307-v1:0',
     modelName: 'Claude 3 Haiku'
@@ -9,9 +10,15 @@ const useLLM = () => {
 
   const [availableModels, setAvailableModels] = useState<LLM[]>([])
   const fetchModels = async () => {
-    const models = await window.api.bedrock.listModels()
-    if (models) {
-      setAvailableModels(models as LLM[])
+    try {
+      const models = await window.api.bedrock.listModels()
+      if (models) {
+        setAvailableModels(models as LLM[])
+      }
+    } catch (e: any) {
+      console.log(e)
+      setError(e)
+      throw e
     }
   }
   const getSelectedModel = async () => {
@@ -31,7 +38,7 @@ const useLLM = () => {
     fetchModels()
   }, [])
 
-  return { llm, setLLM, availableModels }
+  return { llm, setLLM, availableModels, error }
 }
 
 export default useLLM
