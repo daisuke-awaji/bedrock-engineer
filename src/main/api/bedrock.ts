@@ -46,16 +46,19 @@ const converseStream = async (
   try {
     const command = new ConverseStreamCommand(props)
     return await runtimeClient.send(command)
-  } catch (error) {
-    console.log({ retry: retries })
-    if (retries >= MAX_RETRIES) {
-      // 最大再試行回数に達した場合はエラーをスローする
-      throw error
-    }
+  } catch (error: any) {
+    if (error.name === 'ThrottlingException') {
+      console.log({ retry: retries, error, errorName: error.name })
+      if (retries >= MAX_RETRIES) {
+        // 最大再試行回数に達した場合はエラーをスローする
+        throw error
+      }
 
-    // 一定時間待ってから再試行
-    await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY))
-    return converseStream(props, retries + 1)
+      // 一定時間待ってから再試行
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY))
+      return converseStream(props, retries + 1)
+    }
+    throw error
   }
 }
 

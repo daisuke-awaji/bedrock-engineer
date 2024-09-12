@@ -6,6 +6,8 @@ const defaultLaunguage = window.store.get('language')
 const resources = {
   en: {
     translation: {
+      // HomePage
+      'set your aws credential': 'Please set your AWS region or credentials.',
       'Welcome to Bedrock Engineer': 'Welcome to Bedrock Engineer',
       'This is AI assistant of software development tasks':
         'This is AI assistant of software development tasks',
@@ -58,6 +60,7 @@ Each line has orders and shipping information.
 The distributed map processor repeats the batch of these rows and uses the Lambda function to detect the delayed order.
 After that, send a message to the SQS queue for each delayed order.`,
       // ChatPage
+      'request error': 'Request error',
       'This AI agent understands software project structures and creates files and folders.':
         'This AI agent understands software project structures and creates files and folders.',
       'Create a new file': 'Create a new file',
@@ -162,6 +165,7 @@ base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
   },
   ja: {
     translation: {
+      'set your aws credential': 'AWS 認証情報またはリージョンの設定をご確認ください。',
       'Welcome to Bedrock Engineer': 'Bedrock Engineer にようこそ',
       'This is AI assistant of software development tasks':
         '私は、ソフトウェア開発タスクに特化したAIアシスタントです',
@@ -212,6 +216,8 @@ DynamoDB または SNS を使用する場合は、Lambda を使用せず、AWS �
 分散マッププロセッサはこれらの行のバッチを繰り返し、Lambda 関数を使用して注文を検出します。
 その後、注文ごとに SQS キューにメッセージを送信します。`,
       // ChatPage
+      'request error':
+        'Bedrock との通信でエラーが発生しました。しばらく待ってからもう一度お試しください。',
       'This AI agent understands software project structures and creates files and folders.':
         'ソフトウェアプロジェクトの構造を理解し、ファイルとフォルダーを作成します',
       'Create a new file': '新しいファイルを作成',

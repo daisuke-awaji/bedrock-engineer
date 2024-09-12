@@ -4,6 +4,7 @@ import { GrClearOption } from 'react-icons/gr'
 import { FiSend } from 'react-icons/fi'
 import { BsDatabaseCheck, BsDatabase } from 'react-icons/bs'
 import prompts from '../../prompts/prompts'
+import { AiOutlineReload } from 'react-icons/ai'
 
 import { useChat } from '@renderer/hooks/useChat'
 import useLLM from '@renderer/hooks/useLLM'
@@ -309,7 +310,7 @@ ${language}
   useEffect(() => {
     if (messages?.length > 0 && !loading) {
       console.log('runSandpack')
-      sleep(1000).then(() => runSandpack())
+      sleep(500).then(() => runSandpack())
     }
   }, [loading, lastText])
 
@@ -345,12 +346,24 @@ ${language}
   return (
     <div className={'flex flex-col h-[calc(100vh-11rem)] overflow-y-auto'}>
       <div className="flex pb-2 justify-between">
-        <span className="font-bold flex flex-col gap-2">
+        <span className="font-bold flex flex-col gap-2 w-full">
           <h1 className="content-center">Website Generator</h1>
-          <div className="flex gap-2">
-            {TEMPLATES.map((fw) => (
-              <TemplateButton {...fw} key={fw.id} />
-            ))}
+          <div className="flex justify-between w-full">
+            <div className="flex gap-2">
+              {TEMPLATES.map((fw) => (
+                <TemplateButton {...fw} key={fw.id} />
+              ))}
+            </div>
+            <div>
+              <Tooltip content="re:run" placement="bottom" animation="duration-500">
+                <button
+                  className="cursor-pointer rounded-md py-1.5 px-2 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  onClick={runSandpack}
+                >
+                  <AiOutlineReload className="text-xl" />
+                </button>
+              </Tooltip>
+            </div>
           </div>
         </span>
       </div>
