@@ -58,7 +58,11 @@ type ChatAvatorProps = {
   role?: ConversationRole
 }
 const ChatAvator: React.FC<ChatAvatorProps> = ({ role }) => {
-  return <div className="flex items-center justify-center w-10 h-10">{renderAvator(role)}</div>
+  return (
+    <div className="flex items-center justify-center w-10 h-10 dark:text-white">
+      {renderAvator(role)}
+    </div>
+  )
 }
 
 type JSONCodeBlockProps = {
