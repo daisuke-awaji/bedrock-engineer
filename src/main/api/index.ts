@@ -21,8 +21,8 @@ api.use(
     origin: allowedOrigins
   })
 )
-api.use(express.json())
-api.use(express.urlencoded({ extended: true }))
+api.use(express.json({ limit: '10mb' }))
+api.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
 api.get('/', (_req: Request, res: Response) => {
   res.send('Hello World')

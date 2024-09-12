@@ -3,6 +3,7 @@ import * as fs from 'fs/promises'
 import * as path from 'path'
 import { store } from './store'
 import * as diff from 'diff'
+import GitignoreLikeMatcher from './lib/gitignore-like-matcher'
 
 export async function createFolder(folderPath: string): Promise<string> {
   try {
@@ -46,6 +47,10 @@ export async function readFiles(filePaths: string[]): Promise<string> {
 export async function listFiles(dirPath: string, prefix: string = ''): Promise<string> {
   try {
     const files = await fs.readdir(dirPath, { withFileTypes: true })
+
+    const ignoreFiles = store.get('agentChatConfig')?.ignoreFiles
+    const matcher = new GitignoreLikeMatcher(ignoreFiles ?? [])
+
     let result = ''
 
     for (let i = 0; i < files.length; i++) {
@@ -53,10 +58,16 @@ export async function listFiles(dirPath: string, prefix: string = ''): Promise<s
       const isLast = i === files.length - 1
       const currentPrefix = prefix + (isLast ? '└── ' : '├── ')
       const nextPrefix = prefix + (isLast ? '    ' : '│   ')
+      const filePath = path.join(dirPath, file.name)
+      const relativeFilePath = path.relative(process.cwd(), filePath)
+      // Check if the current file path matches any of the ignore file paths
+      if (ignoreFiles && ignoreFiles.length && matcher.isIgnored(relativeFilePath)) {
+        continue
+      }
 
       if (file.isDirectory()) {
         result += `${currentPrefix}📁 ${file.name}\n`
-        result += await listFiles(path.join(dirPath, file.name), nextPrefix)
+        result += await listFiles(filePath, nextPrefix)
       } else {
         result += `${currentPrefix}📄 ${file.name}\n`
       }
@@ -64,7 +75,7 @@ export async function listFiles(dirPath: string, prefix: string = ''): Promise<s
 
     return result
   } catch (e: any) {
-    throw `Error listing directory structure: ${e.message}`
+    throw `Error listing directory structure: ${e}`
   }
 }
 export async function moveFile(source: string, destination: string): Promise<string> {
