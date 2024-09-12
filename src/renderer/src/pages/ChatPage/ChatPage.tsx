@@ -20,6 +20,7 @@ import AILogo from '../../assets/images/icons/ai.svg'
 import { LiaUserCircleSolid } from 'react-icons/lia'
 import CodeRenderer from './CodeRenderer'
 import { useTranslation } from 'react-i18next'
+import useIgnoreFileModal from './useIgnoreFileModal'
 
 const agents = [
   {
@@ -422,6 +423,7 @@ export default function ChatPage() {
     scrollToBottom()
   }, [loading, messages.length])
 
+  const { openModal: openIgnoreFileModal, IgnoreFileModal } = useIgnoreFileModal()
   return (
     <React.Fragment>
       <div
@@ -429,6 +431,7 @@ export default function ChatPage() {
         id="main"
       >
         <ToolSettingModal />
+        <IgnoreFileModal />
         <div className="flex flex-col gap-4 h-full">
           {messages.length === 0 && agents.length > 1 ? (
             <div className="justify-center flex flex-col items-center gap-2">
@@ -522,15 +525,23 @@ export default function ChatPage() {
                   </div>
                 </label>
 
-                <label
-                  onClick={selectDirectory}
-                  className="block text-sm font-medium text-gray-900 dark:text-white cursor-pointer hover:text-gray-500"
-                >
-                  <div className="flex gap-2 items-center">
-                    <FcFolder className="text-lg" />
-                    <span>{projectPath}</span>
-                  </div>
-                </label>
+                <div className="flex gap-2">
+                  <label
+                    onClick={selectDirectory}
+                    className="block text-sm font-medium text-gray-900 dark:text-white cursor-pointer hover:text-gray-500"
+                  >
+                    <div className="flex gap-2 items-center">
+                      <FcFolder className="text-lg" />
+                      <span>{projectPath}</span>
+                    </div>
+                  </label>
+                  <label
+                    onClick={openIgnoreFileModal}
+                    className="block text-sm font-medium text-gray-500 dark:text-white cursor-pointer hover:text-gray-500 hover:text-gray-900"
+                  >
+                    .ignore
+                  </label>
+                </div>
               </div>
 
               {/* right */}
