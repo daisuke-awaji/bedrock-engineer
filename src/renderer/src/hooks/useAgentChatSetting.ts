@@ -15,7 +15,7 @@ const useAgentChatSetting = () => {
   }
 
   const getAutomode = () => {
-    return window.store.get('agentChatConfig').automode
+    return window.store.get('agentChatConfig')?.automode
   }
 
   return { automode, setAutomode, getAutomode }

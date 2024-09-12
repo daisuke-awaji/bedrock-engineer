@@ -12,7 +12,7 @@ const useToolSettingModal = () => {
       setStateTools(tools)
     }
 
-    if (window.tools.length !== tools.length) {
+    if (window.tools?.length !== tools?.length) {
       const t = window.tools
         .map((tool) => {
           if (!tool.toolSpec?.name) return

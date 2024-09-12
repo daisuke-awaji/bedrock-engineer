@@ -1,3 +1,4 @@
+import { StopReason } from '@aws-sdk/client-bedrock-runtime'
 import { streamChatCompletion } from '@renderer/lib/api'
 import { useCallback, useState } from 'react'
 
@@ -9,6 +10,7 @@ export const useChat = (props: UseChatProps) => {
   const [messages, setMessages] = useState<{ role: string; content: { text: string }[] }[]>([])
   const [loading, setLoading] = useState(false)
   const [lastText, setLatestText] = useState('')
+  const [stopReason, setStopReason] = useState<StopReason>()
 
   const handleSubmit = useCallback(
     async (input: string, messages) => {
@@ -35,11 +37,18 @@ export const useChat = (props: UseChatProps) => {
       let s = ''
       for await (const json of generator) {
         try {
-          const text = json.contentBlockDelta?.delta?.text
-          if (text) {
-            setMessages([...msgs, { role: 'assistant', content: [{ type: 'text', text }] }])
-            s = s + text
-            setLatestText(s)
+          if (json.contentBlockDelta) {
+            const text = json.contentBlockDelta.delta?.text
+            if (text) {
+              s = s + text
+              setMessages([...msgs, { role: 'assistant', content: [{ text: s }] }])
+              setLatestText(s)
+            }
+          }
+
+          if (json.messageStop) {
+            console.log({ stopReason: json.messageStop.stopReason })
+            setStopReason(json.messageStop.stopReason)
           }
         } catch (error) {
           console.error(error)
@@ -58,5 +67,5 @@ export const useChat = (props: UseChatProps) => {
     setLatestText('')
   }
 
-  return { messages, handleSubmit, loading, initChat, lastText, setLoading }
+  return { messages, handleSubmit, loading, initChat, lastText, setLoading, stopReason }
 }

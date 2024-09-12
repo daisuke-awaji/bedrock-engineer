@@ -147,7 +147,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     label: 'Tailwind.css',
     value: 'tailwind'
   })
-  const { handleSubmit, messages, loading, lastText, initChat, setLoading } = useChat({
+  const { handleSubmit, messages, loading, lastText, initChat, setLoading, stopReason } = useChat({
     systemPrompt: prompts.WebsiteGenerator.system[template]({
       styleType: styleType.value
     }),
@@ -303,7 +303,7 @@ ${language}
   useEffect(() => {
     if (messages?.length > 0 && !loading) {
       console.log('runSandpack')
-      runSandpack()
+      sleep(1000).then(() => runSandpack())
     }
   }, [loading, lastText])
 

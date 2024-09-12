@@ -6,10 +6,10 @@ const useWebsiteGeneratorSettings = () => {
 
   useEffect(() => {
     const settings = window.store.get('websiteGenerator')
-    if (settings.knowledgeBaseId) {
+    if (settings?.knowledgeBaseId) {
       setStateKbId(settings.knowledgeBaseId)
     }
-    if (settings.enableKnowledgeBase) {
+    if (settings?.enableKnowledgeBase) {
       setStateEnableKnowledgeBase(settings.enableKnowledgeBase)
     }
   }, [])
