@@ -209,38 +209,16 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
 
       setRagLoading(true)
 
-      // 必要となるコンポーネントの名称を取得
-      const components = await converse({
-        modelId: 'anthropic.claude-3-haiku-20240307-v1:0',
-        system: [
-          {
-            text: `You are an AI assistant that suggests the necessary web component elements according to the given requirements. Please create your answer according to the following rules.
-
-<rules>
-- Please answer the necessary web components in English, separated by commas, in the following format:
-Button, BreadCrumb, List, Checkbox, Divider, Input, Error Text, Label, Link, Radio Button
-</rules>
-`
-          }
-        ],
-        messages: [{ role: 'user', content: [{ text: input }] }]
-      })
       const promptTemplate = prompts.WebsiteGenerator.rag.promptTemplate
       const inputText = `Follow these instructions to create a website that conforms to the requirements described in <website-requirements>.
 
-Please provide examples of the React source code needed to create the components described in <components> that achieve these requirements.
+Please provide examples of the React source code needed to create the components that achieve these requirements.
 If the data source contains programs written in a language other than React, please extract the source code equivalent for the web styles.
-
-<components>
-${components.output.message?.content[0]?.text}
-</components>
 
 <website-requirements>
 ${input}
 </website-requirements>
 `
-
-      console.log(components.output.message?.content[0]?.text)
 
       // Knowledge base から関連コードの取得
       const res = await retrieveAndGenerate({

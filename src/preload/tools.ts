@@ -4,6 +4,7 @@ import * as path from 'path'
 import { store } from './store'
 import * as diff from 'diff'
 import GitignoreLikeMatcher from './lib/gitignore-like-matcher'
+import * as XLSX from 'xlsx'
 
 export async function createFolder(folderPath: string): Promise<string> {
   try {
@@ -27,7 +28,24 @@ export async function readFiles(filePaths: string[]): Promise<string> {
   try {
     const fileContents = await Promise.all(
       filePaths.map(async (filePath) => {
-        const content = await fs.readFile(filePath, 'utf-8')
+        const ext = path.extname(filePath).toLowerCase()
+        let content: string
+
+        if (ext === '.xlsx' || ext === '.xls') {
+          // エクセルファイルの読み込み
+          const workbook = XLSX.readFile(filePath)
+          const sheetNames = workbook.SheetNames
+          content = sheetNames
+            .map((sheetName) => {
+              const sheet = workbook.Sheets[sheetName]
+              return `Sheet: ${sheetName}\n${XLSX.utils.sheet_to_csv(sheet)}\n`
+            })
+            .join('\n')
+        } else {
+          // 通常のテキストファイルの読み込み
+          content = await fs.readFile(filePath, 'utf-8')
+        }
+
         return { path: filePath, content }
       })
     )
@@ -237,7 +255,7 @@ export const tools: Tool[] = [
     toolSpec: {
       name: 'readFiles',
       description:
-        'Read the contents of multiple files at the specified paths. Use this when you need to examine the contents of several existing files at once.',
+        'Read the contents of multiple files at the specified paths, including text files and Excel files (.xlsx, .xls). For Excel files, the content is converted to CSV format. Use this when you need to examine the contents of several existing files at once.',
       inputSchema: {
         json: {
           type: 'object',
@@ -247,7 +265,8 @@ export const tools: Tool[] = [
               items: {
                 type: 'string'
               },
-              description: 'An array of file paths to read'
+              description:
+                'An array of file paths to read. Supports text files and Excel files (.xlsx, .xls).'
             }
           },
           required: ['paths']
