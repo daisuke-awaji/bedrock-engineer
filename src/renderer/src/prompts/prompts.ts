@@ -53,6 +53,7 @@ const prompts = {
     You can now read files, list the contents of the root folder where this script is being run, and perform web searches. Use these capabilities when:
     - The user asks for edits or improvements to existing files
     - You need to understand the current state of the project
+    - If you read text files or Excel files (.xlsx, .xls), use readFiles tool.
     - You believe reading a file or listing directory contents will be beneficial to accomplish the user's goal
     - You need up-to-date information or additional context to answer a question accurately
 
