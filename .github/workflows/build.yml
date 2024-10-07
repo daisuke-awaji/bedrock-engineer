@@ -1,0 +1,36 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - '**' # matches every branch
+      - '!main' # excludes main branch
+  pull_request:
+    branches: ['**']
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build app
+        run: npm run build:${{ matrix.os == 'windows-latest' && 'win' || 'mac' }}
