@@ -1,4 +1,3 @@
-import { BedrockClient, ListFoundationModelsCommand } from '@aws-sdk/client-bedrock'
 import {
   BedrockRuntimeClient,
   ConverseCommand,
@@ -9,13 +8,7 @@ import {
   ToolConfiguration
 } from '@aws-sdk/client-bedrock-runtime'
 import { executeTool } from './tools'
-import * as Figma from 'figma-js'
 
-import NodeCache from 'node-cache'
-import { store } from './store'
-const cache = new NodeCache()
-
-const client = new BedrockClient()
 const runtimeClient = new BedrockRuntimeClient()
 
 const inferenceConfig = {
@@ -78,45 +71,26 @@ const converseStream = async (
 }
 
 const listModels = async () => {
-  const command = new ListFoundationModelsCommand()
+  const models = [
+    {
+      modelId: 'anthropic.claude-3-sonnet-20240229-v1:0',
+      modelName: 'Claude 3 Sonnet'
+    },
+    {
+      modelId: 'anthropic.claude-3-haiku-20240307-v1:0',
+      modelName: 'Claude 3 Haiku'
+    },
+    {
+      modelId: 'anthropic.claude-3-5-sonnet-20240620-v1:0',
+      modelName: 'Claude 3.5 Sonnet'
+    },
+    {
+      modelId: 'us.anthropic.claude-3-5-sonnet-20240620-v1:0',
+      modelName: 'Claude 3.5 Sonnet (cross region inference)'
+    }
+  ]
 
-  // TODO: API Cache の機構はあとで考える
-  const cached = cache.get('listModels')
-  if (cached) {
-    return cached
-  }
-  const res = await client.send(command)
-  const result = res.modelSummaries
-    ?.filter((value) => {
-      return (
-        value.providerName === 'Anthropic' &&
-        value.modelLifecycle?.status === 'ACTIVE' &&
-        value.inferenceTypesSupported?.includes('ON_DEMAND') &&
-        value.modelName?.includes('Claude 3')
-      )
-    })
-    .map((value) => {
-      return {
-        modelId: value.modelId,
-        modelName: value.modelName
-      }
-    })
-
-  result?.push({
-    modelId: 'us.anthropic.claude-3-5-sonnet-20240620-v1:0',
-    modelName: 'Claude 3.5 Sonnet (cross region inference)'
-  })
-
-  cache.set('listModels', result, 180)
-  return result
-}
-
-const getFile = async (fileKey: string) => {
-  const client = Figma.Client({
-    personalAccessToken: store.get('figma').personalAccessToken
-  })
-  const res = await client.file(fileKey)
-  return res.data
+  return models
 }
 
 export const api = {
@@ -125,9 +99,6 @@ export const api = {
     converse,
     converseStream,
     executeTool
-  },
-  figma: {
-    getFile
   }
 }
 

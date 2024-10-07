@@ -38,7 +38,6 @@
     "electron-store": "^8.2.0",
     "electron-updater": "^6.1.7",
     "express": "^4.19.2",
-    "figma-js": "^1.16.1-0",
     "flowbite-react": "^0.10.1",
     "framer-motion": "^11.3.29",
     "i18next": "^23.15.0",

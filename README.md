@@ -60,6 +60,7 @@ https://github.com/user-attachments/assets/838fc854-f310-40dc-8237-f82ffd623ef3
 
 - React.js (w/ Typescript)
 - Vue.js (w/ Typescript)
+- Svelte.js
 - Vanilla.js
 
 https://github.com/user-attachments/assets/d28c2ab1-70f4-4ce0-9537-cf89a2c31ad4
@@ -89,3 +90,9 @@ https://github.com/user-attachments/assets/17756811-6314-438f-a13d-61af10c1963e
 ## Star history
 
 [![Star History Chart](https://api.star-history.com/svg?repos=daisuke-awaji/bedrock-engineer&type=Date)](https://star-history.com/#daisuke-awaji/bedrock-engineer&Date)
+
+## License
+
+MIT License
+
+This software uses [Lottie Files](https://lottiefiles.com/free-animation/robot-futuristic-ai-animated-xyiArJ2DEF).
