@@ -1,10 +1,8 @@
 import useLLM from '@renderer/hooks/useLLM'
 import useProject from '@renderer/hooks/useProject'
 import React from 'react'
-import FigmaLogo from '../../assets/images/icons/figma.svg'
 
 import { FcElectronics, FcFolder, FcMindMap, FcGlobe } from 'react-icons/fc'
-import useFigma from '@renderer/hooks/useFigmaConfig'
 import useTavilySearch from '@renderer/hooks/useTavilySearch'
 import useAdvancedSetting from '@renderer/hooks/useAdvancedSetting'
 import { Kbd } from 'flowbite-react'
@@ -36,7 +34,6 @@ export default function SettingPage() {
   const { t, i18n } = useTranslation()
   const { projectPath, selectDirectory } = useProject()
   const { llm, setLLM, availableModels } = useLLM()
-  const { accessToken, setAccessToken } = useFigma()
   const { apikey, setApiKey } = useTavilySearch()
   const { sendMsgKey, setSendMsgKey } = useAdvancedSetting()
 
@@ -175,29 +172,6 @@ export default function SettingPage() {
             }}
           />
           {/* todo */}
-        </div>
-
-        <h2 className="text-lg">{t('Figma')}</h2>
-
-        <div className="flex flex-col gap-2">
-          <label className="block text-sm font-medium leading-6 text-gray-900">
-            <div className="flex gap-2 items-center">
-              <span className="h-3 w-3">
-                <FigmaLogo />
-              </span>
-              <span className="dark:text-white">{t('Connect to Figma')}</span>
-            </div>
-          </label>
-          <InputWithLabel
-            label={t('Personal access token')}
-            type="string"
-            placeholder={t('Figma personal access token')}
-            value={accessToken}
-            onChange={(e) => {
-              console.log(e.target.value)
-              setAccessToken(e.target.value)
-            }}
-          />
         </div>
 
         <h2 className="text-lg">{t('Advanced Setting')}</h2>

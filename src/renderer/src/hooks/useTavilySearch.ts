@@ -4,8 +4,8 @@ const useTavilySearch = () => {
   const [apikey, setStateApiKey] = useState<string>('tvly-xxxxxxxxxxxxxxxxxxx')
 
   const getTavilySearchConfig = () => {
-    const figma = window.store.get('tavilySearch')
-    return figma
+    const tavilySearchConfig = window.store.get('tavilySearch')
+    return tavilySearchConfig
   }
 
   useEffect(() => {
