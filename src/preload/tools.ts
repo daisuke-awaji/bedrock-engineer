@@ -4,7 +4,6 @@ import * as path from 'path'
 import { store } from './store'
 import * as diff from 'diff'
 import GitignoreLikeMatcher from './lib/gitignore-like-matcher'
-import * as XLSX from 'xlsx'
 
 export async function createFolder(folderPath: string): Promise<string> {
   try {
@@ -28,23 +27,7 @@ export async function readFiles(filePaths: string[]): Promise<string> {
   try {
     const fileContents = await Promise.all(
       filePaths.map(async (filePath) => {
-        const ext = path.extname(filePath).toLowerCase()
-        let content: string
-
-        if (ext === '.xlsx' || ext === '.xls') {
-          // エクセルファイルの読み込み
-          const workbook = XLSX.readFile(filePath)
-          const sheetNames = workbook.SheetNames
-          content = sheetNames
-            .map((sheetName) => {
-              const sheet = workbook.Sheets[sheetName]
-              return `Sheet: ${sheetName}\n${XLSX.utils.sheet_to_csv(sheet)}\n`
-            })
-            .join('\n')
-        } else {
-          // 通常のテキストファイルの読み込み
-          content = await fs.readFile(filePath, 'utf-8')
-        }
+        const content = await fs.readFile(filePath, 'utf-8')
 
         return { path: filePath, content }
       })
