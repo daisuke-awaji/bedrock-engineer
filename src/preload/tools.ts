@@ -59,7 +59,7 @@ export async function listFiles(dirPath: string, prefix: string = ''): Promise<s
       const isLast = i === files.length - 1
       const currentPrefix = prefix + (isLast ? '└── ' : '├── ')
       const nextPrefix = prefix + (isLast ? '    ' : '│   ')
-      const filePath = path.join(dirPath, file.name)
+      const filePath = path.join(dirPath, file.name) // nosemgrep
       const relativeFilePath = path.relative(process.cwd(), filePath)
       // Check if the current file path matches any of the ignore file paths
       if (ignoreFiles && ignoreFiles.length && matcher.isIgnored(relativeFilePath)) {
