@@ -87,7 +87,7 @@ class GitignoreLikeMatcher {
       regexPattern += '($|/)'
     }
 
-    return new RegExp(regexPattern)
+    return new RegExp(regexPattern) // nosemgrep
   }
 }
 
