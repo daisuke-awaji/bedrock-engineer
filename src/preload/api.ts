@@ -87,6 +87,14 @@ const listModels = async () => {
     {
       modelId: 'us.anthropic.claude-3-5-sonnet-20240620-v1:0',
       modelName: 'Claude 3.5 Sonnet (cross region inference)'
+    },
+    {
+      modelId: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
+      modelName: 'Claude 3.5 Sonnet v2'
+    },
+    {
+      modelId: 'us.anthropic.claude-3-5-sonnet-20241022-v2:0',
+      modelName: 'Claude 3.5 Sonnet v2 (cross region inference)'
     }
   ]
 
