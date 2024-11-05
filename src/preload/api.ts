@@ -81,6 +81,14 @@ const listModels = async () => {
       modelName: 'Claude 3 Haiku'
     },
     {
+      modelId: 'anthropic.claude-3-5-haiku-20241022-v1:0',
+      modelName: 'Claude 3.5 Haiku'
+    },
+    {
+      modelId: 'us.anthropic.claude-3-5-haiku-20241022-v1:0',
+      modelName: 'Claude 3.5 Haiku (cross region inference)'
+    },
+    {
       modelId: 'anthropic.claude-3-5-sonnet-20240620-v1:0',
       modelName: 'Claude 3.5 Sonnet'
     },
