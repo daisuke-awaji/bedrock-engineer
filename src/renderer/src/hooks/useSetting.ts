@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react'
 import { SendMsgKey } from 'src/types/agent-chat'
 import { listModels } from '@renderer/lib/api'
-import { LLM } from 'src/types/llm'
+import { InferenceParameters, LLM } from 'src/types/llm'
+
+const DEFAULT_INFERENCE_PARAMS: InferenceParameters = {
+  maxTokens: 4096,
+  temperature: 0.5,
+  topP: 0.9
+}
 
 const useSetting = () => {
   // Advanced Settings
@@ -14,6 +20,8 @@ const useSetting = () => {
     modelName: 'Claude 3 Haiku'
   })
   const [availableModels, setAvailableModels] = useState<LLM[]>([])
+  const [inferenceParams, setInferenceParams] =
+    useState<InferenceParameters>(DEFAULT_INFERENCE_PARAMS)
 
   // Project Settings
   const [projectPath, setProjectPath] = useState<string>()
@@ -37,7 +45,12 @@ const useSetting = () => {
     if (storedLLM) {
       setCurrentLLM(storedLLM)
     }
-    fetchModels()
+
+    // Load Inference Parameters
+    const storedInferenceParams = window.store.get('inferenceParams')
+    if (storedInferenceParams) {
+      setInferenceParams(storedInferenceParams)
+    }
 
     // Load Project Settings
     const path = window.store.get('projectPath')
@@ -58,6 +71,10 @@ const useSetting = () => {
       setStateAwsAccessKeyId(awsConfig.accessKeyId || '')
       setStateAwsSecretAccessKey(awsConfig.secretAccessKey || '')
     }
+  }, [])
+
+  useEffect(() => {
+    fetchModels()
   }, [])
 
   // Advanced Settings Methods
@@ -85,6 +102,13 @@ const useSetting = () => {
   const updateLLM = (selectedModel: LLM) => {
     setCurrentLLM(selectedModel)
     window.store.set('llm', selectedModel)
+  }
+
+  // Inference Parameters Methods
+  const updateInferenceParams = (params: Partial<InferenceParameters>) => {
+    const updatedParams = { ...inferenceParams, ...params }
+    setInferenceParams(updatedParams)
+    window.store.set('inferenceParams', updatedParams)
   }
 
   // Project Methods
@@ -140,6 +164,10 @@ const useSetting = () => {
     updateLLM,
     availableModels,
     llmError,
+
+    // Inference Parameters
+    inferenceParams,
+    updateInferenceParams,
 
     // Project Settings
     projectPath,

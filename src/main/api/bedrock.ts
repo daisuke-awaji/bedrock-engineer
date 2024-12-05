@@ -1,9 +1,4 @@
 import {
-  BedrockClient,
-  FoundationModelSummary,
-  ListFoundationModelsCommand
-} from '@aws-sdk/client-bedrock'
-import {
   BedrockRuntimeClient,
   ConverseCommand,
   ConverseCommandOutput,
@@ -20,11 +15,6 @@ import { STSClient, GetCallerIdentityCommand } from '@aws-sdk/client-sts' // ES 
 import { getDefaultPromptRouter, models } from './models'
 import { store } from '../../preload/store'
 
-const getCredentials = () => {
-  const { region, accessKeyId, secretAccessKey } = store.get('aws')
-  return { region, accessKeyId, secretAccessKey }
-}
-
 export type CallConverseAPIProps = {
   modelId: string
   messages: Message[]
@@ -33,12 +23,14 @@ export type CallConverseAPIProps = {
 
 const converse = async (props: CallConverseAPIProps): Promise<ConverseCommandOutput> => {
   const { modelId, messages, system } = props
+  const { maxTokens, temperature, topP } = store.get('inferenceParams')
   const command = new ConverseCommand({
     modelId,
     messages,
-    system
+    system,
+    inferenceConfig: { maxTokens, temperature, topP }
   })
-  const { region, accessKeyId, secretAccessKey } = getCredentials()
+  const { region, accessKeyId, secretAccessKey } = store.get('aws')
   const runtimeClient = new BedrockRuntimeClient({
     credentials: {
       accessKeyId,
@@ -55,7 +47,7 @@ const converseStream = async (
   props: CallConverseAPIProps,
   retries = 0
 ): Promise<ConverseStreamCommandOutput> => {
-  const { region, accessKeyId, secretAccessKey } = getCredentials()
+  const { region, accessKeyId, secretAccessKey } = store.get('aws')
   const runtimeClient = new BedrockRuntimeClient({
     credentials: {
       accessKeyId,
@@ -65,7 +57,13 @@ const converseStream = async (
   })
 
   try {
-    const command = new ConverseStreamCommand(props)
+    const { modelId, messages, system } = props
+    const command = new ConverseStreamCommand({
+      modelId,
+      messages,
+      system,
+      inferenceConfig: store.get('inferenceParams')
+    })
     return await runtimeClient.send(command)
   } catch (error: any) {
     if (error.name === 'ThrottlingException') {
@@ -83,23 +81,6 @@ const converseStream = async (
   }
 }
 
-/**
- * TODO: 指定したリージョンで利用可能なモデルを取得する処理は後ほど実装する
- */
-const listModelsByFetch = async (): Promise<FoundationModelSummary[] | undefined> => {
-  const command = new ListFoundationModelsCommand()
-  const { region, accessKeyId, secretAccessKey } = getCredentials()
-  const client = new BedrockClient({
-    region,
-    credentials: {
-      accessKeyId,
-      secretAccessKey
-    }
-  })
-  const res = await client.send(command)
-  return res.modelSummaries
-}
-
 const getAccountId = async () => {
   const sts = new STSClient()
   const command = new GetCallerIdentityCommand({})
@@ -107,19 +88,28 @@ const getAccountId = async () => {
   return res.Account
 }
 
+// TODO: キャッシュの仕掛けはちゃんとまた後で考える
+let cache = {}
 const listModels = async () => {
   const accountId = await getAccountId()
   if (!accountId) {
     return models
   }
 
-  const defaultPromptRouterModels = getDefaultPromptRouter(accountId, 'us-east-1') // TODO: region はユーザにて設定可能にする
+  const { region } = store.get('aws')
+  const c = cache[`${region}-promptRouter`]
 
-  return [...models, ...defaultPromptRouterModels]
+  if (!c) {
+    const defaultPromptRouterModels = getDefaultPromptRouter(accountId, region) // TODO: region はユーザにて設定可能にする
+    cache[`${region}-promptRouter`] = defaultPromptRouterModels
+    return [...models, ...defaultPromptRouterModels]
+  }
+
+  return [...models, ...c]
 }
 
 const retrieveAndGenerate = async (props: RetrieveAndGenerateCommandInput) => {
-  const { region, accessKeyId, secretAccessKey } = getCredentials()
+  const { region, accessKeyId, secretAccessKey } = store.get('aws')
   const agentClient = new BedrockAgentRuntimeClient({
     credentials: {
       accessKeyId,
@@ -135,7 +125,6 @@ const retrieveAndGenerate = async (props: RetrieveAndGenerateCommandInput) => {
 
 export const bedrock = {
   listModels,
-  listModelsByFetch,
   converse,
   converseStream,
   retrieveAndGenerate

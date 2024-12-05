@@ -1,28 +1,41 @@
-import React from 'react'
+import React, { useState } from 'react'
 
 import { FcElectronics, FcFolder, FcMindMap, FcGlobe, FcKey } from 'react-icons/fc'
+import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import { Kbd } from 'flowbite-react'
 import { useTranslation } from 'react-i18next'
 import useSetting from '@renderer/hooks/useSetting'
 
 interface InputWithLabelProp extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string
+  isPassword?: boolean
 }
+
 const InputWithLabel: React.FC<InputWithLabelProp> = (props) => {
+  const [showPassword, setShowPassword] = useState(false)
+  const { isPassword, ...inputProps } = props
+
   return (
     <div>
       <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
         {props.label}
       </label>
-      <input
-        type={props.type}
-        className="bg-white-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-        placeholder={props.placeholder}
-        defaultValue={props.defaultValue}
-        onChange={props.onChange}
-        required
-        {...props}
-      />
+      <div className="relative">
+        <input
+          {...inputProps}
+          type={isPassword && !showPassword ? 'password' : 'text'}
+          className="bg-white-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+        />
+        {isPassword && (
+          <button
+            type="button"
+            className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-500"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? <FaEyeSlash className="w-5 h-5" /> : <FaEye className="w-5 h-5" />}
+          </button>
+        )}
+      </div>
     </div>
   )
 }
@@ -44,7 +57,9 @@ export default function SettingPage() {
     awsAccessKeyId,
     setAwsAccessKeyId,
     awsSecretAccessKey,
-    setAwsSecretAccessKey
+    setAwsSecretAccessKey,
+    inferenceParams,
+    updateInferenceParams
   } = useSetting()
 
   const handleChangeLLMSelect = (e) => {
@@ -103,13 +118,20 @@ export default function SettingPage() {
         <div className="flex flex-col gap-2">
           <InputWithLabel
             label={t('Tavily Search API Key')}
-            type="password"
+            isPassword
             placeholder={t('Tavily Search API Key')}
             value={tavilySearchApiKey}
             onChange={(e) => {
+              console.log(e.target.value)
               setTavilySearchApiKey(e.target.value)
             }}
           />
+          <span className="text-xs flex gap-1 text-gray-800 dark:text-gray-200">
+            <span>Learn more about Tavily Search, go to</span>
+            <span onClick={() => open('https://tavily.com/')} className="cursor-pointer">
+              https://tavily.com/
+            </span>
+          </span>
         </div>
 
         <h2 className="text-lg">{t('AWS Settings')}</h2>
@@ -125,7 +147,7 @@ export default function SettingPage() {
           <InputWithLabel
             label={t('AWS Region')}
             type="string"
-            placeholder="ap-northeast-1"
+            placeholder="us-east-1"
             value={awsRegion}
             onChange={(e) => setAwsRegion(e.target.value)}
           />
@@ -138,12 +160,14 @@ export default function SettingPage() {
           />
           <InputWithLabel
             label={t('AWS Secret Access Key')}
-            type="password"
+            isPassword
             placeholder="****************************************"
             value={awsSecretAccessKey}
             onChange={(e) => setAwsSecretAccessKey(e.target.value)}
           />
         </div>
+
+        <h2 className="text-lg">{t('Amazon Bedrock')}</h2>
 
         {/* LLM Select Box */}
         <div>
@@ -176,42 +200,40 @@ export default function SettingPage() {
           </label>
 
           <InputWithLabel
-            disabled // TODO
             label={t('Max Tokens')}
             type="number"
             placeholder={t('Max tokens')}
-            value={4096}
+            value={inferenceParams.maxTokens}
             min={1}
             max={4096}
             onChange={(e) => {
-              console.log(e)
+              updateInferenceParams({ maxTokens: parseInt(e.target.value, 10) })
             }}
           />
           <InputWithLabel
-            disabled // TODO
             label={t('Temperature')}
             type="number"
             placeholder={t('Temperature')}
-            value={0.5}
+            value={inferenceParams.temperature}
             min={0}
             max={1.0}
+            step={0.1}
             onChange={(e) => {
-              console.log(e)
+              updateInferenceParams({ temperature: parseFloat(e.target.value) })
             }}
           />
           <InputWithLabel
-            disabled // TODO
             label={t('topP')}
             type="number"
             placeholder={t('topP')}
-            value={0.9}
+            value={inferenceParams.topP}
             min={0}
             max={1}
+            step={0.1}
             onChange={(e) => {
-              console.log(e)
+              updateInferenceParams({ topP: parseFloat(e.target.value) })
             }}
           />
-          {/* todo */}
         </div>
 
         <h2 className="text-lg">{t('Advanced Setting')}</h2>

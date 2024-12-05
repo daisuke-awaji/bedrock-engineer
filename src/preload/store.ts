@@ -1,15 +1,15 @@
 import Store from 'electron-store'
-import { LLM } from '../types/llm'
+import { LLM, InferenceParameters } from '../types/llm'
 import { AgentChatConfig, SendMsgKey, ToolState } from '../types/agent-chat'
 
 type StoreScheme = {
   projectPath?: string
   llm?: LLM
+  inferenceParams: InferenceParameters
   language: 'ja' | 'en'
   agentChatConfig: AgentChatConfig
   tools: ToolState[]
   websiteGenerator: {
-    // 今だけ Knowledge base にしておく、今後透過的に GitHub のデータソースを元に推論できるUIと機能を実装する
     knowledgeBaseId: string
     enableKnowledgeBase: boolean
   }
@@ -57,9 +57,19 @@ const init = () => {
   const awsConfig = electronStore.get('aws')
   if (!awsConfig) {
     electronStore.set('aws', {
-      region: '',
+      region: 'us-east-1',
       accessKeyId: '',
       secretAccessKey: ''
+    })
+  }
+
+  // Initialize inference parameters if not present
+  const inferenceParams = electronStore.get('inferenceParams')
+  if (!inferenceParams) {
+    electronStore.set('inferenceParams', {
+      maxTokens: 4096,
+      temperature: 0.5,
+      topP: 0.9
     })
   }
 }
