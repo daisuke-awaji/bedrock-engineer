@@ -170,7 +170,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     }
     setRecommendLoading(true)
     const result = await converse({
-      modelId: 'anthropic.claude-3-sonnet-20240229-v1:0',
+      modelId: llm.modelId,
       system: [{ text: t(prompts.WebsiteGenerator.recommend.system, { language }) }],
       messages: [{ role: 'user', content: [{ text: websiteCode }] }]
     })

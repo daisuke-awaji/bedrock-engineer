@@ -21,15 +21,17 @@ export type CallConverseAPIProps = {
   modelId: string
   messages: Message[]
   system: [{ text: string }]
+  toolConfig?: ConverseCommand['input']['toolConfig']
 }
 
 const converse = async (props: CallConverseAPIProps): Promise<ConverseCommandOutput> => {
-  const { modelId, messages, system } = props
+  const { modelId, messages, system, toolConfig } = props
   const { maxTokens, temperature, topP } = store.get('inferenceParams')
   const command = new ConverseCommand({
     modelId,
     messages,
     system,
+    toolConfig,
     inferenceConfig: { maxTokens, temperature, topP }
   })
   const { region, accessKeyId, secretAccessKey } = store.get('aws')
@@ -59,11 +61,12 @@ const converseStream = async (
   })
 
   try {
-    const { modelId, messages, system } = props
+    const { modelId, messages, system, toolConfig } = props
     const command = new ConverseStreamCommand({
       modelId,
       messages,
       system,
+      toolConfig,
       inferenceConfig: store.get('inferenceParams')
     })
     return await runtimeClient.send(command)

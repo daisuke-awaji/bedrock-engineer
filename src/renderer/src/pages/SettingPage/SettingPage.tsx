@@ -81,7 +81,7 @@ export default function SettingPage() {
 
   return (
     <React.Fragment>
-      <div className="flex flex-col gap-4 min-w-[320px] max-w-[1024px] mx-auto h-full overflow-y-auto dark:text-white">
+      <div className="flex flex-col gap-4 min-w-[320px] max-w-[1024px] mx-auto h-full overflow-y-auto dark:text-white md:pr-16 md:pl-16 pr-8 pl-8">
         <h1 className="text-lg font-bold">{t('Setting')}</h1>
 
         <h2 className="text-lg">{t('Project Setting')}</h2>
@@ -145,7 +145,7 @@ export default function SettingPage() {
               </div>
             </label>
           </div>
-          
+
           {/* AWS Region Select Box */}
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
@@ -158,14 +158,14 @@ export default function SettingPage() {
             >
               <option value="">{t('Select a region')}</option>
               <optgroup label={t('Bedrock Supported Regions')}>
-                {AWS_REGIONS.filter(region => region.bedrockSupported).map(region => (
+                {AWS_REGIONS.filter((region) => region.bedrockSupported).map((region) => (
                   <option key={region.id} value={region.id}>
                     {region.name} ({region.id})
                   </option>
                 ))}
               </optgroup>
               <optgroup label={t('Other Regions')}>
-                {AWS_REGIONS.filter(region => !region.bedrockSupported).map(region => (
+                {AWS_REGIONS.filter((region) => !region.bedrockSupported).map((region) => (
                   <option key={region.id} value={region.id}>
                     {region.name} ({region.id})
                   </option>
