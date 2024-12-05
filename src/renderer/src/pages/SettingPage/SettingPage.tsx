@@ -9,12 +9,13 @@ import { AWS_REGIONS } from '@renderer/constants/aws-regions'
 
 interface InputWithLabelProp extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string
-  isPassword?: boolean
 }
 
 const InputWithLabel: React.FC<InputWithLabelProp> = (props) => {
   const [showPassword, setShowPassword] = useState(false)
-  const { isPassword, ...inputProps } = props
+  const { ...inputProps } = props
+
+  const isPassword = props.type === 'password'
 
   return (
     <div>
@@ -24,7 +25,7 @@ const InputWithLabel: React.FC<InputWithLabelProp> = (props) => {
       <div className="relative">
         <input
           {...inputProps}
-          type={isPassword && !showPassword ? 'password' : 'text'}
+          type={!showPassword ? props.type : 'text'}
           className="bg-white-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         />
         {isPassword && (
@@ -119,7 +120,7 @@ export default function SettingPage() {
         <div className="flex flex-col gap-2">
           <InputWithLabel
             label={t('Tavily Search API Key')}
-            isPassword
+            type="password"
             placeholder={t('Tavily Search API Key')}
             value={tavilySearchApiKey}
             onChange={(e) => {
@@ -183,7 +184,7 @@ export default function SettingPage() {
           />
           <InputWithLabel
             label={t('AWS Secret Access Key')}
-            isPassword
+            type="password"
             placeholder="****************************************"
             value={awsSecretAccessKey}
             onChange={(e) => setAwsSecretAccessKey(e.target.value)}

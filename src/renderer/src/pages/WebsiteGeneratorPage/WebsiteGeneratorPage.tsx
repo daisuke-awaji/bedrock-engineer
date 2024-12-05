@@ -33,6 +33,7 @@ import { Style, SupportedTemplate, templates, TEMPLATES, supportedStyles } from 
 import { useTranslation } from 'react-i18next'
 import useSetting from '@renderer/hooks/useSetting'
 import toast from 'react-hot-toast'
+import { title } from 'process'
 
 export default function WebsiteGeneratorPage() {
   const [template, setTemplate] = useState<SupportedTemplate['id']>('react-ts')
@@ -122,6 +123,10 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     {
       title: t('ecSiteTitle'),
       value: t('ecSiteValue')
+    },
+    {
+      title: t('ecSiteAdminTitle'),
+      value: t('ecSiteAdminValue')
     },
     {
       title: t('healthFitnessSiteTitle'),

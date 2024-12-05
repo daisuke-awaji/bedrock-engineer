@@ -85,20 +85,30 @@ After that, send a message to the SQS queue for each delayed order.`,
 - The layout likes Amazon.com.
 - The name of the e-commerce website is "Green Village".
 - Use a green color theme.
+- Following the previous output, add a section that displays the plants in card format.
+- Following the previous output, create a function to add to the shopping cart.
+- Following the previous output, create a function to check what is currently in the shopping cart and calculate the total amount.
+</Conditions>`,
+      ecSiteAdminTitle: 'EC site management',
+      ecSiteAdminValue: `Please create an administration screen for an e-commerce site that specializes in houseplants, with the following conditions.
+<Conditions>
+- The name of the e-commerce site is "Green Village".
+- Use a green color theme.
+- There is a table that displays the most recent orders, and you can manage the status of orders, etc.
+- Display dummy data
 </Conditions>
-Following the previous output, add a section that displays the plants in card format.
-Following the previous output, create a function to add to the shopping cart.
-Following the previous output, create a function to check what is currently in the shopping cart and calculate the total amount.`,
+Following the previous output, add a sidebar navigation`,
       healthFitnessSiteTitle: 'Health & Fitness site',
       healthFitnessSiteValue: `Create the basic structure and layout of a health and fitness website, with the following conditions:
 <Conditions>
 - The layout likes Amazon.com.
 - The name of the website is "FitLife".
 - Use a red color theme.
+- Following the previous output, add a section that displays the health and fitness blogs.
+- Following the previous output, create a function to search for health and fitness content based on keywords.
+- Following the previous output, create a function to add comments to the blog.
 </Conditions>
-Following the previous output, add a section that displays the health and fitness blogs.
-Following the previous output, create a function to search for health and fitness content based on keywords.
-Following the previous output, create a function to add comments to the blog.`,
+`,
       drawingGraphTitle: 'Drawing Graph',
       drawingGraphValue: `Please visualize the following as a graph on your website.
 Purchase data CSV file
@@ -239,21 +249,32 @@ DynamoDB または SNS を使用する場合は、Lambda を使用せず、AWS �
 - レイアウトは Amazon.com のようなものにする。
 - EC ウェブサイトの名前は "Green Village" とする。
 - グリーンの配色テーマを使用する。
+- 植物をカード形式で表示するセクションを追加する。
+- ショッピングカートに追加する機能を作成する。
+- 現在のショッピングカートの中身を確認し、合計金額を計算する機能を作成する。
 </Conditions>
-植物をカード形式で表示するセクションを追加する。
-ショッピングカートに追加する機能を作成する。
-現在のショッピングカートの中身を確認し、合計金額を計算する機能を作成する。
 `,
+      ecSiteAdminTitle: 'ECサイトの管理画面',
+      ecSiteAdminValue: `以下の条件で、観葉植物を専門に取り扱うECサイトの管理画面を作ってください。
+<条件>
+- EC サイトの名前は「Green Village」です。
+- グリーン系のカラーテーマにしてください。
+- 直近の注文を表示するテーブルがあり、発注などのステータスを管理できます
+- ダミーデータを表示してください
+</条件>
+前の出力に続けて、サイドバーナビゲーションを追加してください`,
       healthFitnessSiteTitle: 'フィットネスサイト',
       healthFitnessSiteValue: `次の条件で、健康とフィットネスのウェブサイトの基本構造とレイアウトを作成してください。
 <Conditions>
 - レイアウトは Amazon.com のようなものにする。
 - ウェブサイトの名前は "FitLife" とする。
 - 赤い配色テーマを使用する。
+- 健康とフィットネスのブログを表示するセクションを追加する。
+- キーワードで健康とフィットネスのコンテンツを検索する機能を作成する。
+- ブログにコメントを追加する機能を作成する。
+- 記事にはサムネイル画像をつける
 </Conditions>
-健康とフィットネスのブログを表示するセクションを追加する。
-キーワードで健康とフィットネスのコンテンツを検索する機能を作成する。
-ブログにコメントを追加する機能を作成する。`,
+`,
       drawingGraphTitle: 'グラフの描画',
       drawingGraphValue: `ウェブサイト上で、次のデータをグラフで可視化してください。
 
