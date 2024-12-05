@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { FcElectronics, FcFolder, FcMindMap, FcGlobe } from 'react-icons/fc'
+import { FcElectronics, FcFolder, FcMindMap, FcGlobe, FcKey } from 'react-icons/fc'
 import { Kbd } from 'flowbite-react'
 import { useTranslation } from 'react-i18next'
 import useSetting from '@renderer/hooks/useSetting'
@@ -38,7 +38,13 @@ export default function SettingPage() {
     sendMsgKey,
     updateSendMsgKey,
     tavilySearchApiKey,
-    setTavilySearchApiKey
+    setTavilySearchApiKey,
+    awsRegion,
+    setAwsRegion,
+    awsAccessKeyId,
+    setAwsAccessKeyId,
+    awsSecretAccessKey,
+    setAwsSecretAccessKey
   } = useSetting()
 
   const handleChangeLLMSelect = (e) => {
@@ -97,17 +103,47 @@ export default function SettingPage() {
         <div className="flex flex-col gap-2">
           <InputWithLabel
             label={t('Tavily Search API Key')}
-            type="string"
+            type="password"
             placeholder={t('Tavily Search API Key')}
             value={tavilySearchApiKey}
             onChange={(e) => {
-              console.log(e.target.value)
               setTavilySearchApiKey(e.target.value)
             }}
           />
         </div>
 
-        <h2 className="text-lg">{t('Amazon Bedrock')}</h2>
+        <h2 className="text-lg">{t('AWS Settings')}</h2>
+        <div className="flex flex-col gap-2">
+          <div>
+            <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              <div className="flex gap-2 items-center">
+                <FcKey className="text-lg" />
+                <span>{t('AWS Credentials')}</span>
+              </div>
+            </label>
+          </div>
+          <InputWithLabel
+            label={t('AWS Region')}
+            type="string"
+            placeholder="ap-northeast-1"
+            value={awsRegion}
+            onChange={(e) => setAwsRegion(e.target.value)}
+          />
+          <InputWithLabel
+            label={t('AWS Access Key ID')}
+            type="string"
+            placeholder="AKIAXXXXXXXXXXXXXXXX"
+            value={awsAccessKeyId}
+            onChange={(e) => setAwsAccessKeyId(e.target.value)}
+          />
+          <InputWithLabel
+            label={t('AWS Secret Access Key')}
+            type="password"
+            placeholder="****************************************"
+            value={awsSecretAccessKey}
+            onChange={(e) => setAwsSecretAccessKey(e.target.value)}
+          />
+        </div>
 
         {/* LLM Select Box */}
         <div>

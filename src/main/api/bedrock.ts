@@ -18,10 +18,12 @@ import {
 } from '@aws-sdk/client-bedrock-agent-runtime'
 import { STSClient, GetCallerIdentityCommand } from '@aws-sdk/client-sts' // ES Modules import
 import { getDefaultPromptRouter, models } from './models'
+import { store } from '../../preload/store'
 
-const client = new BedrockClient()
-const runtimeClient = new BedrockRuntimeClient()
-const agentClient = new BedrockAgentRuntimeClient({ region: 'ap-northeast-1' }) // TODO
+const getCredentials = () => {
+  const { region, accessKeyId, secretAccessKey } = store.get('aws')
+  return { region, accessKeyId, secretAccessKey }
+}
 
 export type CallConverseAPIProps = {
   modelId: string
@@ -36,6 +38,14 @@ const converse = async (props: CallConverseAPIProps): Promise<ConverseCommandOut
     messages,
     system
   })
+  const { region, accessKeyId, secretAccessKey } = getCredentials()
+  const runtimeClient = new BedrockRuntimeClient({
+    credentials: {
+      accessKeyId,
+      secretAccessKey
+    },
+    region
+  })
   return runtimeClient.send(command)
 }
 
@@ -45,6 +55,15 @@ const converseStream = async (
   props: CallConverseAPIProps,
   retries = 0
 ): Promise<ConverseStreamCommandOutput> => {
+  const { region, accessKeyId, secretAccessKey } = getCredentials()
+  const runtimeClient = new BedrockRuntimeClient({
+    credentials: {
+      accessKeyId,
+      secretAccessKey
+    },
+    region
+  })
+
   try {
     const command = new ConverseStreamCommand(props)
     return await runtimeClient.send(command)
@@ -69,6 +88,14 @@ const converseStream = async (
  */
 const listModelsByFetch = async (): Promise<FoundationModelSummary[] | undefined> => {
   const command = new ListFoundationModelsCommand()
+  const { region, accessKeyId, secretAccessKey } = getCredentials()
+  const client = new BedrockClient({
+    region,
+    credentials: {
+      accessKeyId,
+      secretAccessKey
+    }
+  })
   const res = await client.send(command)
   return res.modelSummaries
 }
@@ -92,6 +119,15 @@ const listModels = async () => {
 }
 
 const retrieveAndGenerate = async (props: RetrieveAndGenerateCommandInput) => {
+  const { region, accessKeyId, secretAccessKey } = getCredentials()
+  const agentClient = new BedrockAgentRuntimeClient({
+    credentials: {
+      accessKeyId,
+      secretAccessKey
+    },
+    region
+  })
+
   const command = new RetrieveAndGenerateCommand(props)
   const res = await agentClient.send(command)
   return res

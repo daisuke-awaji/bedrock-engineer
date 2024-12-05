@@ -21,6 +21,11 @@ const useSetting = () => {
   // Tavily Search Settings
   const [tavilySearchApiKey, setStateApiKey] = useState<string>('tvly-xxxxxxxxxxxxxxxxxxx')
 
+  // AWS Settings
+  const [awsRegion, setStateAwsRegion] = useState<string>('')
+  const [awsAccessKeyId, setStateAwsAccessKeyId] = useState<string>('')
+  const [awsSecretAccessKey, setStateAwsSecretAccessKey] = useState<string>('')
+
   // Initialize all settings
   useEffect(() => {
     // Load Advanced Settings
@@ -44,6 +49,14 @@ const useSetting = () => {
     const tavilySearchConfig = window.store.get('tavilySearch')
     if (tavilySearchConfig) {
       setStateApiKey(tavilySearchConfig.apikey)
+    }
+
+    // Load AWS Settings
+    const awsConfig = window.store.get('aws')
+    if (awsConfig) {
+      setStateAwsRegion(awsConfig.region || '')
+      setStateAwsAccessKeyId(awsConfig.accessKeyId || '')
+      setStateAwsSecretAccessKey(awsConfig.secretAccessKey || '')
     }
   }, [])
 
@@ -91,6 +104,30 @@ const useSetting = () => {
     })
   }
 
+  // AWS Methods
+  const setAwsRegion = (region: string) => {
+    setStateAwsRegion(region)
+    saveAwsConfig(region, awsAccessKeyId, awsSecretAccessKey)
+  }
+
+  const setAwsAccessKeyId = (accessKeyId: string) => {
+    setStateAwsAccessKeyId(accessKeyId)
+    saveAwsConfig(awsRegion, accessKeyId, awsSecretAccessKey)
+  }
+
+  const setAwsSecretAccessKey = (secretAccessKey: string) => {
+    setStateAwsSecretAccessKey(secretAccessKey)
+    saveAwsConfig(awsRegion, awsAccessKeyId, secretAccessKey)
+  }
+
+  const saveAwsConfig = (region: string, accessKeyId: string, secretAccessKey: string) => {
+    window.store.set('aws', {
+      region,
+      accessKeyId,
+      secretAccessKey
+    })
+  }
+
   const enabledTavilySearch = tavilySearchApiKey !== 'tvly-xxxxxxxxxxxxxxxxxxx'
 
   return {
@@ -112,7 +149,15 @@ const useSetting = () => {
     // Tavily Search Settings
     tavilySearchApiKey,
     setTavilySearchApiKey,
-    enabledTavilySearch
+    enabledTavilySearch,
+
+    // AWS Settings
+    awsRegion,
+    setAwsRegion,
+    awsAccessKeyId,
+    setAwsAccessKeyId,
+    awsSecretAccessKey,
+    setAwsSecretAccessKey
   }
 }
 

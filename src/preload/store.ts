@@ -22,6 +22,11 @@ type StoreScheme = {
       sendMsgKey: SendMsgKey
     }
   }
+  aws: {
+    region: string
+    accessKeyId: string
+    secretAccessKey: string
+  }
 }
 
 const electronStore = new Store<StoreScheme>()
@@ -46,6 +51,16 @@ const init = () => {
   const language = electronStore.get('language')
   if (language === undefined) {
     electronStore.set('language', 'en')
+  }
+
+  // Initialize AWS settings if not present
+  const awsConfig = electronStore.get('aws')
+  if (!awsConfig) {
+    electronStore.set('aws', {
+      region: '',
+      accessKeyId: '',
+      secretAccessKey: ''
+    })
   }
 }
 
