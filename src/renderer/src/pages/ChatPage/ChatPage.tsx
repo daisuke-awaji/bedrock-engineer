@@ -157,9 +157,6 @@ export default function ChatPage() {
   const [userInput, setUserInput] = useState('')
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
-  useEffect(() => {
-    console.log(messages)
-  }, [messages.length])
 
   const { enabledTavilySearch } = useTavilySearch()
   const { llm } = useLLM()
