@@ -90,7 +90,7 @@ export async function retrieveAndGenerate(props: RetrieveAndGenerateCommandInput
       'Content-Type': 'application/json'
     }
   })
-  return res.json()
+  return res
 }
 
 export async function listModels() {

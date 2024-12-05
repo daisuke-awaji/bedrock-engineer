@@ -32,6 +32,7 @@ import LazyVisibleMessage from './LazyVisibleMessage'
 import { Style, SupportedTemplate, templates, TEMPLATES, supportedStyles } from './templates'
 import { useTranslation } from 'react-i18next'
 import useSetting from '@renderer/hooks/useSetting'
+import toast from 'react-hot-toast'
 
 export default function WebsiteGeneratorPage() {
   const [template, setTemplate] = useState<SupportedTemplate['id']>('react-ts')
@@ -197,11 +198,11 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     }
   }, [loading, messages])
 
-  const { kbId, DataSourceConnectModal, openModal, enableKnowledgeBase } =
+  const { kbId, DataSourceConnectModal, openModal, enableKnowledgeBase, modelId } =
     useDataSourceConnectModal()
+  const { awsRegion } = useSetting()
   const ragEnabled = !!kbId && enableKnowledgeBase
-  const RETRIVE_AND_GEN_MODEL_ARN =
-    'arn:aws:bedrock:ap-northeast-1::foundation-model/anthropic.claude-3-haiku-20240307-v1:0'
+
   const ragSubmit = useCallback(
     async (input: string, messages) => {
       setLoading(true)
@@ -219,39 +220,46 @@ ${input}
 </website-requirements>
 `
 
-      // Knowledge base から関連コードの取得
-      const res = await retrieveAndGenerate({
-        input: {
-          text: inputText
-        },
-        retrieveAndGenerateConfiguration: {
-          type: 'KNOWLEDGE_BASE',
-          knowledgeBaseConfiguration: {
-            knowledgeBaseId: kbId,
-            modelArn: RETRIVE_AND_GEN_MODEL_ARN,
-            generationConfiguration: {
-              promptTemplate: {
-                textPromptTemplate: promptTemplate
-              }
-            },
-            retrievalConfiguration: {
-              vectorSearchConfiguration: {
-                numberOfResults: 5
+      try {
+        // Knowledge base から関連コードの取得
+        const res = await retrieveAndGenerate({
+          input: {
+            text: inputText
+          },
+          retrieveAndGenerateConfiguration: {
+            type: 'KNOWLEDGE_BASE',
+            knowledgeBaseConfiguration: {
+              knowledgeBaseId: kbId,
+              modelArn: `arn:aws:bedrock:${awsRegion}::foundation-model/${modelId}`,
+              generationConfiguration: {
+                promptTemplate: {
+                  textPromptTemplate: promptTemplate
+                }
+              },
+              retrievalConfiguration: {
+                vectorSearchConfiguration: {
+                  numberOfResults: 5
+                }
               }
             }
           }
+        })
+
+        const response = await res.json()
+        if (res.status !== 200) {
+          toast.error(response.message)
+          return
         }
-      })
 
-      console.log(res?.output?.text)
+        console.log(response?.output?.text)
 
-      setRagLoading(false)
+        setRagLoading(false)
 
-      const prompt = `Create a website based on the sample source code below.
+        const prompt = `Create a website based on the sample source code below.
 Important: The style should follow the sample code as closely as possible. Even if the system prompts you about the style you should use, the style in the sample code should be your first priority. If there is a designated design system, use it.
 
 <code>
-${res?.output.text}
+${response?.output.text}
 </code>
 
 <website-requirements>
@@ -264,7 +272,11 @@ ${language}
 
 !Important rule: Do not import modules with relative paths (e.g. import { Button } from './Button';) If you have required components, put them all in the same file.
 `
-      await handleSubmit(prompt, messages)
+        await handleSubmit(prompt, messages)
+      } catch (error) {
+        console.log(error)
+      }
+
       setLoading(false)
     },
     [kbId, language]

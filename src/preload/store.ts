@@ -12,6 +12,7 @@ type StoreScheme = {
   websiteGenerator: {
     knowledgeBaseId: string
     enableKnowledgeBase: boolean
+    modelId: string
   }
   tavilySearch: {
     apikey: string
