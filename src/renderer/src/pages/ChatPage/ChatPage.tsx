@@ -2,10 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { FcFolder, FcSupport } from 'react-icons/fc'
 import { FiSend } from 'react-icons/fi'
 import prompts from '@renderer/prompts/prompts'
-import useProject from '@renderer/hooks/useProject'
-import useLLM from '@renderer/hooks/useLLM'
-import useTavilySearch from '@renderer/hooks/useTavilySearch'
-import useAdvancedSetting from '@renderer/hooks/useAdvancedSetting'
 import useToolSettingModal from './useToolSettingModal'
 import useScroll from '@renderer/hooks/useScroll'
 import {
@@ -22,6 +18,7 @@ import CodeRenderer from './CodeRenderer'
 import { useTranslation } from 'react-i18next'
 import useIgnoreFileModal from './useIgnoreFileModal'
 import toast from 'react-hot-toast'
+import useSetting from '@renderer/hooks/useSetting'
 
 const agents = [
   {
@@ -158,14 +155,18 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
 
-  const { enabledTavilySearch } = useTavilySearch()
-  const { llm } = useLLM()
+  const {
+    currentLLM: llm,
+    projectPath,
+    selectDirectory,
+    enabledTavilySearch,
+    sendMsgKey
+  } = useSetting()
+
   const modelId = llm?.modelId
 
   const [agent, setAgent] = useState('softwareAgent')
   const systemPrompt = prompts.Chat[agent]
-
-  const { projectPath, selectDirectory } = useProject()
 
   const { enabledTools, ToolSettingModal, openModal } = useToolSettingModal()
 
@@ -363,7 +364,6 @@ export default function ChatPage() {
   }
 
   const [isComposing, setIsComposing] = useState(false)
-  const { sendMsgKey } = useAdvancedSetting()
   const onkeydown = (e) => {
     if (e.shiftKey) {
       return

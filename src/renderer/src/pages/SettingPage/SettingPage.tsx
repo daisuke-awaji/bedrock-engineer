@@ -1,12 +1,9 @@
-import useLLM from '@renderer/hooks/useLLM'
-import useProject from '@renderer/hooks/useProject'
 import React from 'react'
 
 import { FcElectronics, FcFolder, FcMindMap, FcGlobe } from 'react-icons/fc'
-import useTavilySearch from '@renderer/hooks/useTavilySearch'
-import useAdvancedSetting from '@renderer/hooks/useAdvancedSetting'
 import { Kbd } from 'flowbite-react'
 import { useTranslation } from 'react-i18next'
+import useSetting from '@renderer/hooks/useSetting'
 
 interface InputWithLabelProp extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string
@@ -32,10 +29,17 @@ const InputWithLabel: React.FC<InputWithLabelProp> = (props) => {
 
 export default function SettingPage() {
   const { t, i18n } = useTranslation()
-  const { projectPath, selectDirectory } = useProject()
-  const { llm, setLLM, availableModels } = useLLM()
-  const { apikey, setApiKey } = useTavilySearch()
-  const { sendMsgKey, setSendMsgKey } = useAdvancedSetting()
+  const {
+    projectPath,
+    selectDirectory,
+    currentLLM: llm,
+    updateLLM: setLLM,
+    availableModels,
+    sendMsgKey,
+    updateSendMsgKey,
+    tavilySearchApiKey,
+    setTavilySearchApiKey
+  } = useSetting()
 
   const handleChangeLLMSelect = (e) => {
     const selectedModelId = e.target.value
@@ -95,10 +99,10 @@ export default function SettingPage() {
             label={t('Tavily Search API Key')}
             type="string"
             placeholder={t('Tavily Search API Key')}
-            value={apikey}
+            value={tavilySearchApiKey}
             onChange={(e) => {
               console.log(e.target.value)
-              setApiKey(e.target.value)
+              setTavilySearchApiKey(e.target.value)
             }}
           />
         </div>
@@ -185,10 +189,10 @@ export default function SettingPage() {
               </span>
             </div>
           </label>
-          <div className="flex items-center mb-2" onClick={() => setSendMsgKey('Enter')}>
+          <div className="flex items-center mb-2" onClick={() => updateSendMsgKey('Enter')}>
             <input
               checked={sendMsgKey === 'Enter'}
-              onChange={() => setSendMsgKey('Enter')}
+              onChange={() => updateSendMsgKey('Enter')}
               id="default-radio-1"
               type="radio"
               name="default-radio"
@@ -198,10 +202,10 @@ export default function SettingPage() {
               {t('Send the message')}
             </label>
           </div>
-          <div className="flex items-center" onClick={() => setSendMsgKey('Cmd+Enter')}>
+          <div className="flex items-center" onClick={() => updateSendMsgKey('Cmd+Enter')}>
             <input
               checked={sendMsgKey === 'Cmd+Enter'}
-              onChange={() => setSendMsgKey('Cmd+Enter')}
+              onChange={() => updateSendMsgKey('Cmd+Enter')}
               id="default-radio-2"
               type="radio"
               name="default-radio"

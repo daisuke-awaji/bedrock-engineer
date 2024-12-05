@@ -1,5 +1,5 @@
 import useModal from '@renderer/hooks/useModal'
-import useTavilySearch from '@renderer/hooks/useTavilySearch'
+import useSetting from '@renderer/hooks/useSetting'
 import { useEffect, useState } from 'react'
 import { ToolState } from 'src/types/agent-chat'
 
@@ -75,7 +75,7 @@ const useToolSettingModal = () => {
     )
   }
 
-  const { apikey } = useTavilySearch()
+  const { tavilySearchApiKey: apikey } = useSetting()
   const tavilySearchEnabled = apikey !== 'tvly-xxxxxxxxxxxxxxxxxxx'
   const enabledTools = tools
     ?.filter((v) => v.enabled)

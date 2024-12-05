@@ -7,8 +7,6 @@ import prompts from '../../prompts/prompts'
 import { AiOutlineReload } from 'react-icons/ai'
 
 import { useChat } from '@renderer/hooks/useChat'
-import useLLM from '@renderer/hooks/useLLM'
-import useAdvancedSetting from '@renderer/hooks/useAdvancedSetting'
 import { retrieveAndGenerate } from '@renderer/lib/api'
 import { autocompletion, completionKeymap } from '@codemirror/autocomplete'
 import {
@@ -33,6 +31,7 @@ import LoadingDataBaseLottie from './LoadingDataBase.lottie'
 import LazyVisibleMessage from './LazyVisibleMessage'
 import { Style, SupportedTemplate, templates, TEMPLATES, supportedStyles } from './templates'
 import { useTranslation } from 'react-i18next'
+import useSetting from '@renderer/hooks/useSetting'
 
 export default function WebsiteGeneratorPage() {
   const [template, setTemplate] = useState<SupportedTemplate['id']>('react-ts')
@@ -146,7 +145,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   const [showCode, setShowCode] = useState(true)
   const [ragLoading, setRagLoading] = useState<boolean>(false)
   const [userInput, setUserInput] = useState('')
-  const { llm } = useLLM()
+  const { currentLLM: llm, sendMsgKey } = useSetting()
 
   const handleClickShowCode = () => {
     setShowCode(!showCode)
@@ -302,7 +301,7 @@ ${language}
   }, [loading, lastText])
 
   const [isComposing, setIsComposing] = useState(false)
-  const { sendMsgKey } = useAdvancedSetting()
+
   const onkeydown = useCallback(
     (e) => {
       if (e.shiftKey) {
