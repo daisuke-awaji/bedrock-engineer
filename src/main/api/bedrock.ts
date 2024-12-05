@@ -16,6 +16,8 @@ import {
   RetrieveAndGenerateCommand,
   RetrieveAndGenerateCommandInput
 } from '@aws-sdk/client-bedrock-agent-runtime'
+import { STSClient, GetCallerIdentityCommand } from '@aws-sdk/client-sts' // ES Modules import
+import { getDefaultPromptRouter, models } from './models'
 
 const client = new BedrockClient()
 const runtimeClient = new BedrockRuntimeClient()
@@ -62,10 +64,31 @@ const converseStream = async (
   }
 }
 
-const listModels = async (): Promise<FoundationModelSummary[] | undefined> => {
+/**
+ * TODO: 指定したリージョンで利用可能なモデルを取得する処理は後ほど実装する
+ */
+const listModelsByFetch = async (): Promise<FoundationModelSummary[] | undefined> => {
   const command = new ListFoundationModelsCommand()
   const res = await client.send(command)
   return res.modelSummaries
+}
+
+const getAccountId = async () => {
+  const sts = new STSClient()
+  const command = new GetCallerIdentityCommand({})
+  const res = await sts.send(command)
+  return res.Account
+}
+
+const listModels = async () => {
+  const accountId = await getAccountId()
+  if (!accountId) {
+    return models
+  }
+
+  const defaultPromptRouterModels = getDefaultPromptRouter(accountId, 'us-east-1') // TODO: region はユーザにて設定可能にする
+
+  return [...models, ...defaultPromptRouterModels]
 }
 
 const retrieveAndGenerate = async (props: RetrieveAndGenerateCommandInput) => {
@@ -76,6 +99,7 @@ const retrieveAndGenerate = async (props: RetrieveAndGenerateCommandInput) => {
 
 export const bedrock = {
   listModels,
+  listModelsByFetch,
   converse,
   converseStream,
   retrieveAndGenerate

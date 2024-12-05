@@ -1,4 +1,4 @@
-const models = [
+export const models = [
   {
     modelId: 'anthropic.claude-3-sonnet-20240229-v1:0',
     modelName: 'Claude 3 Sonnet'
@@ -57,4 +57,19 @@ const models = [
   }
 ]
 
-export default models
+export const getDefaultPromptRouter = (accountId: string, region: string) => {
+  if (region === 'us-east-1' || region === 'us-west-2') {
+    return [
+      {
+        modelId: `arn:aws:bedrock:${region}:${accountId}:default-prompt-router/anthropic.claude:1`,
+        modelName: 'Claude Prompt Router'
+      },
+      {
+        modelId: `arn:aws:bedrock:${region}:${accountId}:default-prompt-router/meta.llama:1`,
+        modelName: 'Meta Prompt Router'
+      }
+    ]
+  }
+
+  return []
+}

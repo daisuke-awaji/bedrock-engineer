@@ -1,3 +1,4 @@
+import { listModels } from '@renderer/lib/api'
 import { useEffect, useState } from 'react'
 import { LLM } from 'src/types/llm'
 
@@ -11,7 +12,7 @@ const useLLM = () => {
   const [availableModels, setAvailableModels] = useState<LLM[]>([])
   const fetchModels = async () => {
     try {
-      const models = await window.api.bedrock.listModels()
+      const models = await listModels()
       if (models) {
         setAvailableModels(models as LLM[])
       }
