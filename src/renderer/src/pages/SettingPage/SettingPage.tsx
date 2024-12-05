@@ -5,6 +5,7 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import { Kbd } from 'flowbite-react'
 import { useTranslation } from 'react-i18next'
 import useSetting from '@renderer/hooks/useSetting'
+import { AWS_REGIONS } from '@renderer/constants/aws-regions'
 
 interface InputWithLabelProp extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string
@@ -144,13 +145,35 @@ export default function SettingPage() {
               </div>
             </label>
           </div>
-          <InputWithLabel
-            label={t('AWS Region')}
-            type="string"
-            placeholder="us-east-1"
-            value={awsRegion}
-            onChange={(e) => setAwsRegion(e.target.value)}
-          />
+          
+          {/* AWS Region Select Box */}
+          <div>
+            <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              {t('AWS Region')}
+            </label>
+            <select
+              className="bg-white-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              value={awsRegion}
+              onChange={(e) => setAwsRegion(e.target.value)}
+            >
+              <option value="">{t('Select a region')}</option>
+              <optgroup label={t('Bedrock Supported Regions')}>
+                {AWS_REGIONS.filter(region => region.bedrockSupported).map(region => (
+                  <option key={region.id} value={region.id}>
+                    {region.name} ({region.id})
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label={t('Other Regions')}>
+                {AWS_REGIONS.filter(region => !region.bedrockSupported).map(region => (
+                  <option key={region.id} value={region.id}>
+                    {region.name} ({region.id})
+                  </option>
+                ))}
+              </optgroup>
+            </select>
+          </div>
+
           <InputWithLabel
             label={t('AWS Access Key ID')}
             type="string"

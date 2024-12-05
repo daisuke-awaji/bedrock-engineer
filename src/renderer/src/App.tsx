@@ -7,6 +7,7 @@ import { routes } from './routes'
 import HomePage from './pages/HomePage/HomePage'
 import { Toaster } from 'react-hot-toast'
 import ErrorPage from './pages/ErrorPage/ErrorPage'
+import { SettingsProvider } from './contexts/SettingsContext'
 
 const ListItem: React.FC<{
   children: any
@@ -90,10 +91,12 @@ const router = createHashRouter([
 
 function App(): JSX.Element {
   return (
-    <div>
-      <Toaster position="top-right" />
-      <RouterProvider router={router} />
-    </div>
+    <SettingsProvider>
+      <div>
+        <Toaster position="top-right" />
+        <RouterProvider router={router} />
+      </div>
+    </SettingsProvider>
   )
 }
 

@@ -6,14 +6,16 @@ import {
   ConverseStreamCommandOutput,
   Message
 } from '@aws-sdk/client-bedrock-runtime'
+import { BedrockClient, ListFoundationModelsCommand } from '@aws-sdk/client-bedrock'
 import {
   BedrockAgentRuntimeClient,
   RetrieveAndGenerateCommand,
   RetrieveAndGenerateCommandInput
 } from '@aws-sdk/client-bedrock-agent-runtime'
-import { STSClient, GetCallerIdentityCommand } from '@aws-sdk/client-sts' // ES Modules import
+import { STSClient, GetCallerIdentityCommand } from '@aws-sdk/client-sts'
 import { getDefaultPromptRouter, models } from './models'
 import { store } from '../../preload/store'
+import { LLM } from '../../types/llm'
 
 export type CallConverseAPIProps = {
   modelId: string
@@ -82,30 +84,89 @@ const converseStream = async (
 }
 
 const getAccountId = async () => {
-  const sts = new STSClient()
-  const command = new GetCallerIdentityCommand({})
-  const res = await sts.send(command)
-  return res.Account
+  try {
+    const { region, accessKeyId, secretAccessKey } = store.get('aws')
+    const sts = new STSClient({
+      credentials: {
+        accessKeyId,
+        secretAccessKey
+      },
+      region
+    })
+    const command = new GetCallerIdentityCommand({})
+    const res = await sts.send(command)
+    return res.Account
+  } catch (error) {
+    console.error('Error getting AWS account ID:', error)
+    return null
+  }
 }
 
-// TODO: キャッシュの仕掛けはちゃんとまた後で考える
-let cache = {}
+// 利用可能なモデルの取得とキャッシュ
+const modelCache: { [key: string]: any } = {}
+const CACHE_LIFETIME = 1000 * 60 * 60 // 1時間
+
+const listAvailableModels = async (
+  region: string,
+  credentials: { accessKeyId: string; secretAccessKey: string }
+) => {
+  const client = new BedrockClient({ credentials, region })
+  const command = new ListFoundationModelsCommand({})
+
+  try {
+    const response = await client.send(command)
+    return (
+      response.modelSummaries?.map((model) => ({
+        modelId: model.modelId || '',
+        modelName: model.modelName || ''
+      })) || []
+    )
+  } catch (error) {
+    console.error('Error listing foundation models:', error)
+    return []
+  }
+}
+
 const listModels = async () => {
-  const accountId = await getAccountId()
-  if (!accountId) {
-    return models
+  const { region, accessKeyId, secretAccessKey } = store.get('aws')
+  if (!region || !accessKeyId || !secretAccessKey) {
+    console.warn('AWS credentials not configured')
+    return []
   }
 
-  const { region } = store.get('aws')
-  const c = cache[`${region}-promptRouter`]
+  const cacheKey = `${region}-${accessKeyId}`
+  const cachedData = modelCache[cacheKey]
 
-  if (!c) {
-    const defaultPromptRouterModels = getDefaultPromptRouter(accountId, region) // TODO: region はユーザにて設定可能にする
-    cache[`${region}-promptRouter`] = defaultPromptRouterModels
-    return [...models, ...defaultPromptRouterModels]
+  // キャッシュが有効な場合はキャッシュを返す
+  if (cachedData && cachedData._timestamp && Date.now() - cachedData._timestamp < CACHE_LIFETIME) {
+    return cachedData.filter((model) => !model._timestamp)
   }
 
-  return [...models, ...c]
+  try {
+    // 利用可能なモデルを取得
+    const availableModels = await listAvailableModels(region, { accessKeyId, secretAccessKey })
+
+    // models のうち、availableModels に存在しない要素を除外
+    const availableModelIds = availableModels.map((model) => model.modelId)
+    const filteredModels = models.filter(
+      (model: LLM) =>
+        availableModelIds.includes(model.modelId) ||
+        availableModelIds.includes(model.modelId.slice(3)) // cross region inference
+    )
+
+    // Prompt Routerを取得
+    const accountId = await getAccountId()
+    const promptRouterModels = accountId ? getDefaultPromptRouter(accountId, region) : []
+
+    // 結果をキャッシュに保存
+    const result = [...filteredModels, ...promptRouterModels]
+    modelCache[cacheKey] = [...result, { _timestamp: Date.now() } as any]
+
+    return result
+  } catch (error) {
+    console.error('Error in listModels:', error)
+    return []
+  }
 }
 
 const retrieveAndGenerate = async (props: RetrieveAndGenerateCommandInput) => {
