@@ -26,6 +26,7 @@
     "@aws-sdk/client-bedrock": "^3.632.0",
     "@aws-sdk/client-bedrock-agent-runtime": "^3.642.0",
     "@aws-sdk/client-bedrock-runtime": "^3.632.0",
+    "@aws-sdk/client-sts": "^3.699.0",
     "@codemirror/autocomplete": "^6.18.0",
     "@codesandbox/sandpack-react": "^2.18.3",
     "@electron-toolkit/preload": "^3.0.1",

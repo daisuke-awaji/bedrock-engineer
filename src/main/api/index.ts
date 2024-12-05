@@ -94,8 +94,20 @@ api.post(
       console.log(error)
       return res.status(500).send(error)
     }
+  })
+)
 
-    return res.status(500).send('error')
+api.get(
+  '/listModels',
+  wrap(async (_req: Request, res) => {
+    res.setHeader('Content-Type', 'application/json')
+    try {
+      const result = await bedrock.listModels()
+      return res.json(result)
+    } catch (error) {
+      console.log(error)
+      return res.status(500).send(error)
+    }
   })
 )
 

@@ -85,3 +85,13 @@ export async function retrieveAndGenerate(props: RetrieveAndGenerateCommandInput
   })
   return res.json()
 }
+
+export async function listModels() {
+  const res = await fetch(`${API_ENDPOINT}/listModels`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  return res.json()
+}
