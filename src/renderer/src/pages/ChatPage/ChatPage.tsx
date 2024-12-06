@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next'
 import useIgnoreFileModal from './useIgnoreFileModal'
 import toast from 'react-hot-toast'
 import useSetting from '@renderer/hooks/useSetting'
+import { motion } from 'framer-motion'
 
 const agents = [
   {
@@ -384,12 +385,6 @@ export default function ChatPage() {
   const exampleSenarios = {
     softwareAgent: [
       {
-        title: t('Create a new file'),
-        content: t(
-          'Create a new file called "test.txt" in the current directory with the content "Hello, World!"'
-        )
-      },
-      {
         title: t("Yesterday's News"),
         content: t('What news happened in the world yesterday ({{date}})', {
           date: new Date(
@@ -420,6 +415,12 @@ export default function ChatPage() {
       {
         title: t('CDK Project'),
         content: t('cdkProjectContent')
+      },
+      {
+        title: t('Understanding the source code'),
+        content: t('Understanding the source code content', {
+          projectPath: projectPath
+        })
       }
     ]
   }
@@ -470,15 +471,18 @@ export default function ChatPage() {
                 )}
               </div>
               <div className="grid grid-cols-3 gap-2 pt-6 text-xs">
-                {exampleSenarios[agent]?.map((senario) => {
+                {exampleSenarios[agent]?.map((senario, index) => {
                   return (
-                    <button
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.2 }}
                       key={senario.title}
                       className="px-4 py-2 border rounded-md text-gray-400 hover:text-gray-700 hover:border-gray-300"
                       onClick={() => setUserInput(senario.content)}
                     >
                       {senario.title}
-                    </button>
+                    </motion.button>
                   )
                 })}
               </div>

@@ -493,11 +493,12 @@ ${language}
                   <span className="dark:text-white">{t('addRecommend')}</span>
                 </div>
               ) : (
-                recommendChanges?.map((a) => {
+                recommendChanges?.map((a, index) => {
                   return (
                     <motion.button
                       initial={{ opacity: 0, scale: 0 }}
                       animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.2 }}
                       key={a.title}
                       className="cursor-pointer rounded-full border p-2 text-xs hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:hover:border-gray-600"
                       onClick={() => {

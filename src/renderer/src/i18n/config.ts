@@ -55,13 +55,11 @@ When using dynamodb or SNS, do not use Lambda and weigh AWS native integration.
 Each line has orders and shipping information.
 The distributed map processor repeats the batch of these rows and uses the Lambda function to detect the delayed order.
 After that, send a message to the SQS queue for each delayed order.`,
+
       // ChatPage
       'request error': 'Request error',
       'This AI agent understands software project structures and creates files and folders.':
         'This AI agent understands software project structures and creates files and folders.',
-      'Create a new file': 'Create a new file',
-      'Create a new file called "test.txt" in the current directory with the content "Hello, World!"':
-        'Create a new file called "test.txt" in the current directory with the content "Hello, World!"',
       "Yesterday's News": "Yesterday's News",
       'What news happened in the world yesterday ({{date}})':
         'What news happened in the world yesterday ({{date}})',
@@ -77,6 +75,10 @@ After that, send a message to the SQS queue for each delayed order.`,
       'CDK Project': 'CDK Project',
       cdkProjectContent:
         'Create a new CDK project that deploys a Lambda function and an API Gateway. The Lambda function should return a simple "Hello, World!" message when invoked through the API Gateway.',
+      'Understanding the source code': 'Understanding the source code',
+      'Understanding the source code content':
+        'Understand the source code of the application contained in {{projectPath}} and explain (with illustrations) the software architecture and representative functionality.',
+
       // WebsiteGeneratorPage
       addRecommend: 'Considering additional recommended features',
       ecSiteTitle: 'EC site for plants',
@@ -218,14 +220,12 @@ DynamoDB または SNS を使用する場合は、Lambda を使用せず、AWS �
 各行には注文と配送情報があります。
 分散マッププロセッサはこれらの行のバッチを繰り返し、Lambda 関数を使用して注文を検出します。
 その後、注文ごとに SQS キューにメッセージを送信します。`,
+
       // ChatPage
       'request error':
         'Bedrock との通信でエラーが発生しました。しばらく待ってからもう一度お試しください。',
       'This AI agent understands software project structures and creates files and folders.':
         'ソフトウェアプロジェクトの構造を理解し、ファイルとフォルダーを作成します',
-      'Create a new file': '新しいファイルを作成',
-      'Create a new file called "test.txt" in the current directory with the content "Hello, World!"':
-        '現在のディレクトリに "test.txt" という名前の新しいファイルを作成し、内容を "Hello, World!" にしてください',
       "Yesterday's News": '昨日のニュース',
       'What news happened in the world yesterday ({{date}})':
         '昨日（{{date}}）の日本のニュースは何がありましたか？',
@@ -241,6 +241,10 @@ DynamoDB または SNS を使用する場合は、Lambda を使用せず、AWS �
       'CDK Project': 'CDKプロジェクト',
       cdkProjectContent:
         'Lambda関数とAPI Gatewayをデプロイする新しいCDKプロジェクトを作成してください。Lambda関数は、API Gatewayを通じて呼び出されたときに単純な"Hello, World!"メッセージを返すようにしてください。',
+      'Understanding the source code': 'ソースコードを説明する',
+      'Understanding the source code content':
+        '{{projectPath}} に含まれているアプリケーションのソースコードを理解して、ソフトウェアアーキテクチャと代表的な機能について図解しながら説明してください。',
+
       // WebsiteGenerator
       addRecommend: 'おすすめの追加機能を考え中',
       ecSiteTitle: '観葉植物のECサイト',

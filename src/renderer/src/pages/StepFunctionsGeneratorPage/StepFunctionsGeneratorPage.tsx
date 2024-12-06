@@ -11,6 +11,7 @@ import { useChat } from '@renderer/hooks/useChat'
 import { Loader } from '../../components/Loader'
 import { useTranslation } from 'react-i18next'
 import useSetting from '@renderer/hooks/useSetting'
+import { motion } from 'framer-motion'
 
 function StepFunctionsGeneratorPage() {
   const {
@@ -157,9 +158,12 @@ function StepFunctionsGeneratorPage() {
         <div className="relative w-full">
           <div className="flex gap-2 justify-between">
             <div>
-              {examples.map((e) => {
+              {examples.map((e, index) => {
                 return (
-                  <button
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.2 }}
                     key={e.title}
                     className="cursor-pointer rounded-full border p-2 text-xs hover:border-gray-300 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700 "
                     onClick={() => {
@@ -167,7 +171,7 @@ function StepFunctionsGeneratorPage() {
                     }}
                   >
                     {e.title}
-                  </button>
+                  </motion.button>
                 )
               })}
             </div>
