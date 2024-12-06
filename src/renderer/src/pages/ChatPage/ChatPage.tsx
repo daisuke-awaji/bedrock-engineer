@@ -20,6 +20,8 @@ import useIgnoreFileModal from './useIgnoreFileModal'
 import toast from 'react-hot-toast'
 import useSetting from '@renderer/hooks/useSetting'
 import { motion } from 'framer-motion'
+import MD from './MD'
+import useModal from '@renderer/hooks/useModal'
 
 const agents = [
   {
@@ -167,7 +169,10 @@ export default function ChatPage() {
   const modelId = llm?.modelId
 
   const [agent, setAgent] = useState('softwareAgent')
-  const systemPrompt = prompts.Chat[agent]
+  const systemPrompt = prompts.Chat[agent]({
+    workingDir: projectPath,
+    useTavilySearch: enabledTavilySearch
+  })
 
   const { enabledTools, ToolSettingModal, openModal } = useToolSettingModal()
 
@@ -188,9 +193,7 @@ export default function ChatPage() {
     await streamChat({
       messages: msgs,
       modelId,
-      system: [
-        { text: systemPrompt({ workingDir: projectPath, useTavilySearch: enabledTavilySearch }) }
-      ],
+      system: [{ text: systemPrompt }],
       toolConfig: { tools: enabledTools }
     })
 
@@ -256,7 +259,7 @@ export default function ChatPage() {
         modelId,
         system: [
           {
-            text: systemPrompt({ workingDir: projectPath, useTavilySearch: enabledTavilySearch })
+            text: systemPrompt
           }
         ],
         toolConfig: { tools: enabledTools }
@@ -430,6 +433,8 @@ export default function ChatPage() {
     scrollToBottom()
   }, [loading, messages.length])
 
+  const { Modal: SystemPromptModal, openModal: openSystemPromptModal } = useModal()
+
   const { openModal: openIgnoreFileModal, IgnoreFileModal } = useIgnoreFileModal()
   return (
     <React.Fragment>
@@ -437,6 +442,14 @@ export default function ChatPage() {
         className={`flex flex-col h-[calc(100vh-12rem)] overflow-y-auto mx-auto min-w-[320px] max-w-[2048px]`}
         id="main"
       >
+        <div className="flex justify-end">
+          <span
+            className="text-xs text-gray-400 font-thin cursor-pointer hover:text-gray-700"
+            onClick={openSystemPromptModal}
+          >
+            SYSTEM_PROMPT
+          </span>
+        </div>
         <ToolSettingModal />
         <IgnoreFileModal />
         <div className="flex flex-col gap-4 h-full">
@@ -555,7 +568,7 @@ export default function ChatPage() {
               </div>
 
               {/* right */}
-              <div className="flex flex-col justify-end">
+              <div className="flex justify-end">
                 <label className="inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
@@ -596,6 +609,9 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
+      <SystemPromptModal header="SYSTEM PROMPT" size="7xl">
+        <MD>{systemPrompt}</MD>
+      </SystemPromptModal>
     </React.Fragment>
   )
 }

@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
 import { SAMPLE_ASL_PARALLEL } from './SAMPLE_ASL'
-
-import { BsGear } from 'react-icons/bs'
 import StepFunctionLogo from '../../assets/images/aws-icons/Arch_AWS-Step-Functions_32.svg'
 import AWSSfnGraph from '@tshepomgaga/aws-sfn-graph'
 import '@tshepomgaga/aws-sfn-graph/index.css'
@@ -12,6 +10,9 @@ import { Loader } from '../../components/Loader'
 import { useTranslation } from 'react-i18next'
 import useSetting from '@renderer/hooks/useSetting'
 import { motion } from 'framer-motion'
+import MD from '../ChatPage/MD'
+import useModal from '@renderer/hooks/useModal'
+import prompts from '@renderer/prompts/prompts'
 
 function StepFunctionsGeneratorPage() {
   const {
@@ -19,18 +20,7 @@ function StepFunctionsGeneratorPage() {
     i18n: { language: lng }
   } = useTranslation()
 
-  const systemPrompt = `You are an AI assistant that generates AWS Step Functions ASL (Amazon States Language). Follow the given sentences and rules to output JSON format ASL.
-
-  <rules>
-  - No explanation is required.
-  - There is no prefix such as * \`\`\` json.
-  - Please generate only ASL text
-  </rules>
-
-  <language>
-  ${lng}
-  </language>
-  `
+  const systemPrompt = prompts.StepFunctonsGenerator.system(lng)
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_asl, setAsl] = useState(SAMPLE_ASL_PARALLEL)
@@ -117,8 +107,13 @@ function StepFunctionsGeneratorPage() {
     }
   ]
 
+  const { Modal: SystemPromptModal, openModal: openSystemPromptModal } = useModal()
+
   return (
     <div className={'flex flex-col h-[calc(100vh-11rem)] overflow-y-auto z-10'}>
+      <SystemPromptModal header="SYSTEM PROMPT" size="7xl">
+        <MD>{systemPrompt}</MD>
+      </SystemPromptModal>
       <div className="flex pb-2 justify-between">
         <span className="font-bold flex gap-2">
           <div className="content-center">
@@ -126,9 +121,12 @@ function StepFunctionsGeneratorPage() {
           </div>
           <h1 className="content-center dark:text-white">AWS Step Functions Generator</h1>
         </span>
-        <button className="hover:bg-gray-100 p-3 rounded-full">
-          <BsGear />
-        </button>
+        <span
+          className="text-xs text-gray-400 font-thin cursor-pointer hover:text-gray-700"
+          onClick={openSystemPromptModal}
+        >
+          SYSTEM_PROMPT
+        </span>
       </div>
 
       <div className="grid grid-cols-2 gap-2">

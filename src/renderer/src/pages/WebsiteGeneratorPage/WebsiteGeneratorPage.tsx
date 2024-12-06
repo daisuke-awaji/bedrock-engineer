@@ -33,6 +33,8 @@ import { Style, SupportedTemplate, templates, TEMPLATES, supportedStyles } from 
 import { useTranslation } from 'react-i18next'
 import useSetting from '@renderer/hooks/useSetting'
 import toast from 'react-hot-toast'
+import useModal from '@renderer/hooks/useModal'
+import MD from '../ChatPage/MD'
 
 export default function WebsiteGeneratorPage() {
   const [template, setTemplate] = useState<SupportedTemplate['id']>('react-ts')
@@ -160,11 +162,12 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     label: 'Tailwind.css',
     value: 'tailwind'
   })
+  const systemPrompt = prompts.WebsiteGenerator.system[template]({
+    styleType: styleType.value,
+    libraries: Object.keys(templates[template].customSetup.dependencies)
+  })
   const { handleSubmit, messages, loading, lastText, initChat, setLoading } = useChat({
-    systemPrompt: prompts.WebsiteGenerator.system[template]({
-      styleType: styleType.value,
-      libraries: Object.keys(templates[template].customSetup.dependencies)
-    }),
+    systemPrompt,
     modelId: llm.modelId
   })
 
@@ -373,11 +376,24 @@ ${language}
     [version]
   )
 
+  const { Modal: SystemPromptModal, openModal: openSystemPromptModal } = useModal()
+
   return (
     <div className={'flex flex-col h-[calc(100vh-11rem)] overflow-y-auto'}>
+      <SystemPromptModal header="SYSTEM PROMPT" size="7xl">
+        <MD>{systemPrompt}</MD>
+      </SystemPromptModal>
       <div className="flex pb-2 justify-between">
         <span className="font-bold flex flex-col gap-2 w-full">
-          <h1 className="content-center">Website Generator</h1>
+          <div className="flex justify-between">
+            <h1 className="content-center">Website Generator</h1>
+            <span
+              className="text-xs text-gray-400 font-thin cursor-pointer hover:text-gray-700"
+              onClick={openSystemPromptModal}
+            >
+              SYSTEM_PROMPT
+            </span>
+          </div>
           <div className="flex justify-between w-full">
             <div className="flex gap-2">
               {TEMPLATES.map((fw) => (
