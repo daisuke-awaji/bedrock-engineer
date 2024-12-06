@@ -8,6 +8,8 @@ import HomePage from './pages/HomePage/HomePage'
 import { Toaster } from 'react-hot-toast'
 import ErrorPage from './pages/ErrorPage/ErrorPage'
 import { SettingsProvider } from './contexts/SettingsContext'
+import { StepType, TourProvider } from '@reactour/tour'
+import { useTranslation } from 'react-i18next'
 
 const ListItem: React.FC<{
   children: any
@@ -17,7 +19,7 @@ const ListItem: React.FC<{
 }> = ({ children, selected, toolTipContent, href }) => {
   const bgColor = selected ? 'bg-gray-800 text-white' : 'hover:bg-gray-400 hover:bg-opacity-20'
   return (
-    <Link to={href}>
+    <Link to={href} className={href === '/setting' ? 'react-tour-first-step' : ''}>
       {toolTipContent ? (
         <Tooltip content={toolTipContent} placement="right" animation="duration-500">
           <li className={'p-3 cursor-pointer m-1 rounded-md ' + bgColor}>{children}</li>
@@ -89,14 +91,42 @@ const router = createHashRouter([
   }
 ])
 
+const styles: any = {
+  maskWrapper: (base) => ({
+    ...base
+  }),
+  maskArea: (base) => ({
+    ...base,
+    rx: 8
+  }),
+  popover: (base) => ({
+    ...base,
+    '--reactour-accent': '#ef5a3d',
+    borderRadius: 8
+  }),
+  badge: (base) => ({ ...base, color: 'gray', backgroundColor: 'white' })
+}
+
 function App(): JSX.Element {
+  const { t } = useTranslation()
+
+  const steps: StepType[] = [
+    {
+      selector: '.react-tour-first-step',
+      content: t('set your aws credential'),
+      position: 'right'
+    }
+  ]
+
   return (
-    <SettingsProvider>
-      <div>
-        <Toaster position="top-right" />
-        <RouterProvider router={router} />
-      </div>
-    </SettingsProvider>
+    <TourProvider steps={steps} styles={styles}>
+      <SettingsProvider>
+        <div>
+          <Toaster position="top-right" />
+          <RouterProvider router={router} />
+        </div>
+      </SettingsProvider>
+    </TourProvider>
   )
 }
 
