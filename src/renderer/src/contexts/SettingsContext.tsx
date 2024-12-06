@@ -63,7 +63,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [projectPath, setProjectPath] = useState<string>()
 
   // Tavily Search Settings
-  const [tavilySearchApiKey, setStateApiKey] = useState<string>('tvly-xxxxxxxxxxxxxxxxxxx')
+  const [tavilySearchApiKey, setStateApiKey] = useState<string>('')
 
   // AWS Settings
   const [awsRegion, setStateAwsRegion] = useState<string>('')
@@ -111,7 +111,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     fetchModels()
-  }, [awsRegion])
+  }, [awsRegion, awsAccessKeyId, awsSecretAccessKey])
 
   // Methods
   const updateSendMsgKey = (key: SendMsgKey) => {
@@ -183,7 +183,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     })
   }
 
-  const enabledTavilySearch = tavilySearchApiKey !== 'tvly-xxxxxxxxxxxxxxxxxxx'
+  const enabledTavilySearch = tavilySearchApiKey.length > 0
 
   const value = {
     // Advanced Settings
