@@ -152,6 +152,23 @@ const ChatMessage: React.FC<{ message: Message; showCodePreview: boolean }> = ({
 export default function ChatPage() {
   const { t } = useTranslation()
   const [userInput, setUserInput] = useState('')
+
+  const calculateTextareaRows = (text: string) => {
+    const lineCount = text.split('\n').length
+    if (lineCount > 5) {
+      return 6
+    } else if (lineCount > 2) {
+      return lineCount + 1
+    } else {
+      return 3
+    }
+  }
+
+  const [textareaRows, setTextareaRows] = useState(3)
+  useEffect(() => {
+    setTextareaRows(calculateTextareaRows(userInput))
+  }, [userInput])
+
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -580,8 +597,11 @@ export default function ChatPage() {
               onChange={(e) => setUserInput(e.target.value)}
               onKeyDown={(e) => onkeydown(e)}
               required
-              rows={3}
+              rows={textareaRows}
             />
+            {/* <div className="absolute bottom-2.5 start-2">
+              <ImageUploader onImageUpload={function (file: File): void {}} />
+            </div> */}
 
             <button
               onClick={() => handleClickPromptSubmit(userInput, messages)}
