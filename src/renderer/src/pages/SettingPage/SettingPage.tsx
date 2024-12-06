@@ -121,7 +121,7 @@ export default function SettingPage() {
           <InputWithLabel
             label={t('Tavily Search API Key')}
             type="password"
-            placeholder={t('Tavily Search API Key')}
+            placeholder={'tvly-xxxxxxxxxxxxxxx'}
             value={tavilySearchApiKey}
             onChange={(e) => {
               console.log(e.target.value)

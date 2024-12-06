@@ -1,13 +1,14 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 
-const defaultLaunguage = window.store.get('language')
+const defaultLaunguage = navigator.language ?? window.store.get('language')
 
 const resources = {
   en: {
     translation: {
       // HomePage
-      'set your aws credential': 'Please set your AWS region or credentials.',
+      'set your aws credential':
+        'Set up the Amazon Bedrock configuration. Enter your AWS Credentials (region, access key, secret access key) from the settings screen.',
       'Welcome to Bedrock Engineer': 'Welcome to Bedrock Engineer',
       'This is AI assistant of software development tasks':
         'This is AI assistant of software development tasks',
@@ -174,7 +175,8 @@ base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
   },
   ja: {
     translation: {
-      'set your aws credential': 'AWS 認証情報またはリージョンの設定をご確認ください。',
+      'set your aws credential':
+        'Bedrock に接続する設定をします。設定画面から AWS Credentials（リージョン、アクセスキー、シークレットアクセスキー）を入力してください。',
       'Welcome to Bedrock Engineer': 'Bedrock Engineer にようこそ',
       'This is AI assistant of software development tasks':
         '私は、ソフトウェア開発タスクに特化したAIアシスタントです',
