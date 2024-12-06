@@ -1,11 +1,12 @@
 /* eslint-disable react/prop-types */
-import { Modal } from 'flowbite-react'
+import { Modal, ModalSizes } from 'flowbite-react'
 import { useState } from 'react'
 
 type CustomModalProps = {
   children: React.ReactNode
   header?: React.ReactNode
   footer?: React.ReactNode
+  size?: keyof ModalSizes
 }
 
 const useModal = () => {
@@ -19,9 +20,9 @@ const useModal = () => {
     setShow(false)
   }
 
-  const CustomModal: React.FC<CustomModalProps> = ({ children, header, footer }) => (
+  const CustomModal: React.FC<CustomModalProps> = ({ children, header, footer, size }) => (
     <>
-      <Modal dismissible show={show} onClose={() => setShow(false)}>
+      <Modal dismissible show={show} onClose={() => setShow(false)} size={size}>
         {header && <Modal.Header>{header}</Modal.Header>}
         <Modal.Body>{children}</Modal.Body>
         {footer && <Modal.Footer>{footer}</Modal.Footer>}
