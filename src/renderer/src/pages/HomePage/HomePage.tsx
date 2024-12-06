@@ -2,13 +2,13 @@ import Lottie from 'lottie-react'
 import robotAnimation from './Robot.json'
 import { Kbd } from 'flowbite-react'
 import { useTranslation } from 'react-i18next'
-import useLLM from '@renderer/hooks/useLLM'
 import toast from 'react-hot-toast'
 import { useEffect } from 'react'
+import useSetting from '@renderer/hooks/useSetting'
 
 const HomePage = () => {
   const { t } = useTranslation()
-  const { error } = useLLM()
+  const { llmError: error } = useSetting()
   useEffect(() => {
     if (error) {
       if (error.message === 'Region is missing') {

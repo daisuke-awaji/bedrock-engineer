@@ -1,41 +1,68 @@
-import useLLM from '@renderer/hooks/useLLM'
-import useProject from '@renderer/hooks/useProject'
-import React from 'react'
+import React, { useState } from 'react'
 
-import { FcElectronics, FcFolder, FcMindMap, FcGlobe } from 'react-icons/fc'
-import useTavilySearch from '@renderer/hooks/useTavilySearch'
-import useAdvancedSetting from '@renderer/hooks/useAdvancedSetting'
+import { FcElectronics, FcFolder, FcMindMap, FcGlobe, FcKey } from 'react-icons/fc'
+import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import { Kbd } from 'flowbite-react'
 import { useTranslation } from 'react-i18next'
+import useSetting from '@renderer/hooks/useSetting'
+import { AWS_REGIONS } from '@renderer/constants/aws-regions'
 
 interface InputWithLabelProp extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string
 }
+
 const InputWithLabel: React.FC<InputWithLabelProp> = (props) => {
+  const [showPassword, setShowPassword] = useState(false)
+  const { ...inputProps } = props
+
+  const isPassword = props.type === 'password'
+
   return (
     <div>
       <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
         {props.label}
       </label>
-      <input
-        type={props.type}
-        className="bg-white-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-        placeholder={props.placeholder}
-        defaultValue={props.defaultValue}
-        onChange={props.onChange}
-        required
-        {...props}
-      />
+      <div className="relative">
+        <input
+          {...inputProps}
+          type={!showPassword ? props.type : 'text'}
+          className="bg-white-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+        />
+        {isPassword && (
+          <button
+            type="button"
+            className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-500"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? <FaEyeSlash className="w-5 h-5" /> : <FaEye className="w-5 h-5" />}
+          </button>
+        )}
+      </div>
     </div>
   )
 }
 
 export default function SettingPage() {
   const { t, i18n } = useTranslation()
-  const { projectPath, selectDirectory } = useProject()
-  const { llm, setLLM, availableModels } = useLLM()
-  const { apikey, setApiKey } = useTavilySearch()
-  const { sendMsgKey, setSendMsgKey } = useAdvancedSetting()
+  const {
+    projectPath,
+    selectDirectory,
+    currentLLM: llm,
+    updateLLM: setLLM,
+    availableModels,
+    sendMsgKey,
+    updateSendMsgKey,
+    tavilySearchApiKey,
+    setTavilySearchApiKey,
+    awsRegion,
+    setAwsRegion,
+    awsAccessKeyId,
+    setAwsAccessKeyId,
+    awsSecretAccessKey,
+    setAwsSecretAccessKey,
+    inferenceParams,
+    updateInferenceParams
+  } = useSetting()
 
   const handleChangeLLMSelect = (e) => {
     const selectedModelId = e.target.value
@@ -55,7 +82,7 @@ export default function SettingPage() {
 
   return (
     <React.Fragment>
-      <div className="flex flex-col gap-4 min-w-[320px] max-w-[1024px] mx-auto h-full overflow-y-auto dark:text-white">
+      <div className="flex flex-col gap-4 min-w-[320px] max-w-[1024px] mx-auto h-full overflow-y-auto dark:text-white md:pr-16 md:pl-16 pr-8 pl-8">
         <h1 className="text-lg font-bold">{t('Setting')}</h1>
 
         <h2 className="text-lg">{t('Project Setting')}</h2>
@@ -93,13 +120,74 @@ export default function SettingPage() {
         <div className="flex flex-col gap-2">
           <InputWithLabel
             label={t('Tavily Search API Key')}
-            type="string"
+            type="password"
             placeholder={t('Tavily Search API Key')}
-            value={apikey}
+            value={tavilySearchApiKey}
             onChange={(e) => {
               console.log(e.target.value)
-              setApiKey(e.target.value)
+              setTavilySearchApiKey(e.target.value)
             }}
+          />
+          <span className="text-xs flex gap-1 text-gray-800 dark:text-gray-200">
+            <span>Learn more about Tavily Search, go to</span>
+            <span onClick={() => open('https://tavily.com/')} className="cursor-pointer">
+              https://tavily.com/
+            </span>
+          </span>
+        </div>
+
+        <h2 className="text-lg">{t('AWS Settings')}</h2>
+        <div className="flex flex-col gap-2">
+          <div>
+            <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              <div className="flex gap-2 items-center">
+                <FcKey className="text-lg" />
+                <span>{t('AWS Credentials')}</span>
+              </div>
+            </label>
+          </div>
+
+          {/* AWS Region Select Box */}
+          <div>
+            <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              {t('AWS Region')}
+            </label>
+            <select
+              className="bg-white-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              value={awsRegion}
+              onChange={(e) => setAwsRegion(e.target.value)}
+            >
+              <option value="">{t('Select a region')}</option>
+              <optgroup label={t('Bedrock Supported Regions')}>
+                {AWS_REGIONS.filter((region) => region.bedrockSupported).map((region) => (
+                  <option key={region.id} value={region.id}>
+                    {region.name} ({region.id})
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label={t('Other Regions')}>
+                {AWS_REGIONS.filter((region) => !region.bedrockSupported).map((region) => (
+                  <option key={region.id} value={region.id}>
+                    {region.name} ({region.id})
+                  </option>
+                ))}
+              </optgroup>
+            </select>
+          </div>
+
+          <InputWithLabel
+            label={t('AWS Access Key ID')}
+            type="string"
+            placeholder="AKIAXXXXXXXXXXXXXXXX"
+            value={awsAccessKeyId}
+            onChange={(e) => setAwsAccessKeyId(e.target.value)}
+          />
+          <InputWithLabel
+            label={t('AWS Secret Access Key')}
+            type="password"
+            placeholder="****************************************"
+            value={awsSecretAccessKey}
+            onChange={(e) => setAwsSecretAccessKey(e.target.value)}
           />
         </div>
 
@@ -136,42 +224,40 @@ export default function SettingPage() {
           </label>
 
           <InputWithLabel
-            disabled // TODO
             label={t('Max Tokens')}
             type="number"
             placeholder={t('Max tokens')}
-            value={4096}
+            value={inferenceParams.maxTokens}
             min={1}
             max={4096}
             onChange={(e) => {
-              console.log(e)
+              updateInferenceParams({ maxTokens: parseInt(e.target.value, 10) })
             }}
           />
           <InputWithLabel
-            disabled // TODO
             label={t('Temperature')}
             type="number"
             placeholder={t('Temperature')}
-            value={0.5}
+            value={inferenceParams.temperature}
             min={0}
             max={1.0}
+            step={0.1}
             onChange={(e) => {
-              console.log(e)
+              updateInferenceParams({ temperature: parseFloat(e.target.value) })
             }}
           />
           <InputWithLabel
-            disabled // TODO
             label={t('topP')}
             type="number"
             placeholder={t('topP')}
-            value={0.9}
+            value={inferenceParams.topP}
             min={0}
             max={1}
+            step={0.1}
             onChange={(e) => {
-              console.log(e)
+              updateInferenceParams({ topP: parseFloat(e.target.value) })
             }}
           />
-          {/* todo */}
         </div>
 
         <h2 className="text-lg">{t('Advanced Setting')}</h2>
@@ -185,10 +271,10 @@ export default function SettingPage() {
               </span>
             </div>
           </label>
-          <div className="flex items-center mb-2" onClick={() => setSendMsgKey('Enter')}>
+          <div className="flex items-center mb-2" onClick={() => updateSendMsgKey('Enter')}>
             <input
               checked={sendMsgKey === 'Enter'}
-              onChange={() => setSendMsgKey('Enter')}
+              onChange={() => updateSendMsgKey('Enter')}
               id="default-radio-1"
               type="radio"
               name="default-radio"
@@ -198,10 +284,10 @@ export default function SettingPage() {
               {t('Send the message')}
             </label>
           </div>
-          <div className="flex items-center" onClick={() => setSendMsgKey('Cmd+Enter')}>
+          <div className="flex items-center" onClick={() => updateSendMsgKey('Cmd+Enter')}>
             <input
               checked={sendMsgKey === 'Cmd+Enter'}
-              onChange={() => setSendMsgKey('Cmd+Enter')}
+              onChange={() => updateSendMsgKey('Cmd+Enter')}
               id="default-radio-2"
               type="radio"
               name="default-radio"

@@ -9,9 +9,8 @@ import { ASLEditor } from './ASLEditor'
 import { FiSend } from 'react-icons/fi'
 import { useChat } from '@renderer/hooks/useChat'
 import { Loader } from '../../components/Loader'
-import useLLM from '@renderer/hooks/useLLM'
-import useAdvancedSetting from '@renderer/hooks/useAdvancedSetting'
 import { useTranslation } from 'react-i18next'
+import useSetting from '@renderer/hooks/useSetting'
 
 function StepFunctionsGeneratorPage() {
   const {
@@ -36,7 +35,7 @@ function StepFunctionsGeneratorPage() {
   const [_asl, setAsl] = useState(SAMPLE_ASL_PARALLEL)
   const [editorValue, setEditorValue] = useState(JSON.stringify(SAMPLE_ASL_PARALLEL, null, 2))
   const [userInput, setUserInput] = useState('')
-  const { llm } = useLLM()
+  const { currentLLM: llm, sendMsgKey } = useSetting()
   const { messages, handleSubmit, loading, lastText } = useChat({
     systemPrompt,
     modelId: llm.modelId
@@ -62,7 +61,6 @@ function StepFunctionsGeneratorPage() {
   }, [messages, loading])
 
   const [isComposing, setIsComposing] = useState(false)
-  const { sendMsgKey } = useAdvancedSetting()
   const onkeydown = (e) => {
     if (e.shiftKey) {
       return

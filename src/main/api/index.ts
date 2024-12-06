@@ -51,8 +51,16 @@ api.post(
       for await (const item of result.stream) {
         res.write(JSON.stringify(item) + '\n')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log(error)
+      console.log(error.message)
+      if (error.name === 'ValidationException') {
+        return res.status(400).send({
+          ...error,
+          message: error.message
+        })
+      }
+
       return res.status(500).send(error)
     }
 
@@ -90,8 +98,14 @@ api.post(
     try {
       const result = await bedrock.retrieveAndGenerate(req.body)
       return res.json(result)
-    } catch (error) {
+    } catch (error: any) {
       console.log(error)
+      if (error.name === 'ResourceNotFoundException') {
+        return res.status(404).send({
+          ...error,
+          message: error.message
+        })
+      }
       return res.status(500).send(error)
     }
   })

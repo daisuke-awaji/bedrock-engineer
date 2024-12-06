@@ -22,11 +22,18 @@ export async function* streamChatCompletion(
   })
   const reader = res.body?.getReader()
 
-  if (res.status !== 200 || !reader) {
+  if (!reader) {
     throw new Error('Request failed')
   }
 
   const decoder = new TextDecoder('utf-8')
+
+  if (res.status !== 200) {
+    const { value } = await reader.read()
+    const msg = decoder.decode(value)
+    throw new Error(msg)
+  }
+
   let done = false
   while (!done) {
     const { done: readDone, value } = await reader.read()
@@ -83,7 +90,7 @@ export async function retrieveAndGenerate(props: RetrieveAndGenerateCommandInput
       'Content-Type': 'application/json'
     }
   })
-  return res.json()
+  return res
 }
 
 export async function listModels() {
