@@ -398,10 +398,6 @@ export default function ChatPage() {
         })
       },
       {
-        title: t('Simple website'),
-        content: t('Create a cool website for an IT company using HTML, CSS, and JavaScript.')
-      },
-      {
         title: t('Organizing folders'),
         content: t(
           'Extract only the png files contained in the {{projectPath}} folder and copy them to the {{imagePath}} folder.',
@@ -410,6 +406,10 @@ export default function ChatPage() {
             imagePath: `${projectPath}/images`
           }
         )
+      },
+      {
+        title: t('Simple website'),
+        content: t('Create a cool website for an IT company using HTML, CSS, and JavaScript.')
       },
       {
         title: t('Simple Web API'),
@@ -422,6 +422,18 @@ export default function ChatPage() {
       {
         title: t('Understanding the source code'),
         content: t('Understanding the source code content', {
+          projectPath: projectPath
+        })
+      },
+      {
+        title: t('Refactoring'),
+        content: t('RefactoringContent', {
+          projectPath: projectPath
+        })
+      },
+      {
+        title: t('Testcode'),
+        content: t('TestcodeContent', {
           projectPath: projectPath
         })
       }
@@ -483,13 +495,13 @@ export default function ChatPage() {
                   'This AI agent understands software project structures and creates files and folders.'
                 )}
               </div>
-              <div className="grid grid-cols-3 gap-2 pt-6 text-xs">
+              <div className="grid grid-cols-4 gap-2 pt-6 text-xs">
                 {exampleSenarios[agent]?.map((senario, index) => {
                   return (
                     <motion.button
                       initial={{ opacity: 0, scale: 0 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.2 }}
+                      transition={{ delay: index * 0.15 }}
                       key={senario.title}
                       className="px-4 py-2 border rounded-md text-gray-400 hover:text-gray-700 hover:border-gray-300"
                       onClick={() => setUserInput(senario.content)}
