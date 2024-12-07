@@ -130,7 +130,7 @@ The value property should contain the suggested content. The suggested content h
 ]
 </example-ja-2>
 
-!IMPORTANT: JSON keys should not be in languages ​​other than English.
+!IMPORTANT: JSON keys should not be in languages other than English.
 !IMPORTANT: Respond in the following languages: ${language}.
 `
     }
