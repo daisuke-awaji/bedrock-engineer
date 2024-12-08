@@ -11,7 +11,7 @@ import {
   ToolUseBlockStart
 } from '@aws-sdk/client-bedrock-runtime'
 import { Accordion } from 'flowbite-react'
-import { streamChatCompletion, StreamChatCompletionProps } from '@renderer/lib/api'
+import { converse, streamChatCompletion, StreamChatCompletionProps } from '@renderer/lib/api'
 import AILogo from '../../assets/images/icons/ai.svg'
 import { LiaUserCircleSolid } from 'react-icons/lia'
 import CodeRenderer from './CodeRenderer'
@@ -22,6 +22,7 @@ import useSetting from '@renderer/hooks/useSetting'
 import { motion } from 'framer-motion'
 import MD from './MD'
 import useModal from '@renderer/hooks/useModal'
+import LoadingDotsLottie from '../WebsiteGeneratorPage/LoadingDots.lottie'
 
 const agents = [
   {
@@ -153,7 +154,8 @@ const ChatMessage: React.FC<{ message: Message; showCodePreview: boolean }> = ({
 }
 
 export default function ChatPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+
   const [userInput, setUserInput] = useState('')
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
@@ -398,10 +400,6 @@ export default function ChatPage() {
         })
       },
       {
-        title: t('Simple website'),
-        content: t('Create a cool website for an IT company using HTML, CSS, and JavaScript.')
-      },
-      {
         title: t('Organizing folders'),
         content: t(
           'Extract only the png files contained in the {{projectPath}} folder and copy them to the {{imagePath}} folder.',
@@ -410,6 +408,10 @@ export default function ChatPage() {
             imagePath: `${projectPath}/images`
           }
         )
+      },
+      {
+        title: t('Simple website'),
+        content: t('Create a cool website for an IT company using HTML, CSS, and JavaScript.')
       },
       {
         title: t('Simple Web API'),
@@ -424,9 +426,58 @@ export default function ChatPage() {
         content: t('Understanding the source code content', {
           projectPath: projectPath
         })
+      },
+      {
+        title: t('Refactoring'),
+        content: t('RefactoringContent', {
+          projectPath: projectPath
+        })
+      },
+      {
+        title: t('Testcode'),
+        content: t('TestcodeContent', {
+          projectPath: projectPath
+        })
       }
     ]
   }
+  const [recommendChanges, setRecommendChanges] = useState<{ title: string; content: string }[]>([])
+  const [recommendLoading, setRecommendLoading] = useState(false)
+
+  const getRecommendChanges = async () => {
+    let retry = 0
+    if (retry > 3) {
+      return
+    }
+    setRecommendLoading(true)
+    const result = await converse({
+      modelId: llm.modelId,
+      system: [{ text: prompts.Chat.recommend.system(i18n.language) }],
+      messages: [{ role: 'user', content: messages[messages.length - 1].content }]
+    })
+
+    const recommendChanges = result.output.message?.content[0]?.text
+
+    try {
+      if (recommendChanges) {
+        const json = JSON.parse(recommendChanges)
+        console.log({ json })
+        setRecommendChanges(json)
+        setRecommendLoading(false)
+      }
+    } catch (e) {
+      console.log(e)
+      retry += 1
+      return getRecommendChanges()
+    }
+  }
+
+  useEffect(() => {
+    if (!loading && messages.length > 0) {
+      getRecommendChanges()
+    }
+  }, [loading, messages])
+
   const { scrollToBottom } = useScroll()
 
   useEffect(() => {
@@ -483,13 +534,13 @@ export default function ChatPage() {
                   'This AI agent understands software project structures and creates files and folders.'
                 )}
               </div>
-              <div className="grid grid-cols-3 gap-2 pt-6 text-xs">
+              <div className="grid grid-cols-4 gap-2 pt-6 text-xs">
                 {exampleSenarios[agent]?.map((senario, index) => {
                   return (
                     <motion.button
                       initial={{ opacity: 0, scale: 0 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.2 }}
+                      transition={{ delay: index * 0.15 }}
                       key={senario.title}
                       className="px-4 py-2 border rounded-md text-gray-400 hover:text-gray-700 hover:border-gray-300"
                       onClick={() => setUserInput(senario.content)}
@@ -506,6 +557,32 @@ export default function ChatPage() {
           {messages.map((message, index) => (
             <ChatMessage message={message} key={index} showCodePreview={showCodePreview} />
           ))}
+
+          <div>
+            {recommendLoading ? (
+              <div className="flex gap-1 justify-start dark:text-white">
+                <LoadingDotsLottie className="h-[2rem]" />
+              </div>
+            ) : (
+              !loading &&
+              recommendChanges?.map((a, index) => {
+                return (
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.2 }}
+                    key={a.title}
+                    className="cursor-pointer rounded-full border p-2 text-xs hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:hover:border-gray-600"
+                    onClick={() => {
+                      setUserInput(a.content)
+                    }}
+                  >
+                    {a.title}
+                  </motion.button>
+                )
+              })
+            )}
+          </div>
 
           {loading && (
             <div key="loading-robot" className="flex gap-4">

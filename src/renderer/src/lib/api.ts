@@ -68,7 +68,8 @@ export async function* streamChatCompletion(
 type ConverseProps = {
   modelId: string
   system: { text: string }[] | undefined
-  messages: { role: string; content: { text: string }[] }[]
+  messages: Message[]
+  toolConfig?: ToolConfiguration
 }
 
 export async function converse(props: ConverseProps) {

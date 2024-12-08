@@ -2,19 +2,6 @@ import { useCallback } from 'react'
 import MD from './MD'
 import { Mermaid } from './Mermaid'
 
-function convertToId(str) {
-  // 文字列を小文字に変換
-  str = str.toLowerCase()
-
-  // 空白文字を'-'に置換
-  str = str.replace(/\s+/g, '-')
-
-  // 30文字だけ抜き出す
-  str = str.slice(0, 30)
-
-  return str
-}
-
 type CodeRendererProps = {
   text?: string
   showCodePreview: boolean
@@ -22,7 +9,7 @@ type CodeRendererProps = {
 const CodeRenderer = (props: CodeRendererProps) => {
   const { text, showCodePreview } = props
 
-  const MDAndCodePreview = useCallback(() => {
+  const renderMarkdownAndCodePreview = useCallback(() => {
     const htmlMatches = text?.match(/```html([\s\S]*?)```/g) || []
     const mermaidMatches = text?.match(/```mermaid([\s\S]*?)```/g) || []
 
@@ -44,11 +31,7 @@ const CodeRenderer = (props: CodeRendererProps) => {
           })}
           {mermaidMatches.map((match, index) => {
             const code = match.replace(/^```mermaid\n?|\n?```$/g, '').trim()
-            return (
-              <div className="flex justify-center align-center" key={`mermaid-${index}`}>
-                <Mermaid chart={code} id={`mermaid-${index}-${convertToId(code)}`} />
-              </div>
-            )
+            return <Mermaid chart={code} key={`mermaid-${index}`} />
           })}
         </div>
       </div>
@@ -57,11 +40,7 @@ const CodeRenderer = (props: CodeRendererProps) => {
     )
   }, [text, showCodePreview])
 
-  return (
-    <div className="w-full dark:text-white">
-      <MDAndCodePreview />
-    </div>
-  )
+  return <div className="w-full dark:text-white">{renderMarkdownAndCodePreview()}</div>
 }
 
 export default CodeRenderer

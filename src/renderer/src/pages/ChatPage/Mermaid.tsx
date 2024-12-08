@@ -1,40 +1,54 @@
 import mermaid from 'mermaid'
+import React from 'react'
 import { useEffect, useState } from 'react'
 import { IoIosClose } from 'react-icons/io'
 
-mermaid.initialize({
-  theme: 'default',
-  startOnLoad: true
-})
-
-mermaid.registerIconPacks([
-  {
-    name: 'logos',
-    loader: () => import('@iconify-json/logos').then((module) => module.icons)
-  }
-])
-
-const MermaidCore = ({ chart, id, handler }: { chart: string; id: string; handler?: any }) => {
-  useEffect(() => {
-    mermaid.contentLoaded()
-
-    mermaid.parseError = (err: any, hash: any) => {
-      console.error(err, hash)
-    }
-  }, [chart, id])
-
-  return (
-    <div
-      className="mermaid w-full cursor-pointer bg-gray-100 dark:bg-gray-900 flex justify-center content-center h-full hover:shadow-lg duration-700 rounded-lg p-8"
-      id={id}
-      onClick={handler}
-    >
-      {chart}
-    </div>
-  )
+type Props = {
+  code: string
+  handler?: any
 }
 
-export const Mermaid = ({ chart, id }: { chart: string; id: string }) => {
+mermaid.initialize({
+  // syntax error が dom node に勝手に追加されないようにする
+  // https://github.com/mermaid-js/mermaid/pull/4359
+  suppressErrorRendering: true
+})
+
+export const MermaidCore: React.FC<Props> = (props) => {
+  const { code } = props
+  const outputRef = React.useRef<HTMLDivElement>(null)
+
+  const render = React.useCallback(async () => {
+    if (outputRef.current && code) {
+      try {
+        // 一意な ID を指定する必要あり
+        const { svg } = await mermaid.render(`m${crypto.randomUUID()}`, code)
+        outputRef.current.innerHTML = svg
+      } catch (error) {
+        console.error(error)
+        outputRef.current.innerHTML = 'Invalid syntax'
+      }
+    }
+  }, [code])
+
+  React.useEffect(() => {
+    render()
+  }, [render])
+
+  return code ? (
+    <div
+      onClick={props.handler}
+      className="h-full w-full cursor-pointer bg-gray-100 dark:bg-gray-900 flex justify-center items-center content-center  hover:shadow-lg duration-700 rounded-lg p-8"
+    >
+      <div
+        ref={outputRef}
+        className="w-full h-full flex justify-center aligh-center items-center"
+      />
+    </div>
+  ) : null
+}
+
+export const Mermaid = ({ chart }: { chart: string }) => {
   const [zoom, setZoom] = useState(false)
 
   // on click esc key
@@ -52,7 +66,7 @@ export const Mermaid = ({ chart, id }: { chart: string; id: string }) => {
 
   return (
     <>
-      <MermaidCore handler={() => setZoom(true)} chart={chart} id={id} />
+      <MermaidCore handler={() => setZoom(true)} code={chart} />
 
       {zoom && (
         <div
@@ -65,7 +79,8 @@ export const Mermaid = ({ chart, id }: { chart: string; id: string }) => {
           <div className="absolute top-0 right-0 z-[111] p-4" onClick={() => setZoom(false)}>
             <IoIosClose className="text-lg flex justify-center content-center w-8 h-8 dark:hover:bg-gray-400 hover:bg-gray-200 rounded cursor-pointer" />
           </div>
-          <MermaidCore chart={chart} id={id} />
+
+          <MermaidCore code={chart} />
         </div>
       )}
     </>
