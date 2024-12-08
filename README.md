@@ -1,6 +1,8 @@
+Language: [English](./README.md) / [Japanese](./README-ja.md)
+
 # 🧙 Bedrock Enginner
 
-Bedrock Enginner is an AI assistant of software development tasks. This tool combines the capabilities of a large language model with practical file system operations, web search functionality.
+Bedrock Enginner is an AI assistant for software development tasks powered by [Amazon Bedrock](https://aws.amazon.com/bedrock/). This autonomous AI agent combines the capabilities of large language models with practical file system operations and web search functionality to support your development process.
 
 ## 💻 Demo
 
@@ -8,7 +10,9 @@ https://github.com/user-attachments/assets/83f46abe-0b69-4748-a4a0-e0155c7d80ae
 
 ## 🍎 Getting Started
 
-It is still under development and no packaged binaries have been created. Please build it yourself and use it.
+It is still under development and no packaged binaries have been created. Please build it locally and use it.
+
+### Build
 
 First, install the npm modules:
 
@@ -40,7 +44,7 @@ Use the application stored in the `dist` directory.
 
 ### Agent Chat
 
-- 💬 Interactive chat interface with Anthoropic Claude 3 models.
+- 💬 Interactive chat interface with human-like Amazon Nova and Claude 3.5 models
 - 📁 File system operations (create folders, files, read/write files)
 - 🔍 Web search capabilities using Tavily API
 - 🏗️ Project structure creation and management
@@ -51,6 +55,8 @@ Use the application stored in the `dist` directory.
 https://github.com/user-attachments/assets/838fc854-f310-40dc-8237-f82ffd623ef3
 
 ### Website Generator
+
+Generate source code and preview in real-time for:
 
 - React.js (w/ Typescript)
 - Vue.js (w/ Typescript)
@@ -78,6 +84,8 @@ The following styles are also supported as presets:
 - Material UI (React mode only)
 
 ### Step Function Generator
+
+Generate AWS Step Functions ASL definitions and preview them in real-time.
 
 https://github.com/user-attachments/assets/17756811-6314-438f-a13d-61af10c1963e
 
