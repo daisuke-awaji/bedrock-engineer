@@ -8,6 +8,12 @@ type Props = {
   handler?: any
 }
 
+mermaid.initialize({
+  // syntax error が dom node に勝手に追加されないようにする
+  // https://github.com/mermaid-js/mermaid/pull/4359
+  suppressErrorRendering: true
+})
+
 export const MermaidCore: React.FC<Props> = (props) => {
   const { code } = props
   const outputRef = React.useRef<HTMLDivElement>(null)
