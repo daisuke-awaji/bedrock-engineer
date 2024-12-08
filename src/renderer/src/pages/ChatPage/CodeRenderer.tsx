@@ -9,7 +9,7 @@ type CodeRendererProps = {
 const CodeRenderer = (props: CodeRendererProps) => {
   const { text, showCodePreview } = props
 
-  const MDAndCodePreview = useCallback(() => {
+  const renderMarkdownAndCodePreview = useCallback(() => {
     const htmlMatches = text?.match(/```html([\s\S]*?)```/g) || []
     const mermaidMatches = text?.match(/```mermaid([\s\S]*?)```/g) || []
 
@@ -31,11 +31,7 @@ const CodeRenderer = (props: CodeRendererProps) => {
           })}
           {mermaidMatches.map((match, index) => {
             const code = match.replace(/^```mermaid\n?|\n?```$/g, '').trim()
-            return (
-              <div className="flex justify-center align-center gap-8" key={`mermaid-${index}`}>
-                <Mermaid chart={code} />
-              </div>
-            )
+            return <Mermaid chart={code} key={`mermaid-${index}`} />
           })}
         </div>
       </div>
@@ -44,11 +40,7 @@ const CodeRenderer = (props: CodeRendererProps) => {
     )
   }, [text, showCodePreview])
 
-  return (
-    <div className="w-full dark:text-white">
-      <MDAndCodePreview />
-    </div>
-  )
+  return <div className="w-full dark:text-white">{renderMarkdownAndCodePreview()}</div>
 }
 
 export default CodeRenderer

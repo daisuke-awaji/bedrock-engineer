@@ -74,7 +74,7 @@ const ChatPage = {
     'Lambda関数とAPI Gatewayをデプロイする新しい AWS CDK のプロジェクトを作成してください。Lambda関数は、API Gatewayを通じて呼び出されたときに単純な"Hello, World!"メッセージを返すようにしてください。',
   'Understanding the source code': 'ソースコードの説明',
   'Understanding the source code content':
-    '{{projectPath}} に含まれているアプリケーションのソースコードを理解して、ソフトウェアアーキテクチャと代表的な機能について図解しながら説明してください。',
+    '{{projectPath}} に含まれているアプリケーションのソースコードを理解して、図解しながら説明してください。',
   Refactoring: 'リファクタリング',
   RefactoringContent: `{{projectPath}} に含まれているアプリケーションのソースコードを理解して、リファクタリングの案を提示してください。
   ソースコードの量が多い場合、どのソースコードや機能に対してリファクタリングするべきか、ユーザーに質問しながらステップを進めます。

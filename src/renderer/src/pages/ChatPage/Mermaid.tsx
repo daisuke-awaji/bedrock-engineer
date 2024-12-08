@@ -34,7 +34,10 @@ export const MermaidCore: React.FC<Props> = (props) => {
       onClick={props.handler}
       className="h-full w-full cursor-pointer bg-gray-100 dark:bg-gray-900 flex justify-center items-center content-center  hover:shadow-lg duration-700 rounded-lg p-8"
     >
-      <div ref={outputRef} className="w-full" />
+      <div
+        ref={outputRef}
+        className="w-full h-full flex justify-center aligh-center items-center"
+      />
     </div>
   ) : null
 }
@@ -70,6 +73,7 @@ export const Mermaid = ({ chart }: { chart: string }) => {
           <div className="absolute top-0 right-0 z-[111] p-4" onClick={() => setZoom(false)}>
             <IoIosClose className="text-lg flex justify-center content-center w-8 h-8 dark:hover:bg-gray-400 hover:bg-gray-200 rounded cursor-pointer" />
           </div>
+
           <MermaidCore code={chart} />
         </div>
       )}
