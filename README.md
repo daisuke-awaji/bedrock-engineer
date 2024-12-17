@@ -6,7 +6,7 @@ Bedrock Enginner is an AI assistant for software development tasks powered by [A
 
 ## 💻 Demo
 
-https://github.com/user-attachments/assets/83f46abe-0b69-4748-a4a0-e0155c7d80ae
+https://github.com/user-attachments/assets/6d7c67e2-4089-4c24-9171-a6896b990d6b
 
 ## 🍎 Getting Started
 
@@ -52,8 +52,6 @@ Use the application stored in the `dist` directory.
 - 🚀 Automode for autonomous task completion
 - 🔄 Iteration tracking in automode
 
-https://github.com/user-attachments/assets/838fc854-f310-40dc-8237-f82ffd623ef3
-
 ### Website Generator
 
 Generate source code and preview in real-time for:
@@ -62,8 +60,6 @@ Generate source code and preview in real-time for:
 - Vue.js (w/ Typescript)
 - Svelte.js
 - Vanilla.js
-
-https://github.com/user-attachments/assets/d28c2ab1-70f4-4ce0-9537-cf89a2c31ad4
 
 ## Connect datasource for your design system
 
@@ -75,8 +71,6 @@ You need to store source code and crawled web pages in the knowledge base in adv
 
 Click the "Connect" button at the bottom of the screen and enter your Knowledge base ID.
 
-https://github.com/user-attachments/assets/23181de3-0ae1-43f3-8fe3-149f1f0108be
-
 The following styles are also supported as presets:
 
 - Inline styling
@@ -86,8 +80,6 @@ The following styles are also supported as presets:
 ### Step Function Generator
 
 Generate AWS Step Functions ASL definitions and preview them in real-time.
-
-https://github.com/user-attachments/assets/17756811-6314-438f-a13d-61af10c1963e
 
 ## Star history
 
