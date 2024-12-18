@@ -1,6 +1,6 @@
 import mermaid from 'mermaid'
 import React from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { IoIosClose } from 'react-icons/io'
 
 type Props = {
@@ -16,33 +16,43 @@ mermaid.initialize({
 
 export const MermaidCore: React.FC<Props> = (props) => {
   const { code } = props
-  const outputRef = React.useRef<HTMLDivElement>(null)
+  const [svgContent, setSvgContent] = useState<string>('')
 
-  const render = React.useCallback(async () => {
-    if (outputRef.current && code) {
+  const render = useCallback(async () => {
+    if (code) {
       try {
         // 一意な ID を指定する必要あり
         const { svg } = await mermaid.render(`m${crypto.randomUUID()}`, code)
-        outputRef.current.innerHTML = svg
+        // SVG文字列をパースしてDOMオブジェクトに変換
+        const parser = new DOMParser()
+        const doc = parser.parseFromString(svg, 'image/svg+xml')
+        const svgElement = doc.querySelector('svg')
+        
+        if (svgElement) {
+          // SVG要素に必要な属性を設定
+          svgElement.setAttribute('width', '100%')
+          svgElement.setAttribute('height', '100%')
+          setSvgContent(svgElement.outerHTML)
+        }
       } catch (error) {
         console.error(error)
-        outputRef.current.innerHTML = 'Invalid syntax'
+        setSvgContent('<div>Invalid syntax</div>')
       }
     }
   }, [code])
 
-  React.useEffect(() => {
+  useEffect(() => {
     render()
-  }, [render])
+  }, [code, render])
 
   return code ? (
     <div
       onClick={props.handler}
-      className="h-full w-full cursor-pointer bg-gray-100 dark:bg-gray-900 flex justify-center items-center content-center  hover:shadow-lg duration-700 rounded-lg p-8"
+      className="h-full w-full cursor-pointer bg-gray-100 dark:bg-gray-900 flex justify-center items-center content-center hover:shadow-lg duration-700 rounded-lg p-8"
     >
       <div
-        ref={outputRef}
         className="w-full h-full flex justify-center aligh-center items-center"
+        dangerouslySetInnerHTML={{ __html: svgContent }}
       />
     </div>
   ) : null
