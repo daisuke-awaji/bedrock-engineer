@@ -41,7 +41,7 @@ async function createWindow(): Promise<void> {
   // } else {
   //   mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   // }
-  const port = await getRandomPort(3000)
+  const port = await getRandomPort()
   store.set('apiEndpoint', `http://localhost:${port}`)
 
   api.listen(port, () => {

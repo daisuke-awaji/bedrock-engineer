@@ -1,11 +1,11 @@
 const net = require('net')
 
 const MAXPORT = 65536
-const MINPORT = 3000 // avoid wellknown port
+const MINPORT = 3500 // avoid wellknown port
 
-const getRandomPort = (beginPort: number): Promise<number> => {
+const getRandomPort = (beginPort?: number): Promise<number> => {
   const r = Math.random() * (MAXPORT - MINPORT) + MINPORT
-  let PORT = beginPort || r
+  let PORT = beginPort || Math.floor(r)
   return new Promise((resolve, reject) => {
     const nextPort = () => {
       const port = PORT++
