@@ -1,7 +1,6 @@
 type SystemPromptProps = {
   workingDir?: string
   useTavilySearch?: boolean
-  s3BucketNameForSamPackage?: string
 }
 
 type WebsiteGeneratorPromptProps = {
@@ -9,8 +8,14 @@ type WebsiteGeneratorPromptProps = {
   libraries?: string[]
 }
 
-const getCoreCapabilities = (props: SystemPromptProps) => `
-You can now read files, list the contents of the root folder where this script is being run, and perform web searches. Use these capabilities when:
+export const getAgentCoreRuleForToolUse = (props: SystemPromptProps) => `
+When use tools:
+- The file path must be specified as a absolute path.
+- Working directory is ${props.workingDir}
+`
+
+export const getAgentCoreCapabilities = (props: SystemPromptProps) => `
+You can now read files, list the contents of the root folder where this script is being run, and perform web searches. Use these capabilities:
 - 1. Creating project structures, including folders and files
 - 2. Writing clean, efficient, and well-documented code
 - 3. Debugging complex issues and providing detailed explanations
@@ -31,6 +36,7 @@ When asked to make edits or improvements:
 - Use the read_file tool to examine the contents of existing files.
 - Analyze the code and suggest improvements or make necessary edits.
 - Use the writeToFile tool to implement changes.
+- IMPORTANT!! Do not omit any output text or code.
 
 When you use search:
 - Make sure you use the best query to get the most accurate and up-to-date information
@@ -52,11 +58,8 @@ You can now read files, list the contents of the root folder where this script i
 - You believe reading a file or listing directory contents will be beneficial to accomplish the user's goal
 - You need up-to-date information or additional context to answer a question accurately
 
-${
-  props.useTavilySearch
-    ? 'When you need current information or feel that a search could provide a better answer, use the tavilySearch tool. This tool performs a web search and returns a concise answer along with relevant sources.'
-    : ''
-}
+When you need current information or feel that a search could provide a better answer:
+- Use the tavilySearch tool. This tool performs a web search and returns a concise answer along with relevant sources.
 
 When develop web application:
 - If you need an image, please refer to the appropriate one from pexels. You can also refer to other images if specified.
@@ -65,6 +68,7 @@ When develop web application:
 
 const prompts = {
   Chat: {
+    // @deprecated agetnt.ts に委譲
     softwareAgent: (props: SystemPromptProps) => {
       const { useTavilySearch = false, workingDir = '~/Desktop' } = props
 
@@ -203,7 +207,7 @@ Remember to:
 - Be patient with questions
 - Maintain a positive learning environment
 
-${getCoreCapabilities(props)}
+${getAgentCoreCapabilities(props)}
 `
     },
     productDesigner: (props: SystemPromptProps) => {
@@ -228,7 +232,7 @@ Visual explanations:
 - Use color-coded diagrams for clarity
 - Create interactive prototypes for user testing
 
-${getCoreCapabilities(props)}
+${getAgentCoreCapabilities(props)}
 `
     },
     cafeAssistant: (props: SystemPromptProps) => {

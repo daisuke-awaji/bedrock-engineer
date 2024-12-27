@@ -2,7 +2,7 @@ import React from 'react'
 import { Agent } from '../../types'
 
 type AgentSelectorProps = {
-  agents: Agent[]
+  agents: readonly Agent[]
   selectedAgent: string
   onSelectAgent: (value: string) => void
 }

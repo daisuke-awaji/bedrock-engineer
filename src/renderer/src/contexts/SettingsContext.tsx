@@ -25,7 +25,7 @@ interface SettingsContextType {
   updateInferenceParams: (params: Partial<InferenceParameters>) => void
 
   // Project Settings
-  projectPath: string | undefined
+  projectPath: string
   setProjectPath: (path: string) => void
   selectDirectory: () => Promise<void>
 
@@ -60,7 +60,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     useState<InferenceParameters>(DEFAULT_INFERENCE_PARAMS)
 
   // Project Settings
-  const [projectPath, setProjectPath] = useState<string>()
+  const [projectPath, setProjectPath] = useState<string>('')
 
   // Tavily Search Settings
   const [tavilySearchApiKey, setStateApiKey] = useState<string>('')

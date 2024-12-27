@@ -4,16 +4,17 @@ import { MessageList } from './components/MessageList'
 import { InputForm } from './components/InputForm'
 import { ExampleScenarios } from './components/ExampleScenarios'
 import { useChat } from './hooks/useChat'
+import { AgentSelector } from './components/AgentSelector'
 import useSetting from '@renderer/hooks/useSetting'
 import useModal from '@renderer/hooks/useModal'
 import useScroll from '@renderer/hooks/useScroll'
-import prompts from '@renderer/prompts/prompts'
 import { useTranslation } from 'react-i18next'
 import { Agent, AgentScenarios } from './types'
 import MD from '../../components/Markdown/MD'
 import useIgnoreFileModal from './modals/useIgnoreFileModal'
 import useToolSettingModal from './modals/useToolSettingModal'
 import agents from './constants/agents'
+import { getAgentCoreRuleForToolUse } from '@renderer/prompts/prompts'
 
 export default function ChatPage() {
   const { t } = useTranslation()
@@ -31,6 +32,16 @@ export default function ChatPage() {
 
   const exampleScenarios: AgentScenarios = {
     softwareAgent: [
+      {
+        title: t('Latest News in this week'),
+        content: t('What news happened in the world this week ({{date}})', {
+          date: new Date(
+            new Date().getFullYear(),
+            new Date().getMonth(),
+            new Date().getDate() - 7
+          ).toLocaleDateString('ja')
+        })
+      },
       {
         title: t('Organizing folders'),
         content: t(
@@ -74,10 +85,9 @@ export default function ChatPage() {
     ]
   }
 
-  const systemPrompt = prompts.Chat[agent]({
-    workingDir: projectPath,
-    useTavilySearch: enabledTavilySearch
-  })
+  const currentAgent = agents.find((a) => a.value === agent)
+  const systemPrompt =
+    currentAgent?.system + '\n\n' + getAgentCoreRuleForToolUse({ workingDir: projectPath })
 
   const { enabledTools, ToolSettingModal, openModal: openToolSettingModal } = useToolSettingModal()
   const { messages, loading, handleSubmit } = useChat(
@@ -117,20 +127,7 @@ export default function ChatPage() {
 
         <div className="flex flex-col gap-4 h-full">
           {messages.length === 0 && agents.length > 1 ? (
-            <div className="justify-center flex flex-col items-center gap-2">
-              <span className="text-gray-400 text-xs">Select agent</span>
-              <select
-                className="w-[30vw] bg-gray-50 border border-gray-300 text-gray-600 text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-1.5"
-                value={agent}
-                onChange={(e) => setAgent(e.target.value)}
-              >
-                {agents.map((agent, index) => (
-                  <option key={index} value={agent.value}>
-                    {agent.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <AgentSelector agents={agents} selectedAgent={agent} onSelectAgent={setAgent} />
           ) : null}
 
           {messages.length === 0 ? (
@@ -141,9 +138,7 @@ export default function ChatPage() {
                 </div>
                 <h1 className="text-lg font-bold dark:text-white">Agent Chat</h1>
               </div>
-              <div className="text-gray-400">
-                {t(agents.find((a) => a.value === agent)?.description ?? '')}
-              </div>
+              <div className="text-gray-400">{currentAgent?.description}</div>
               <ExampleScenarios
                 scenarios={exampleScenarios[agent]}
                 onSelectScenario={setUserInput}

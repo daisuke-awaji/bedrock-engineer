@@ -58,9 +58,9 @@ const ChatPage = {
   'request error': 'Request error',
   'This AI agent understands software project structures and creates files and folders.':
     'This AI agent understands software project structures and creates files and folders.',
-  "Yesterday's News": "Yesterday's News",
-  'What news happened in the world yesterday ({{date}})':
-    'What news happened in the world yesterday ({{date}})',
+  'Latest News in this week': 'Latest News in this week',
+  'What news happened in the world this week ({{date}})':
+    'What news happened in the world this week ({{date}})',
   'Simple website': 'Simple website',
   'Create a cool website for an IT company using HTML, CSS, and JavaScript.':
     'Create a cool website for an IT company using HTML, CSS, and JavaScript.',

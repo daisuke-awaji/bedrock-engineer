@@ -18,6 +18,7 @@ export type Agent = {
   name: string
   value: string
   description: string
+  system: string
 }
 
 // Re-export types from agent-chat for convenience

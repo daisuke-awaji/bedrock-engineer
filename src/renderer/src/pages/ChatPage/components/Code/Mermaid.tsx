@@ -11,7 +11,12 @@ type Props = {
 mermaid.initialize({
   // syntax error が dom node に勝手に追加されないようにする
   // https://github.com/mermaid-js/mermaid/pull/4359
-  suppressErrorRendering: true
+  suppressErrorRendering: true,
+  securityLevel: 'loose', // SVGのレンダリングを許可
+  theme: document.documentElement.classList.contains('dark') ? 'dark' : 'default',
+  fontFamily: 'monospace', // フォントファミリーを指定
+  fontSize: 16, // フォントサイズを指定
+  htmlLabels: true // HTMLラベルを許可
 })
 
 export const MermaidCore: React.FC<Props> = (props) => {
@@ -42,7 +47,8 @@ export const MermaidCore: React.FC<Props> = (props) => {
     >
       <div
         ref={outputRef}
-        className="w-full h-full flex justify-center aligh-center items-center"
+        className="w-full h-full flex justify-center items-center overflow-visible"
+        style={{ minHeight: '100px' }}
       />
     </div>
   ) : null
@@ -70,7 +76,7 @@ export const Mermaid = ({ chart }: { chart: string }) => {
 
       {zoom && (
         <div
-          className="fixed left-1/2 top-1/2 z-[110] -translate-x-1/2 -translate-y-1/2 w-screen h-screen"
+          className="fixed left-1/2 top-1/2 z-[110] -translate-x-1/2 -translate-y-1/2 w-[100%] h-[100%]"
           onClick={() => {
             setZoom(false)
           }}

@@ -57,9 +57,9 @@ const ChatPage = {
     'Bedrock との通信でエラーが発生しました。しばらく待ってからもう一度お試しください。',
   'This AI agent understands software project structures and creates files and folders.':
     'ソフトウェアプロジェクトの構造を理解し、ファイルとフォルダーを作成します',
-  "Yesterday's News": '昨日のニュース',
-  'What news happened in the world yesterday ({{date}})':
-    '昨日（{{date}}）の日本のニュースは何がありましたか？',
+  'Latest News in this week': '今週のニュース',
+  'What news happened in the world this week ({{date}})':
+    '今週 {{date}}〜 の日本のニュースは何がありましたか？',
   'Simple website': 'シンプルなウェブサイト',
   'Create a cool website for an IT company using HTML, CSS, and JavaScript.':
     'HTML、CSS、JavaScriptを使用してIT企業向けのクールなウェブサイトを作成してください。',
