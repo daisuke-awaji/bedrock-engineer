@@ -1,6 +1,7 @@
 import Store from 'electron-store'
 import { LLM, InferenceParameters } from '../types/llm'
 import { AgentChatConfig, SendMsgKey, ToolState } from '../types/agent-chat'
+import { CustomAgent } from '../types/agent-chat'
 
 type StoreScheme = {
   projectPath?: string
@@ -28,6 +29,7 @@ type StoreScheme = {
     accessKeyId: string
     secretAccessKey: string
   }
+  customAgents: CustomAgent[]
 }
 
 const electronStore = new Store<StoreScheme>()
@@ -72,6 +74,12 @@ const init = () => {
       temperature: 0.5,
       topP: 0.9
     })
+  }
+
+  // Initialize custom agents if not present
+  const customAgents = electronStore.get('customAgents')
+  if (!customAgents) {
+    electronStore.set('customAgents', [])
   }
 }
 

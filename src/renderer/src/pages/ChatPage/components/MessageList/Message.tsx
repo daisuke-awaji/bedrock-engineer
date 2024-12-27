@@ -8,7 +8,6 @@ import CodeRenderer from '../Code/CodeRenderer'
 
 type ChatMessageProps = {
   message: Message
-  showCodePreview: boolean
 }
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {

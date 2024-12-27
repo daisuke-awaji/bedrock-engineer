@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react'
 import { SendMsgKey } from 'src/types/agent-chat'
 import { InferenceParameters, LLM } from 'src/types/llm'
 import { listModels } from '@renderer/lib/api'
+import { CustomAgent } from '@/types/agent-chat'
 
 const DEFAULT_INFERENCE_PARAMS: InferenceParameters = {
   maxTokens: 4096,
@@ -41,6 +42,10 @@ interface SettingsContextType {
   setAwsAccessKeyId: (accessKeyId: string) => void
   awsSecretAccessKey: string
   setAwsSecretAccessKey: (secretAccessKey: string) => void
+
+  // Custom Agents Settings
+  customAgents: CustomAgent[]
+  saveCustomAgents: (agents: CustomAgent[]) => void
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined)
@@ -69,6 +74,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [awsRegion, setStateAwsRegion] = useState<string>('')
   const [awsAccessKeyId, setStateAwsAccessKeyId] = useState<string>('')
   const [awsSecretAccessKey, setStateAwsSecretAccessKey] = useState<string>('')
+
+  // Custom Agents Settings
+  const [customAgents, setCustomAgents] = useState<CustomAgent[]>([])
 
   // Initialize all settings
   useEffect(() => {
@@ -106,6 +114,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setStateAwsRegion(awsConfig.region || '')
       setStateAwsAccessKeyId(awsConfig.accessKeyId || '')
       setStateAwsSecretAccessKey(awsConfig.secretAccessKey || '')
+    }
+
+    // Load Custom Agents
+    const savedAgents = window.store.get('customAgents')
+    if (savedAgents) {
+      setCustomAgents(savedAgents)
     }
   }, [])
 
@@ -183,6 +197,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     })
   }
 
+  const saveCustomAgents = (agents: CustomAgent[]) => {
+    setCustomAgents(agents)
+    window.store.set('customAgents', agents)
+  }
+
   const enabledTavilySearch = tavilySearchApiKey.length > 0
 
   const value = {
@@ -216,7 +235,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     awsAccessKeyId,
     setAwsAccessKeyId,
     awsSecretAccessKey,
-    setAwsSecretAccessKey
+    setAwsSecretAccessKey,
+
+    // Custom Agents Settings
+    customAgents,
+    saveCustomAgents
   }
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>

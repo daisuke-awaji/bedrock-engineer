@@ -45,7 +45,7 @@ export const TextArea: React.FC<TextAreaProps> = ({
         className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg ${disabled ? 'bg-gray-300' : 'bg-gray-50'} dark:text-white dark:bg-gray-800`}
         placeholder="Type your message... "
         disabled={disabled}
-        value={disabled ? 'Continue until the goal is achieved' : value}
+        value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
         required

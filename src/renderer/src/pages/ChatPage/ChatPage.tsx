@@ -8,86 +8,41 @@ import { AgentSelector } from './components/AgentSelector'
 import useSetting from '@renderer/hooks/useSetting'
 import useModal from '@renderer/hooks/useModal'
 import useScroll from '@renderer/hooks/useScroll'
-import { useTranslation } from 'react-i18next'
-import { Agent, AgentScenarios } from './types'
 import MD from '../../components/Markdown/MD'
 import useIgnoreFileModal from './modals/useIgnoreFileModal'
 import useToolSettingModal from './modals/useToolSettingModal'
+import useAgentSettingsModal from './modals/useAgentSettingsModal'
 import agents from './constants/agents'
-import { getAgentCoreRuleForToolUse } from '@renderer/prompts/prompts'
+import { FiSettings } from 'react-icons/fi'
+import { Agent } from '@/types/agent-chat'
 
 export default function ChatPage() {
-  const { t } = useTranslation()
   const [userInput, setUserInput] = useState('')
-  const [showCodePreview, setShowCodePreview] = useState(false)
-  const [agent, setAgent] = useState<Agent['value']>('softwareAgent')
+  const [agent, setAgent] = useState<Agent['id']>('softwareAgent')
+
+  const { currentLLM: llm, projectPath, selectDirectory, sendMsgKey } = useSetting()
 
   const {
-    currentLLM: llm,
-    projectPath,
-    selectDirectory,
-    enabledTavilySearch,
-    sendMsgKey
-  } = useSetting()
+    customAgents,
+    AgentSettingsModal,
+    openModal: openAgentSettingsModal
+  } = useAgentSettingsModal()
 
-  const exampleScenarios: AgentScenarios = {
-    softwareAgent: [
-      {
-        title: t('Latest News in this week'),
-        content: t('What news happened in the world this week ({{date}})', {
-          date: new Date(
-            new Date().getFullYear(),
-            new Date().getMonth(),
-            new Date().getDate() - 7
-          ).toLocaleDateString('ja')
-        })
-      },
-      {
-        title: t('Organizing folders'),
-        content: t(
-          'Extract only the png files contained in the {{projectPath}} folder and copy them to the {{imagePath}} folder.',
-          {
-            projectPath: projectPath,
-            imagePath: `${projectPath}/images`
-          }
-        )
-      },
-      {
-        title: t('Simple website'),
-        content: t('Create a cool website for an IT company using HTML, CSS, and JavaScript.')
-      },
-      {
-        title: t('Simple Web API'),
-        content: t('simpleWebAPIContent')
-      },
-      {
-        title: t('CDK Project'),
-        content: t('cdkProjectContent')
-      },
-      {
-        title: t('Understanding the source code'),
-        content: t('Understanding the source code content', {
-          projectPath: projectPath
-        })
-      },
-      {
-        title: t('Refactoring'),
-        content: t('RefactoringContent', {
-          projectPath: projectPath
-        })
-      },
-      {
-        title: t('Testcode'),
-        content: t('TestcodeContent', {
-          projectPath: projectPath
-        })
-      }
-    ]
-  }
+  // デフォルトのエージェントとカスタムエージェントを結合
+  const allAgents = [
+    ...agents,
+    ...customAgents.map(
+      (customAgent): Agent => ({
+        ...customAgent,
+        system: customAgent.system,
+        scenarios: customAgent.scenarios
+      })
+    )
+  ]
 
-  const currentAgent = agents.find((a) => a.value === agent)
-  const systemPrompt =
-    currentAgent?.system + '\n\n' + getAgentCoreRuleForToolUse({ workingDir: projectPath })
+  const currentAgent = allAgents.find((a) => a.id === agent)
+  const systemPrompt = currentAgent?.system || ''
+  const currentScenarios = currentAgent?.scenarios || []
 
   const { enabledTools, ToolSettingModal, openModal: openToolSettingModal } = useToolSettingModal()
   const { messages, loading, handleSubmit } = useChat(
@@ -110,26 +65,37 @@ export default function ChatPage() {
         className={`flex flex-col h-[calc(100vh-12rem)] overflow-y-auto mx-auto min-w-[320px] max-w-[2048px]`}
         id="main"
       >
-        <div className="flex justify-end">
-          <span
-            className="text-xs text-gray-400 font-thin cursor-pointer hover:text-gray-700"
-            onClick={openSystemPromptModal}
-          >
-            SYSTEM_PROMPT
-          </span>
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            {messages.length === 0 && allAgents.length > 1 ? (
+              <AgentSelector agents={allAgents} selectedAgent={agent} onSelectAgent={setAgent} />
+            ) : null}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={openAgentSettingsModal}
+              className="p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
+              title="Agent Settings"
+            >
+              <FiSettings className="w-5 h-5" />
+            </button>
+            <span
+              className="text-xs text-gray-400 font-thin cursor-pointer hover:text-gray-700"
+              onClick={openSystemPromptModal}
+            >
+              SYSTEM_PROMPT
+            </span>
+          </div>
         </div>
 
         <SystemPromptModal header="SYSTEM PROMPT" size="7xl">
           <MD>{systemPrompt}</MD>
         </SystemPromptModal>
+        <AgentSettingsModal />
         <ToolSettingModal />
         <IgnoreFileModal />
 
         <div className="flex flex-col gap-4 h-full">
-          {messages.length === 0 && agents.length > 1 ? (
-            <AgentSelector agents={agents} selectedAgent={agent} onSelectAgent={setAgent} />
-          ) : null}
-
           {messages.length === 0 ? (
             <div className="flex flex-col pt-12 h-full w-full justify-center items-center content-center align-center gap-1">
               <div className="flex flex-row gap-3 items-center mb-2">
@@ -139,14 +105,13 @@ export default function ChatPage() {
                 <h1 className="text-lg font-bold dark:text-white">Agent Chat</h1>
               </div>
               <div className="text-gray-400">{currentAgent?.description}</div>
-              <ExampleScenarios
-                scenarios={exampleScenarios[agent]}
-                onSelectScenario={setUserInput}
-              />
+              {currentAgent && (
+                <ExampleScenarios scenarios={currentScenarios} onSelectScenario={setUserInput} />
+              )}
             </div>
           ) : null}
 
-          <MessageList messages={messages} loading={loading} showCodePreview={showCodePreview} />
+          <MessageList messages={messages} loading={loading} />
         </div>
 
         <InputForm

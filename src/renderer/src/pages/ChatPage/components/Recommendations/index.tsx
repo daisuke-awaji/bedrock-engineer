@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import LoadingDotsLottie from '../../../WebsiteGeneratorPage/LoadingDots.lottie'
-import { MessageRecommendation } from '../../types'
+import { MessageRecommendation } from '../../../../../../types/types'
 
 type RecommendationsProps = {
   recommendations: MessageRecommendation[]

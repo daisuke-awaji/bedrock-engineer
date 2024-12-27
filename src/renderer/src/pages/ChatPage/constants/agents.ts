@@ -1,9 +1,9 @@
-import { Agent } from '../types'
+import { Agent } from '@/types/agent-chat'
 
 const agents: Agent[] = [
   {
     name: 'ソフトウェア開発',
-    value: 'softwareAgent',
+    id: 'softwareAgent',
     description:
       'This AI assistant understands software project structures and creates files and folders.',
     system: `You are AI assistant. You are an exceptional software developer with vast knowledge across multiple programming languages, frameworks, and best practices.
@@ -53,11 +53,50 @@ When you need current information or feel that a search could provide a better a
 When develop web application:
 - If you need an image, please refer to the appropriate one from pexels. You can also refer to other images if specified.
 - If you write HTML, don't use special characters such as &lt;.
-`
+`,
+    scenarios: [
+      {
+        title: 'Latest News in this week',
+        content: `What news happened in the world this week (${new Date(
+          new Date().getFullYear(),
+          new Date().getMonth(),
+          new Date().getDate() - 7
+        ).toLocaleDateString('ja')})`
+      },
+      {
+        title: 'Organizing folders',
+        content: `Extract only the png files contained in the {{projectPath}} folder and copy them to the {{projectPath}}/images folder.`
+      },
+      {
+        title: 'Simple website',
+        content: 'Create a cool website for an IT company using HTML, CSS, and JavaScript.'
+      },
+      {
+        title: 'Simple Web API',
+        content: 'Create a simple REST API using Node.js and Express with basic CRUD operations.'
+      },
+      {
+        title: 'CDK Project',
+        content:
+          'Create an AWS CDK project that deploys a Lambda function with an API Gateway endpoint.'
+      },
+      {
+        title: 'Understanding the source code',
+        content: `Please analyze the source code in {{projectPath}} and explain its structure and functionality.`
+      },
+      {
+        title: 'Refactoring',
+        content: `Please analyze the code in {{projectPath}} and suggest improvements or refactoring opportunities.`
+      },
+      {
+        title: 'Testcode',
+        content: `Please help me write test cases for the code in {{projectPath}}.`
+      }
+    ]
   },
   {
     name: 'プログラミングメンター',
-    value: 'codeBuddy',
+    id: 'codeBuddy',
     description: 'This AI mentor helps you with programming tasks and provides learning guidance.',
     system: `You are CodeBuddy, a friendly programming mentor designed to help beginners learn to code. Your approach is patient, encouraging, and focused on building confidence while teaching proper programming practices.
 
@@ -135,11 +174,53 @@ Remember to:
 - Break down complex tasks
 - Provide plenty of examples
 - Be patient with questions
-- Maintain a positive learning environment`
+- Maintain a positive learning environment`,
+    scenarios: [
+      {
+        title: 'Learning JavaScript Basics',
+        content:
+          'Please explain the basics of JavaScript (variables, data types, operators, control flow) with examples for a complete beginner.'
+      },
+      {
+        title: 'Understanding Functions',
+        content:
+          'Help me understand how functions work in JavaScript, including function declarations, expressions, parameters, and return values.'
+      },
+      {
+        title: 'DOM Manipulation',
+        content:
+          'Explain how to manipulate the Document Object Model (DOM) using JavaScript, including selecting elements, modifying content, and handling events.'
+      },
+      {
+        title: 'Debugging JavaScript',
+        content:
+          'I am having trouble with a piece of JavaScript code. Can you help me debug it and explain the errors?'
+      },
+      {
+        title: 'Building a Simple Web App',
+        content:
+          'Guide me through the process of building a simple web application using HTML, CSS, and JavaScript, step-by-step.'
+      },
+      {
+        title: 'Learning Python',
+        content:
+          'I am new to Python. Can you provide a gentle introduction to the language, covering basic syntax, data types, and control structures?'
+      },
+      {
+        title: 'Object-Oriented Programming',
+        content:
+          'Explain the concepts of object-oriented programming (OOP) using Python, including classes, objects, inheritance, and polymorphism.'
+      },
+      {
+        title: 'Data Visualization with Python',
+        content:
+          'Help me learn how to create basic data visualizations (e.g., line plots, scatter plots, bar charts) using Python libraries like Matplotlib or Plotly.'
+      }
+    ]
   },
   {
     name: 'プロダクトデザイナー',
-    value: 'productDesigner',
+    id: 'productDesigner',
     description: 'This AI designer helps you with product design and UX/UI tasks.',
     system: `You are a product designer AI assistant. You are an expert in creating user-friendly interfaces and engaging user experiences.
 
@@ -154,7 +235,49 @@ Your capabilities include:
 - Generating design tokens
 - Creating design specifications
 - Collaborating with developers and other stakeholders
-`
+`,
+    scenarios: [
+      {
+        title: 'Wireframing a Mobile App',
+        content:
+          'Create low-fidelity wireframes for a new mobile app that helps users track their daily water intake.'
+      },
+      {
+        title: 'Designing a Landing Page',
+        content:
+          'Design a modern and visually appealing landing page for a SaaS product, following best practices for conversion optimization.'
+      },
+      {
+        title: 'Improving User Experience',
+        content:
+          'Analyze the user experience of an existing e-commerce website and provide recommendations for improvements.'
+      },
+      {
+        title: 'Creating a Design System',
+        content:
+          'Develop a comprehensive design system for a large enterprise application, including components, patterns, and design tokens.'
+      },
+      {
+        title: 'Accessibility Evaluation',
+        content:
+          'Review the user interface of a web application and identify areas where accessibility can be improved for users with disabilities.'
+      },
+      {
+        title: 'Prototyping an Interface',
+        content:
+          'Create an interactive prototype for a new feature in a project management tool, focusing on usability and intuitive interactions.'
+      },
+      {
+        title: 'Design Handoff',
+        content:
+          'Prepare design specifications and assets for a new feature, ensuring a smooth handoff to the development team.'
+      },
+      {
+        title: 'Design Trend Research',
+        content:
+          'Investigate the latest design trends and provide recommendations on how to incorporate them into an upcoming product redesign.'
+      }
+    ]
   }
 ]
 

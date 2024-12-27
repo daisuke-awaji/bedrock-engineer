@@ -6,7 +6,6 @@ import AILogo from '@renderer/assets/images/icons/ai.svg'
 type MessageListProps = {
   messages: MessageType[]
   loading: boolean
-  showCodePreview: boolean
 }
 
 const LoadingMessage = () => (
@@ -31,11 +30,11 @@ const LoadingMessage = () => (
   </div>
 )
 
-export const MessageList: React.FC<MessageListProps> = ({ messages, loading, showCodePreview }) => {
+export const MessageList: React.FC<MessageListProps> = ({ messages, loading }) => {
   return (
     <div className="flex flex-col gap-4">
       {messages.map((message, index) => (
-        <ChatMessage key={index} message={message} showCodePreview={showCodePreview} />
+        <ChatMessage key={index} message={message} />
       ))}
       {loading && <LoadingMessage />}
     </div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { TextArea } from './TextArea'
 import { ToolSettings } from './ToolSettings'
 import { DirectorySelector } from './DirectorySelector'
-import { SendMsgKey } from '../../types'
+import { SendMsgKey } from '../../../../../../types/types'
 
 type InputFormProps = {
   userInput: string

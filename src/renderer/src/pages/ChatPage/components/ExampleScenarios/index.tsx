@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Scenario } from '../../types'
+import { Scenario } from '@/types/agent-chat'
 
 type ExampleScenariosProps = {
   scenarios?: Scenario[]
