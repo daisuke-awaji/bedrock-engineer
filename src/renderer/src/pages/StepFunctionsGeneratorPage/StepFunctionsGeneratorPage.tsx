@@ -10,9 +10,9 @@ import { Loader } from '../../components/Loader'
 import { useTranslation } from 'react-i18next'
 import useSetting from '@renderer/hooks/useSetting'
 import { motion } from 'framer-motion'
-import MD from '../ChatPage/MD'
 import useModal from '@renderer/hooks/useModal'
 import prompts from '@renderer/prompts/prompts'
+import MD from '@renderer/components/Markdown/MD'
 
 function StepFunctionsGeneratorPage() {
   const {

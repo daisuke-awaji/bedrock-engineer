@@ -34,7 +34,7 @@ import { useTranslation } from 'react-i18next'
 import useSetting from '@renderer/hooks/useSetting'
 import toast from 'react-hot-toast'
 import useModal from '@renderer/hooks/useModal'
-import MD from '../ChatPage/MD'
+import MD from '@renderer/components/Markdown/MD'
 
 export default function WebsiteGeneratorPage() {
   const [template, setTemplate] = useState<SupportedTemplate['id']>('react-ts')

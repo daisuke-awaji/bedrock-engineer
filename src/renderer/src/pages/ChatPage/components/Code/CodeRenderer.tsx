@@ -1,13 +1,12 @@
 import { useCallback } from 'react'
-import MD from './MD'
 import { Mermaid } from './Mermaid'
+import MD from '../../../../components/Markdown/MD'
 
 type CodeRendererProps = {
   text?: string
-  showCodePreview: boolean
 }
 const CodeRenderer = (props: CodeRendererProps) => {
-  const { text, showCodePreview } = props
+  const { text } = props
 
   const renderMarkdownAndCodePreview = useCallback(() => {
     const htmlMatches = text?.match(/```html([\s\S]*?)```/g) || []
@@ -15,7 +14,7 @@ const CodeRenderer = (props: CodeRendererProps) => {
 
     const match = htmlMatches.length || mermaidMatches.length
 
-    return showCodePreview && match ? (
+    return match ? (
       <div className="grid grid-cols-2 gap-2">
         <MD>{text}</MD>
         <div className="grid gap-2">
@@ -38,7 +37,7 @@ const CodeRenderer = (props: CodeRendererProps) => {
     ) : (
       <MD>{text}</MD>
     )
-  }, [text, showCodePreview])
+  }, [text])
 
   return <div className="w-full dark:text-white">{renderMarkdownAndCodePreview()}</div>
 }
