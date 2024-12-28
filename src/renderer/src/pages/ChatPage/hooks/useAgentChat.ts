@@ -221,6 +221,7 @@ export const useAgentChat = (
       toast.error(error.message || 'An error occurred')
     } finally {
       setLoading(false)
+      return
     }
   }
 
