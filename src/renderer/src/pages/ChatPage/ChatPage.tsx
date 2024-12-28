@@ -3,7 +3,7 @@ import AILogo from '../../assets/images/icons/ai.svg'
 import { MessageList } from './components/MessageList'
 import { InputForm } from './components/InputForm'
 import { ExampleScenarios } from './components/ExampleScenarios'
-import { useChat } from './hooks/useChat'
+import { useAgentChat } from './hooks/useAgentChat'
 import { AgentSelector } from './components/AgentSelector'
 import useSetting from '@renderer/hooks/useSetting'
 import useScroll from '@renderer/hooks/useScroll'
@@ -49,7 +49,7 @@ export default function ChatPage() {
   const currentScenarios = currentAgent?.scenarios || []
 
   const { enabledTools, ToolSettingModal, openModal: openToolSettingModal } = useToolSettingModal()
-  const { messages, loading, handleSubmit } = useChat(
+  const { messages, loading, handleSubmit } = useAgentChat(
     llm?.modelId,
     systemPrompt,
     enabledTools?.filter((tool) => tool.enabled)

@@ -1,7 +1,6 @@
-import { useState } from 'react'
-import { converse } from '@renderer/lib/api'
+import { useEffect, useState } from 'react'
 import useSetting from '@renderer/hooks/useSetting'
-import toast from 'react-hot-toast'
+import { useAgentChat } from './useAgentChat'
 
 const PROMPT_TEMPLATE = `You are an AI assistant that helps create a custom AI agent configuration.
 Based on the following agent name and description, generate a system prompt that would be appropriate for this agent.
@@ -72,54 +71,30 @@ Always strive to provide the most accurate, helpful, and detailed responses poss
 `
 
 export const useAgentGenerator = () => {
-  const [isGenerating, setIsGenerating] = useState(false)
+  const [result, setResult] = useState<string>()
   const { currentLLM: llm } = useSetting()
 
-  const generateAgentSystemPrompt = async (
-    name: string,
-    description: string
-  ): Promise<string | null> => {
-    setIsGenerating(true)
+  const { messages, loading, handleSubmit } = useAgentChat(llm?.modelId, PROMPT_TEMPLATE, [])
 
-    try {
-      const result = await converse({
-        modelId: llm.modelId,
-        system: [{ text: PROMPT_TEMPLATE }],
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                text: `Agent Name: ${name}
+  const generateAgentSystemPrompt = async (name: string, description: string) => {
+    const input = `Agent Name: ${name}
 Description: ${description}
 `
-              }
-            ]
-          }
-        ]
-      })
-
-      console.log('Generated agent config:', result)
-
-      const generatedText = result.output.message?.content[0]?.text
-      console.log('Generated text:', generatedText)
-
-      if (!generatedText) {
-        throw new Error('No response from AI')
-      }
-
-      return generatedText
-    } catch (error) {
-      console.error('Failed to generate agent config:', error)
-      toast.error('Failed to generate agent configuration. Please try again.')
-      return null
-    } finally {
-      setIsGenerating(false)
-    }
+    await handleSubmit(input)
   }
+
+  useEffect(() => {
+    if (messages.length > 1) {
+      const lastMessage = messages[messages.length - 1]
+      if (lastMessage.content) {
+        setResult(lastMessage.content[0].text)
+      }
+    }
+  }, [messages])
 
   return {
     generateAgentSystemPrompt,
-    isGenerating
+    generatedAgentSystemPrompt: result,
+    isGenerating: loading
   }
 }

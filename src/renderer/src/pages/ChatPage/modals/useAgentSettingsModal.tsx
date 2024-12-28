@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import useModal from '@renderer/hooks/useModal'
 import { CustomAgent } from '@/types/agent-chat'
 import { nanoid } from 'nanoid'
@@ -15,7 +15,8 @@ const AgentForm: React.FC<{
 }> = ({ agent, onSave, onCancel }) => {
   const { projectPath } = useSetting()
   const { t } = useTranslation()
-  const { generateAgentSystemPrompt, isGenerating } = useAgentGenerator()
+  const { generateAgentSystemPrompt, generatedAgentSystemPrompt, isGenerating } =
+    useAgentGenerator()
 
   const [formData, setFormData] = useState<CustomAgent>({
     id: agent?.id || `custom_agent_${nanoid(8)}`,
@@ -64,17 +65,17 @@ const AgentForm: React.FC<{
       return
     }
 
-    const generatedSystemPrompt = await generateAgentSystemPrompt(
-      formData.name,
-      formData.description
-    )
-    if (generatedSystemPrompt) {
+    await generateAgentSystemPrompt(formData.name, formData.description)
+  }
+
+  useEffect(() => {
+    if (generatedAgentSystemPrompt) {
       setFormData({
         ...formData,
-        system: generatedSystemPrompt
+        system: generatedAgentSystemPrompt
       })
     }
-  }
+  }, [generatedAgentSystemPrompt])
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -212,14 +213,14 @@ const AgentForm: React.FC<{
             value={newScenario.title}
             onChange={(e) => setNewScenario({ ...newScenario, title: e.target.value })}
             placeholder={t('scenarioTitlePlaceholder')}
-            className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="flex-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
           <input
             type="text"
             value={newScenario.content}
             onChange={(e) => setNewScenario({ ...newScenario, content: e.target.value })}
             placeholder={t('scenarioContentPlaceholder')}
-            className="flex-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
           <button
             type="button"

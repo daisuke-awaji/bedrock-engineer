@@ -12,8 +12,8 @@ import { useTranslation } from 'react-i18next'
 import { ToolState } from '@/types/agent-chat'
 import { AttachedImage } from '../components/InputForm/TextArea'
 
-export const useChat = (
-  modelId?: string,
+export const useAgentChat = (
+  modelId: string,
   systemPrompt?: string,
   enabledTools: ToolState[] = []
 ) => {
@@ -26,29 +26,33 @@ export const useChat = (
 
     let s = ''
     let input = ''
-    let role: ConversationRole | undefined = undefined
+    let role: ConversationRole | undefined = 'assistant' // 必ず初回は assistant から帰ってくる
     let toolUse: ToolUseBlockStart | undefined = undefined
     const content: ContentBlock[] = []
 
+    let messageStart = false
     try {
       for await (const json of generator) {
         if (json.messageStart) {
           role = json.messageStart.role
-        }
-
-        if (json.messageStop) {
+          messageStart = true
+        } else if (json.messageStop) {
+          // messageStart で始まらず、messageStop が連続して2回以上帰ってくる場合がある。これは Claude のバグな気がするが、、、念の為リトライしておく
+          if (!messageStart) {
+            console.warn('messageStop without messageStart')
+            console.log(messages)
+            await streamChat(props, currentMessages)
+            return
+          }
           setMessages([...currentMessages, { role, content }])
           currentMessages.push({ role, content })
+          console.log(currentMessages)
 
           const stopReason = json.messageStop.stopReason
           return stopReason
-        }
-
-        if (json.contentBlockStart) {
+        } else if (json.contentBlockStart) {
           toolUse = json.contentBlockStart.start?.toolUse
-        }
-
-        if (json.contentBlockStop) {
+        } else if (json.contentBlockStop) {
           if (toolUse) {
             let parseInput: string
             try {
@@ -64,9 +68,7 @@ export const useChat = (
             content.push({ text: s })
           }
           input = ''
-        }
-
-        if (json.contentBlockDelta) {
+        } else if (json.contentBlockDelta) {
           const text = json.contentBlockDelta.delta?.text
           if (text) {
             s = s + text
@@ -89,6 +91,8 @@ export const useChat = (
               }
             ])
           }
+        } else {
+          console.error('unexpected json:', json)
         }
       }
     } catch (error: any) {
@@ -141,14 +145,12 @@ export const useChat = (
     currentMessages.push(toolResultMessage)
     setMessages((prev) => [...prev, toolResultMessage])
 
-    if (!modelId) return
-
     const stopReason = await streamChat(
       {
         messages: currentMessages,
         modelId,
         system: systemPrompt ? [{ text: systemPrompt }] : undefined,
-        toolConfig: { tools: enabledTools }
+        toolConfig: enabledTools.length ? { tools: enabledTools } : undefined
       },
       currentMessages
     )
@@ -156,7 +158,8 @@ export const useChat = (
     if (stopReason === 'tool_use') {
       const lastMessage = currentMessages[currentMessages.length - 1].content
       if (lastMessage) {
-        return recursivelyExecTool(lastMessage, currentMessages)
+        await recursivelyExecTool(lastMessage, currentMessages)
+        return
       }
     }
   }
@@ -199,7 +202,7 @@ export const useChat = (
           messages: currentMessages,
           modelId,
           system: systemPrompt ? [{ text: systemPrompt }] : undefined,
-          toolConfig: { tools: enabledTools }
+          toolConfig: enabledTools.length ? { tools: enabledTools } : undefined
         },
         currentMessages
       )
