@@ -147,6 +147,9 @@ export async function pexelsSearch(query: string): Promise<string> {
   }
 }
 
+/**
+ * @deprecated 生成AIの出力が安定しないので使用しない
+ */
 export async function applyUnifiedDiff(filePath: string, unifiedDiff: string): Promise<string> {
   try {
     // ファイルの現在の内容を読み取る
@@ -184,8 +187,8 @@ export const executeTool = async (toolName: string | undefined, toolInput: any) 
       return copyFile(toolInput['source'], toolInput['destination'])
     case 'tavilySearch':
       return tavilySearch(toolInput['query'])
-    case 'applyUnifiedDiff':
-      return applyUnifiedDiff(toolInput['filePath'], toolInput['unifiedDiff'])
+    // case 'applyUnifiedDiff':
+    //   return applyUnifiedDiff(toolInput['filePath'], toolInput['unifiedDiff'])
     default:
       throw new Error(`Unknown tool: ${toolName}`)
   }
@@ -340,27 +343,27 @@ export const tools: Tool[] = [
         }
       }
     }
-  },
-  {
-    toolSpec: {
-      name: 'applyUnifiedDiff',
-      description: 'Apply a unified diff to a file, modifying its contents accordingly.',
-      inputSchema: {
-        json: {
-          type: 'object',
-          properties: {
-            filePath: {
-              type: 'string',
-              description: 'The path of the file to modify'
-            },
-            unifiedDiff: {
-              type: 'string',
-              description: 'The unified diff to apply to the file'
-            }
-          },
-          required: ['filePath', 'unifiedDiff']
-        }
-      }
-    }
   }
+  // {
+  //   toolSpec: {
+  //     name: 'applyUnifiedDiff',
+  //     description: 'Apply a unified diff to a file, modifying its contents accordingly.',
+  //     inputSchema: {
+  //       json: {
+  //         type: 'object',
+  //         properties: {
+  //           filePath: {
+  //             type: 'string',
+  //             description: 'The path of the file to modify'
+  //           },
+  //           unifiedDiff: {
+  //             type: 'string',
+  //             description: 'The unified diff to apply to the file'
+  //           }
+  //         },
+  //         required: ['filePath', 'unifiedDiff']
+  //       }
+  //     }
+  //   }
+  // }
 ]

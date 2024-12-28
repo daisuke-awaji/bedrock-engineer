@@ -1,3 +1,5 @@
+import { chatPage } from './chat'
+
 const HomePage = {
   'set your aws credential':
     'Bedrock に接続する設定をします。設定画面から AWS Credentials（リージョン、アクセスキー、シークレットアクセスキー）を入力してください。',
@@ -52,41 +54,6 @@ DynamoDB または SNS を使用する場合は、Lambda を使用せず、AWS �
 その後、注文ごとに SQS キューにメッセージを送信します。`
 }
 
-const ChatPage = {
-  'request error':
-    'Bedrock との通信でエラーが発生しました。しばらく待ってからもう一度お試しください。',
-  'This AI agent understands software project structures and creates files and folders.':
-    'ソフトウェアプロジェクトの構造を理解し、ファイルとフォルダーを作成します',
-  "Yesterday's News": '昨日のニュース',
-  'What news happened in the world yesterday ({{date}})':
-    '昨日（{{date}}）の日本のニュースは何がありましたか？',
-  'Simple website': 'シンプルなウェブサイト',
-  'Create a cool website for an IT company using HTML, CSS, and JavaScript.':
-    'HTML、CSS、JavaScriptを使用してIT企業向けのクールなウェブサイトを作成してください。',
-  'Organizing folders': 'フォルダの整理',
-  'Extract only the png files contained in the {{projectPath}} folder and copy them to the {{imagePath}} folder.':
-    '{{projectPath}}フォルダに含まれるpngファイルのみを抽出し、{{imagePath}}フォルダにコピーしてください。',
-  'Simple Web API': 'シンプルなAPI',
-  simpleWebAPIContent:
-    'Node.jsとExpressを使用して、ユーザーが"users"リソースに対してCRUD操作を実行できるシンプルなRESTful APIを作成してください。\nこのAPIはデータをメモリに保存します（このサンプルではデータベースは不要です）。',
-  'CDK Project': 'CDKプロジェクト',
-  cdkProjectContent:
-    'Lambda関数とAPI Gatewayをデプロイする新しい AWS CDK のプロジェクトを作成してください。Lambda関数は、API Gatewayを通じて呼び出されたときに単純な"Hello, World!"メッセージを返すようにしてください。',
-  'Understanding the source code': 'ソースコードの説明',
-  'Understanding the source code content':
-    '{{projectPath}} に含まれているアプリケーションのソースコードを理解して、図解しながら説明してください。',
-  Refactoring: 'リファクタリング',
-  RefactoringContent: `{{projectPath}} に含まれているアプリケーションのソースコードを理解して、リファクタリングの案を提示してください。
-  ソースコードの量が多い場合、どのソースコードや機能に対してリファクタリングするべきか、ユーザーに質問しながらステップを進めます。
-  リファクタリングの案を提示した後、ユーザーからのフィードバックを受け付け、リファクタリングを実行することを推奨します。
-  `,
-  Testcode: 'テストコード',
-  TestcodeContent: `{{projectPath}} に含まれているアプリケーションのソースコードを理解して、テストコードの案を提示してください。
-ソースコードの量が多い場合、どのソースコードや機能に対してテストコードを作成するべきか、ユーザーに質問しながらステップを進めます。
-テストコードの案を提示した後、ユーザーからのフィードバックを受け付け、作成することを推奨します。
-`
-}
-
 const WebsiteGeneratorPage = {
   addRecommend: 'おすすめの追加機能を考え中',
   ecSiteTitle: '観葉植物のECサイト',
@@ -123,8 +90,7 @@ const WebsiteGeneratorPage = {
 `,
   drawingGraphTitle: 'グラフの描画',
   drawingGraphValue: `ウェブサイト上で、次のデータをグラフで可視化してください。
-
-購入データ CSV ファイル
+購入データCSVファイル
 customer_id,product_id,purchase_date,purchase_amount
 C001,P001,2023-04-01,50.00
 C002,P002,2023-04-02,75.00
@@ -189,7 +155,7 @@ const ja = {
   ...HomePage,
   ...SettingPage,
   ...StepFunctionsGeneratorPage,
-  ...ChatPage,
+  ...chatPage.ja,
   ...WebsiteGeneratorPage
 }
 
