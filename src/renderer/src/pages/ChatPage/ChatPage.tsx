@@ -6,23 +6,26 @@ import { ExampleScenarios } from './components/ExampleScenarios'
 import { useChat } from './hooks/useChat'
 import { AgentSelector } from './components/AgentSelector'
 import useSetting from '@renderer/hooks/useSetting'
-import useModal from '@renderer/hooks/useModal'
 import useScroll from '@renderer/hooks/useScroll'
-import MD from '../../components/Markdown/MD'
 import useIgnoreFileModal from './modals/useIgnoreFileModal'
 import useToolSettingModal from './modals/useToolSettingModal'
 import useAgentSettingsModal from './modals/useAgentSettingsModal'
 import { useDefaultAgents } from './hooks/useDefaultAgents'
 import { FiSettings } from 'react-icons/fi'
-import { Agent } from '@/types/agent-chat'
 import { useTranslation } from 'react-i18next'
+import SystemPromptModal from './components/SystemPromptModal'
 
 export default function ChatPage() {
   const [userInput, setUserInput] = useState('')
-  const [agent, setAgent] = useState<Agent['id']>('softwareAgent')
   const { t } = useTranslation()
-
-  const { currentLLM: llm, projectPath, selectDirectory, sendMsgKey } = useSetting()
+  const {
+    currentLLM: llm,
+    projectPath,
+    selectDirectory,
+    sendMsgKey,
+    selectedAgentId,
+    setSelectedAgentId
+  } = useSetting()
 
   const {
     customAgents,
@@ -37,7 +40,7 @@ export default function ChatPage() {
     return [...baseAgents, ...customAgents]
   }, [baseAgents, customAgents])
 
-  const currentAgent = allAgents.find((a) => a.id === agent)
+  const currentAgent = allAgents.find((a) => a.id === selectedAgentId)
   const systemPrompt = currentAgent?.system.replace(/{{projectPath}}/g, projectPath) || ''
   const currentScenarios = currentAgent?.scenarios || []
 
@@ -54,7 +57,14 @@ export default function ChatPage() {
 
   const { scrollToBottom } = useScroll()
   const { openModal: openIgnoreModal, IgnoreFileModal } = useIgnoreFileModal()
-  const { Modal: SystemPromptModal, openModal: openSystemPromptModal } = useModal()
+
+  const [showSystemPrompt, setShowSystemPrompt] = useState(false)
+  const handleOpenSystemPrompt = () => {
+    setShowSystemPrompt(true)
+  }
+  const handleCloseSystemPrompt = () => {
+    setShowSystemPrompt(false)
+  }
 
   useEffect(() => {
     scrollToBottom()
@@ -66,7 +76,11 @@ export default function ChatPage() {
         <div className="flex justify-between items-center mb-4">
           <div>
             {messages.length === 0 && allAgents.length > 1 ? (
-              <AgentSelector agents={allAgents} selectedAgent={agent} onSelectAgent={setAgent} />
+              <AgentSelector
+                agents={allAgents}
+                selectedAgent={selectedAgentId}
+                onSelectAgent={setSelectedAgentId}
+              />
             ) : null}
           </div>
           <div className="flex items-center gap-2">
@@ -79,16 +93,18 @@ export default function ChatPage() {
             </button>
             <span
               className="text-xs text-gray-400 font-thin cursor-pointer hover:text-gray-700"
-              onClick={openSystemPromptModal}
+              onClick={handleOpenSystemPrompt}
             >
               SYSTEM_PROMPT
             </span>
           </div>
         </div>
 
-        <SystemPromptModal header={'SYSTEM PROMPT'} size="7xl">
-          <MD>{systemPrompt}</MD>
-        </SystemPromptModal>
+        <SystemPromptModal
+          isOpen={showSystemPrompt}
+          onClose={handleCloseSystemPrompt}
+          systemPrompt={systemPrompt}
+        />
         <AgentSettingsModal />
         <ToolSettingModal />
         <IgnoreFileModal />

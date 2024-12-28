@@ -30,6 +30,7 @@ type StoreScheme = {
     secretAccessKey: string
   }
   customAgents: CustomAgent[]
+  selectedAgentId: string
 }
 
 const electronStore = new Store<StoreScheme>()
@@ -80,6 +81,12 @@ const init = () => {
   const customAgents = electronStore.get('customAgents')
   if (!customAgents) {
     electronStore.set('customAgents', [])
+  }
+
+  // Initialize selected agent id if not present
+  const selectedAgentId = electronStore.get('selectedAgentId')
+  if (!selectedAgentId) {
+    electronStore.set('selectedAgentId', 'softwareAgent')
   }
 }
 

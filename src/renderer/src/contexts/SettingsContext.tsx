@@ -46,6 +46,10 @@ interface SettingsContextType {
   // Custom Agents Settings
   customAgents: CustomAgent[]
   saveCustomAgents: (agents: CustomAgent[]) => void
+
+  // Selected Agent Settings
+  selectedAgentId: string
+  setSelectedAgentId: (agentId: string) => void
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined)
@@ -77,6 +81,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Custom Agents Settings
   const [customAgents, setCustomAgents] = useState<CustomAgent[]>([])
+
+  // Selected Agent Settings
+  const [selectedAgentId, setSelectedAgentId] = useState<string>('softwareAgent')
 
   // Initialize all settings
   useEffect(() => {
@@ -120,6 +127,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const savedAgents = window.store.get('customAgents')
     if (savedAgents) {
       setCustomAgents(savedAgents)
+    }
+
+    // Load Selected Agent
+    const savedAgentId = window.store.get('selectedAgentId')
+    if (savedAgentId) {
+      setSelectedAgentId(savedAgentId)
     }
   }, [])
 
@@ -239,7 +252,14 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     // Custom Agents Settings
     customAgents,
-    saveCustomAgents
+    saveCustomAgents,
+
+    // Selected Agent Settings
+    selectedAgentId,
+    setSelectedAgentId: (agentId: string) => {
+      setSelectedAgentId(agentId)
+      window.store.set('selectedAgentId', agentId)
+    }
   }
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>
