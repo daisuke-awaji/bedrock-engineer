@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { TextArea } from './TextArea'
 import { ToolSettings } from './ToolSettings'
 import { DirectorySelector } from './DirectorySelector'
-import { SendMsgKey } from '../../../../../../types/types'
+import { SendMsgKey } from '@/types/agent-chat'
 
 type InputFormProps = {
   userInput: string
@@ -47,8 +47,8 @@ export const InputForm: React.FC<InputFormProps> = ({
         <TextArea
           value={userInput}
           onChange={onChange}
-          onSubmit={() => onSubmit(userInput)}
           disabled={loading}
+          onSubmit={() => onSubmit(userInput)}
           isComposing={isComposing}
           setIsComposing={setIsComposing}
           sendMsgKey={sendMsgKey}

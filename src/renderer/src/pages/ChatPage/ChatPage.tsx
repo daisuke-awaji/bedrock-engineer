@@ -38,7 +38,7 @@ export default function ChatPage() {
   }, [baseAgents, customAgents])
 
   const currentAgent = allAgents.find((a) => a.id === agent)
-  const systemPrompt = currentAgent?.system || ''
+  const systemPrompt = currentAgent?.system.replace(/{{projectPath}}/g, projectPath) || ''
   const currentScenarios = currentAgent?.scenarios || []
 
   const { enabledTools, ToolSettingModal, openModal: openToolSettingModal } = useToolSettingModal()
@@ -47,6 +47,10 @@ export default function ChatPage() {
     systemPrompt,
     enabledTools?.filter((tool) => tool.enabled)
   )
+  const onSubmit = (input: string) => {
+    handleSubmit(input)
+    setUserInput('')
+  }
 
   const { scrollToBottom } = useScroll()
   const { openModal: openIgnoreModal, IgnoreFileModal } = useIgnoreFileModal()
@@ -113,7 +117,7 @@ export default function ChatPage() {
           loading={loading}
           projectPath={projectPath}
           sendMsgKey={sendMsgKey}
-          onSubmit={handleSubmit}
+          onSubmit={onSubmit}
           onChange={setUserInput}
           onOpenToolSettings={openToolSettingModal}
           onSelectDirectory={selectDirectory}
