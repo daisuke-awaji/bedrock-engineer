@@ -1,5 +1,6 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useState, useMemo } from 'react'
 import { FiLoader, FiSend, FiX } from 'react-icons/fi'
+import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 
 export type AttachedImage = {
@@ -27,14 +28,85 @@ export const TextArea: React.FC<TextAreaProps> = ({
   setIsComposing,
   sendMsgKey = 'Enter'
 }) => {
+  const { t } = useTranslation()
   const [dragActive, setDragActive] = useState(false)
   const [attachedImages, setAttachedImages] = useState<AttachedImage[]>([])
 
+  // プラットフォームに応じた Modifire キーの表示を決定
+  const modifierKey = useMemo(() => {
+    const isMac = navigator.platform.toLowerCase().includes('mac')
+    return isMac ? '⌘' : 'Ctrl'
+  }, [])
+
+  // プレースホルダーテキストの生成
+  const placeholder = useMemo(() => {
+    return t('textarea.placeholder', { modifier: modifierKey })
+  }, [t, modifierKey])
+
+  const validateAndProcessImage = useCallback(
+    (file: File) => {
+      if (file.size > 3.75 * 1024 * 1024) {
+        toast.error(t('textarea.imageValidation.tooLarge'))
+        return
+      }
+
+      const reader = new FileReader()
+      reader.onload = () => {
+        const base64 = reader.result as string
+        const img = new Image()
+        img.onload = () => {
+          if (img.width > 8000 || img.height > 8000) {
+            toast.error(t('textarea.imageValidation.dimensionTooLarge'))
+            return
+          }
+          setAttachedImages((prev) => [
+            ...prev,
+            {
+              file,
+              preview: base64,
+              base64: base64.split(',')[1]
+            }
+          ])
+        }
+        img.src = base64
+      }
+      reader.readAsDataURL(file)
+    },
+    [t]
+  )
+
+  const handlePaste = useCallback(
+    async (e: React.ClipboardEvent) => {
+      const items = e.clipboardData?.items
+      if (!items) return
+
+      const imageItems = Array.from(items).filter((item) => item.type.indexOf('image') !== -1)
+
+      if (imageItems.length === 0) return
+
+      if (attachedImages.length + imageItems.length > 20) {
+        toast.error(t('textarea.imageValidation.tooManyImages'))
+        return
+      }
+
+      for (const item of imageItems) {
+        const file = item.getAsFile()
+        if (!file) continue
+
+        const fileType = file.type.split('/')[1].toLowerCase()
+        if (!['png', 'jpeg', 'jpg', 'gif', 'webp'].includes(fileType)) {
+          toast.error(t('textarea.imageValidation.unsupportedFormat', { format: fileType }))
+          continue
+        }
+
+        validateAndProcessImage(file)
+      }
+    },
+    [attachedImages.length, validateAndProcessImage, t]
+  )
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.shiftKey) {
-      return
-    }
-    if (isComposing) {
+    if (e.shiftKey || isComposing) {
       return
     }
 
@@ -50,7 +122,7 @@ export const TextArea: React.FC<TextAreaProps> = ({
   const handleSubmit = () => {
     if (value.trim() || attachedImages.length > 0) {
       onSubmit(value, attachedImages)
-      setAttachedImages([]) // Reset images after submit
+      setAttachedImages([])
     }
   }
 
@@ -72,47 +144,21 @@ export const TextArea: React.FC<TextAreaProps> = ({
 
       const files = Array.from(e.dataTransfer.files).filter((file) => {
         const type = file.type.split('/')[1].toLowerCase()
-        return ['png', 'jpeg', 'jpg', 'gif', 'webp'].includes(type)
+        if (!['png', 'jpeg', 'jpg', 'gif', 'webp'].includes(type)) {
+          toast.error(t('textarea.imageValidation.unsupportedFormat', { format: type }))
+          return false
+        }
+        return true
       })
 
-      // Check if adding new images would exceed the 5 image limit
-      if (attachedImages.length + files.length > 5) {
-        toast.error('Maximum of 5 images allowed')
+      if (attachedImages.length + files.length > 20) {
+        toast.error(t('textarea.imageValidation.tooManyImages'))
         return
       }
 
-      files.forEach((file) => {
-        // Check file size (3.75MB limit)
-        if (file.size > 3.75 * 1024 * 1024) {
-          toast.error(`Image ${file.name} is too large. Maximum size is 3.75MB`)
-          return
-        }
-
-        const reader = new FileReader()
-        reader.onload = () => {
-          const base64 = reader.result as string
-          // Create image element to check dimensions
-          const img = new Image()
-          img.onload = () => {
-            if (img.width > 8000 || img.height > 8000) {
-              toast.error(`Image ${file.name} dimensions exceed 8000px limit`)
-              return
-            }
-            setAttachedImages((prev) => [
-              ...prev,
-              {
-                file,
-                preview: base64,
-                base64: base64.split(',')[1] // Remove data URL prefix
-              }
-            ])
-          }
-          img.src = base64
-        }
-        reader.readAsDataURL(file)
-      })
+      files.forEach(validateAndProcessImage)
     },
-    [attachedImages.length]
+    [attachedImages.length, validateAndProcessImage, t]
   )
 
   const removeImage = (index: number) => {
@@ -121,19 +167,19 @@ export const TextArea: React.FC<TextAreaProps> = ({
 
   return (
     <div className="relative w-full">
-      {/* Image Previews */}
       {attachedImages.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-2">
           {attachedImages.map((image, index) => (
             <div key={index} className="relative group">
               <img
                 src={image.preview}
-                alt={`Preview ${index}`}
+                alt={t('textarea.aria.removeImage')}
                 className="w-20 h-20 object-cover rounded-lg"
               />
               <button
                 onClick={() => removeImage(index)}
                 className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                aria-label={t('textarea.aria.removeImage')}
               >
                 <FiX size={14} />
               </button>
@@ -142,7 +188,6 @@ export const TextArea: React.FC<TextAreaProps> = ({
         </div>
       )}
 
-      {/* Textarea with drag and drop */}
       <div
         className={`relative ${dragActive ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
         onDragEnter={handleDrag}
@@ -153,10 +198,11 @@ export const TextArea: React.FC<TextAreaProps> = ({
           className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 dark:text-white dark:bg-gray-800 ${
             dragActive ? 'border-blue-500' : ''
           }`}
-          placeholder="Type your message or drag & drop images here..."
+          placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => !disabled && handleKeyDown(e)}
+          onPaste={handlePaste}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
@@ -170,6 +216,7 @@ export const TextArea: React.FC<TextAreaProps> = ({
           className={`absolute end-2.5 bottom-2.5 rounded-lg ${
             disabled ? '' : 'hover:bg-gray-200'
           } px-2 py-2 dark:text-white dark:hover:bg-gray-700`}
+          aria-label={disabled ? t('textarea.aria.sending') : t('textarea.aria.sendMessage')}
         >
           {disabled ? (
             <FiLoader className="text-xl animate-spin" />
