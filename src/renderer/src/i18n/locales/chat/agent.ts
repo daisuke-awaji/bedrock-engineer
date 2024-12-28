@@ -38,7 +38,11 @@ export const agent = {
       'This AI assistant understands software project structures and creates files and folders.',
     'codeBuddy.description':
       'This AI mentor helps you with programming tasks and provides learning guidance.',
-    'productDesigner.description': 'This AI designer helps you with product design and UX/UI tasks.'
+    'productDesigner.description':
+      'This AI designer helps you with product design and UX/UI tasks.',
+    pleaseEnterNameAndDescription: 'Please enter the agent name and description',
+    generating: 'Generating...',
+    autoGenerate: 'Auto-generate System Prompt'
   },
   ja: {
     nameDescription:
@@ -77,7 +81,12 @@ export const agent = {
     systemPromptInfo: `エージェントの振る舞いを定義するシステムプロンプトを入力してください。どのような役割を果たし、どのように応答するべきかを詳細に記述します。作業するプロジェクトのディレクトリパスを明確に指示することを推奨します。`,
     'softwareAgent.description':
       'ソフトウェアプロジェクトの構造を理解し、ファイルやフォルダを作成します。',
-    'codeBuddy.description': 'プログラミングタスクのサポートと学習ガイダンスを提供します。',
-    'productDesigner.description': 'プロダクトデザインや UX/UI タスクをサポートします。'
+    'codeBuddy.description':
+      '初心者に優しいプログラミングメンターとして、プログラミングタスクのサポートと学習ガイダンスを提供します。',
+    'productDesigner.description':
+      'ユーザーインターフェースとUXの専門家として、魅力的で使いやすいデザインを提案します。',
+    pleaseEnterNameAndDescription: 'エージェント名と説明を入力してください',
+    generating: '生成中...',
+    autoGenerate: 'System Prompt を自動生成する'
   }
 }

@@ -58,10 +58,7 @@ export default function ChatPage() {
 
   return (
     <React.Fragment>
-      <div
-        className={`flex flex-col h-[calc(100vh-12rem)] overflow-y-auto mx-auto min-w-[320px] max-w-[2048px]`}
-        id="main"
-      >
+      <div className={`flex flex-col h-[calc(100vh-11rem)] overflow-y-auto`} id="main">
         <div className="flex justify-between items-center mb-4">
           <div>
             {messages.length === 0 && allAgents.length > 1 ? (

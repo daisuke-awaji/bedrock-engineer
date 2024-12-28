@@ -2,9 +2,11 @@ import React, { useState } from 'react'
 import useModal from '@renderer/hooks/useModal'
 import { CustomAgent } from '@/types/agent-chat'
 import { nanoid } from 'nanoid'
-import { FiPlus, FiTrash, FiEdit2 } from 'react-icons/fi'
+import { FiPlus, FiTrash, FiEdit2, FiZap } from 'react-icons/fi'
 import useSetting from '@renderer/hooks/useSetting'
 import { useTranslation } from 'react-i18next'
+import { useAgentGenerator } from '../hooks/useAgentGenerator'
+import toast from 'react-hot-toast'
 
 const AgentForm: React.FC<{
   agent?: CustomAgent
@@ -13,6 +15,7 @@ const AgentForm: React.FC<{
 }> = ({ agent, onSave, onCancel }) => {
   const { projectPath } = useSetting()
   const { t } = useTranslation()
+  const { generateAgentSystemPrompt, isGenerating } = useAgentGenerator()
 
   const [formData, setFormData] = useState<CustomAgent>({
     id: agent?.id || `custom_agent_${nanoid(8)}`,
@@ -53,6 +56,24 @@ const AgentForm: React.FC<{
     return text.replace(/{{projectPath}}/g, path)
   }
 
+  const handleAutoGenerate = async () => {
+    if (!formData.name || !formData.description) {
+      toast.error(t('pleaseEnterNameAndDescription'))
+      return
+    }
+
+    const generatedSystemPrompt = await generateAgentSystemPrompt(
+      formData.name,
+      formData.description
+    )
+    if (generatedSystemPrompt) {
+      setFormData({
+        ...formData,
+        system: generatedSystemPrompt
+      })
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
@@ -78,6 +99,17 @@ const AgentForm: React.FC<{
           required
           placeholder={t('descriptionPlaceholder')}
         />
+      </div>
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={handleAutoGenerate}
+          disabled={isGenerating}
+          className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+        >
+          <FiZap />
+          <span>{isGenerating ? t('generating') : t('autoGenerate')}</span>
+        </button>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">System Prompt</label>
@@ -139,10 +171,16 @@ const AgentForm: React.FC<{
                 readOnly
                 className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               />
+              <input
+                type="text"
+                value={scenario.content}
+                readOnly
+                className="flex-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              />
               <button
                 type="button"
                 onClick={() => removeScenario(index)}
-                title={t('deleteAgent')}
+                title={t('deleteScenario')}
                 className="p-2 text-red-600 hover:text-red-800"
               >
                 <FiTrash />
@@ -163,7 +201,7 @@ const AgentForm: React.FC<{
             value={newScenario.content}
             onChange={(e) => setNewScenario({ ...newScenario, content: e.target.value })}
             placeholder={t('scenarioContentPlaceholder')}
-            className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="flex-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
           <button
             type="button"
