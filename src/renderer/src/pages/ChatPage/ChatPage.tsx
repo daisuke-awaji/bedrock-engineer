@@ -40,8 +40,11 @@ export default function ChatPage() {
     return [...baseAgents, ...customAgents]
   }, [baseAgents, customAgents])
 
+  const yyyyMMdd = new Date().toISOString().slice(0, 10)
   const currentAgent = allAgents.find((a) => a.id === selectedAgentId)
-  const systemPrompt = currentAgent?.system.replace(/{{projectPath}}/g, projectPath) || ''
+  const systemPrompt =
+    currentAgent?.system.replace(/{{projectPath}}/g, projectPath).replace(/{{date}}/g, yyyyMMdd) ||
+    ''
   const currentScenarios = currentAgent?.scenarios || []
 
   const { enabledTools, ToolSettingModal, openModal: openToolSettingModal } = useToolSettingModal()

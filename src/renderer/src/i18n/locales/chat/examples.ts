@@ -1,9 +1,6 @@
 export const examples = {
   en: {
     // Software Development Agent Scenarios
-    'Latest News in this week': 'Latest News in this week',
-    'What news happened in the world this week':
-      'What news happened in the world this week ({{date}})',
     'Simple website': 'Simple website',
     'Simple website description':
       'Create a cool website for an IT company using HTML, CSS, and JavaScript.',
@@ -78,10 +75,6 @@ export const examples = {
       'Investigate the latest design trends and provide recommendations on how to incorporate them into an upcoming product redesign.'
   },
   ja: {
-    // ソフトウェア開発エージェントのシナリオ
-    'Latest News in this week': '今週のニュース',
-    'What news happened in the world this week':
-      '今週 {{date}}〜 の日本のニュースは何がありましたか？',
     'Simple website': 'シンプルなウェブサイト',
     'Simple website description':
       'HTML、CSS、JavaScriptを使用してIT企業向けのクールなウェブサイトを作成してください。',

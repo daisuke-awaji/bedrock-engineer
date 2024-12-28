@@ -1,5 +1,8 @@
 export const agent = {
   en: {
+    'What is Amazon Bedrock': 'What is Amazon Bedrock',
+    'What is Amazon Bedrock description':
+      'Search for the latest information about Amazon Bedrock and summarize what it can do in a concise manner.',
     nameDescription:
       'Enter the display name of the agent (e.g., Programming Tutor, Technical Document Writer)',
     descriptionDescription: 'Briefly describe the role and characteristics of this agent.',
@@ -42,9 +45,13 @@ export const agent = {
       'This AI designer helps you with product design and UX/UI tasks.',
     pleaseEnterNameAndDescription: 'Please enter the agent name and description',
     generating: 'Generating...',
-    autoGenerate: 'Auto-generate System Prompt'
+    autoGenerate: 'Auto-generate System Prompt',
+    datePlaceholder: 'Today e.g., 2022-01-01'
   },
   ja: {
+    'What is Amazon Bedrock': 'Amazon Bedrock とは',
+    'What is Amazon Bedrock description':
+      'Amazon Bedrock に関する最新情報を検索して、何ができるか簡潔にまとめてください。',
     nameDescription:
       'エージェントの表示名を入力してください（例：プログラミング講師、技術ドキュメント作成者）',
     descriptionDescription: 'このエージェントの役割や特徴を簡潔に説明してください。',
@@ -87,6 +94,7 @@ export const agent = {
       'ユーザーインターフェースとUXの専門家として、魅力的で使いやすいデザインを提案します。',
     pleaseEnterNameAndDescription: 'エージェント名と説明を入力してください',
     generating: '生成中...',
-    autoGenerate: 'System Prompt を自動生成する'
+    autoGenerate: 'System Prompt を自動生成する',
+    datePlaceholder: '本日日付 （例：2022-01-01）'
   }
 }

@@ -35,6 +35,7 @@ When asked to make edits or improvements:
 
 When you use search:
 - Make sure you use the best query to get the most accurate and up-to-date information
+- Try creating and searching at least three different queries to get a better idea of ​​the search results.
 
 Be sure to consider the type of project (e.g., Python, JavaScript, web application) when determining the appropriate structure and files to include.
 
@@ -187,7 +188,7 @@ When use tools:
 
 // ソフトウェア開発者のシナリオ定義
 const getSoftwareAgentScenarios = (): Scenario[] => [
-  { title: 'Latest News in this week', content: '' },
+  { title: 'What is Amazon Bedrock', content: '' },
   { title: 'Organizing folders', content: '' },
   { title: 'Simple website', content: '' },
   { title: 'Simple Web API', content: '' },
@@ -230,7 +231,9 @@ export const useDefaultAgents = () => {
     (text: string): string => {
       if (!text) return text
       const path = projectPath || t('no project path')
-      return text.replace(/{{projectPath}}/g, path)
+      const yyyyMMdd = new Date().toISOString().slice(0, 10)
+      // 1 week ago
+      return text.replace(/{{projectPath}}/g, path).replace(/{{date}}/g, yyyyMMdd)
     },
     [projectPath, t]
   )

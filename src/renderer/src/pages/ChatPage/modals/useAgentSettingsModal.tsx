@@ -53,7 +53,9 @@ const AgentForm: React.FC<{
   const getPreviewText = (text: string): string => {
     if (!text) return text
     const path = projectPath || t('noProjectPath')
-    return text.replace(/{{projectPath}}/g, path)
+    return text
+      .replace(/{{projectPath}}/g, path)
+      .replace(/{{date}}/g, new Date().toISOString().slice(0, 10))
   }
 
   const handleAutoGenerate = async () => {
@@ -132,6 +134,21 @@ const AgentForm: React.FC<{
                 {t('copy')}
               </button>
             </div>
+            <div className="mt-1 flex items-center space-x-2">
+              <code className="text-xs bg-white px-2 py-1 rounded border border-gray-300">
+                {`{{date}}`}
+              </code>
+              <span className="text-xs text-gray-500">{t('datePlaceholder')}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText('{{date}}')
+                }}
+                className="text-xs text-blue-600 hover:text-blue-800"
+              >
+                {t('copy')}
+              </button>
+            </div>
           </div>
         </div>
         <textarea
@@ -141,23 +158,24 @@ const AgentForm: React.FC<{
           required
           placeholder={t('systemPromptPlaceholder')}
         />
-        {formData.system.includes('{{projectPath}}') && (
-          <div className="mt-2">
-            <button
-              type="button"
-              onClick={() => setShowPreview(!showPreview)}
-              className="text-sm text-blue-600 hover:text-blue-800"
-            >
-              {showPreview ? t('hidePreview') : t('showPreview')}
-            </button>
-            {showPreview && (
-              <div className="mt-2 p-4 bg-gray-50 rounded-md border border-gray-200">
-                <p className="text-xs text-gray-600 mb-2">{t('previewResult')}</p>
-                <p className="text-sm whitespace-pre-wrap">{getPreviewText(formData.system)}</p>
-              </div>
-            )}
-          </div>
-        )}
+        {formData.system.includes('{{projectPath}}') ||
+          (formData.system.includes('{{date}}') && (
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={() => setShowPreview(!showPreview)}
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
+                {showPreview ? t('hidePreview') : t('showPreview')}
+              </button>
+              {showPreview && (
+                <div className="mt-2 p-4 bg-gray-50 rounded-md border border-gray-200">
+                  <p className="text-xs text-gray-600 mb-2">{t('previewResult')}</p>
+                  <p className="text-sm whitespace-pre-wrap">{getPreviewText(formData.system)}</p>
+                </div>
+              )}
+            </div>
+          ))}
       </div>
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">Scenarios {t('optional')}</label>
