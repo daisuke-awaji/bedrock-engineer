@@ -1,3 +1,5 @@
+import { chatPage } from './chat'
+
 const HomePage = {
   'set your aws credential':
     'Set up the Amazon Bedrock configuration. Enter your AWS Credentials (region, access key, secret access key) from the settings screen.',
@@ -38,56 +40,11 @@ const StepFunctionsGeneratorPage = {
   'Please implement a workflow that combines the following seven types':
     'Please implement a workflow that combines the following seven types',
   'Create Nested Workflow example': 'Create Nested Workflow example',
-  'Implement the workflow for user registration processing': `Implement the workflow for user registration processing
-    First, use Lambda to verify the input contents.
-
-Next, if there is no problem with the input content, save the information to Dynamodb.
-Finally, send an email. The email uses AMAAON SNS.
-
-If Lambda's input content fails, dynamodb will not save information and will notify the user by e -mail.
-
-When using dynamodb or SNS, do not use Lambda and weigh AWS native integration.
-`,
+  'Implement the workflow for user registration processing': `Implement the workflow for user registration processing`,
   'Use the distributed map to repeat the row of the CSV file generated in S3': `Use the distributed map to repeat the row of the CSV file generated in S3
 Each line has orders and shipping information.
 The distributed map processor repeats the batch of these rows and uses the Lambda function to detect the delayed order.
 After that, send a message to the SQS queue for each delayed order.`
-}
-
-const ChatPage = {
-  'request error': 'Request error',
-  'This AI agent understands software project structures and creates files and folders.':
-    'This AI agent understands software project structures and creates files and folders.',
-  'Latest News in this week': 'Latest News in this week',
-  'What news happened in the world this week ({{date}})':
-    'What news happened in the world this week ({{date}})',
-  'Simple website': 'Simple website',
-  'Create a cool website for an IT company using HTML, CSS, and JavaScript.':
-    'Create a cool website for an IT company using HTML, CSS, and JavaScript.',
-  'Organizing folders': 'Organizing folders',
-  'Extract only the png files contained in the {{projectPath}} folder and copy them to the {{imagePath}} folder.':
-    'Extract only the png files contained in the {{projectPath}} folder and copy them to the {{imagePath}} folder.',
-  'Simple Web API': 'Simple Web API',
-  simpleWebAPIContent:
-    'Create a simple RESTful API using Node.js and Express that allows users to perform CRUD operations on a "users" resource. The API should store data in memory (no database required for this example).',
-  'CDK Project': 'CDK Project',
-  cdkProjectContent:
-    'Create a new CDK project that deploys a Lambda function and an API Gateway. The Lambda function should return a simple "Hello, World!" message when invoked through the API Gateway.',
-  'Understanding the source code': 'Understanding the source code',
-  'Understanding the source code content':
-    'Understand the source code of the application contained in {{projectPath}} and explain (with illustrations) the software architecture and representative functionality.',
-  Refactoring: 'Refactoring',
-  RefactoringContent: `Understand the source code of the application contained in {{projectPath}} and propose refactoring suggestions.
-
-If there is a large amount of source code, proceed through the steps while asking the user which source code or functions should be refactored.
-After proposing refactoring suggestions, we recommend accepting feedback from the user and then carrying out the refactoring.
-    `,
-  Testcode: 'Write the test code',
-  TestcodeContent: `Understand the source code of the application contained in {{projectPath}} and propose test code.
-
-If there is a large amount of source code, proceed by asking the user which source code or functions should have test code created for them.
-After proposing the test code, we recommend that you accept feedback from the user and then create it.
-  `
 }
 
 const WebsiteGeneratorPage = {
@@ -187,7 +144,7 @@ const en = {
   ...HomePage,
   ...SettingPage,
   ...StepFunctionsGeneratorPage,
-  ...ChatPage,
+  ...chatPage.en,
   ...WebsiteGeneratorPage
 }
 

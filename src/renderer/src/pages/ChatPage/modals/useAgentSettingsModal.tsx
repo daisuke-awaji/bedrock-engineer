@@ -4,21 +4,25 @@ import { CustomAgent } from '@/types/agent-chat'
 import { nanoid } from 'nanoid'
 import { FiPlus, FiTrash, FiEdit2 } from 'react-icons/fi'
 import useSetting from '@renderer/hooks/useSetting'
+import { useTranslation } from 'react-i18next'
 
 const AgentForm: React.FC<{
   agent?: CustomAgent
   onSave: (agent: CustomAgent) => void
   onCancel: () => void
 }> = ({ agent, onSave, onCancel }) => {
+  const { projectPath } = useSetting()
+  const { t } = useTranslation()
+
   const [formData, setFormData] = useState<CustomAgent>({
-    id: agent?.id || `custom_agent_${nanoid(8)}`, // 自動生成された識別子
+    id: agent?.id || `custom_agent_${nanoid(8)}`,
     name: agent?.name || '',
     description: agent?.description || '',
     system: agent?.system || '',
     scenarios: agent?.scenarios || [],
     isCustom: true
   })
-
+  const [showPreview, setShowPreview] = useState(false)
   const [newScenario, setNewScenario] = useState({ title: '', content: '' })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -43,60 +47,89 @@ const AgentForm: React.FC<{
     })
   }
 
+  const getPreviewText = (text: string): string => {
+    if (!text) return text
+    const path = projectPath || t('noProjectPath')
+    return text.replace(/{{projectPath}}/g, path)
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700">Name</label>
-        <p className="text-xs text-gray-500 mb-1">
-          エージェントの表示名を入力してください。（例：プログラミング講師、技術ドキュメント作成者）
-        </p>
+        <p className="text-xs text-gray-500 mb-1">{t('nameDescription')}</p>
         <input
           type="text"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           required
-          placeholder="例: プログラミングメンター"
+          placeholder={t('namePlaceholder')}
         />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">Description</label>
-        <p className="text-xs text-gray-500 mb-1">
-          このエージェントの役割や特徴を簡潔に説明してください。
-        </p>
+        <p className="text-xs text-gray-500 mb-1">{t('descriptionDescription')}</p>
         <input
           type="text"
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           required
-          placeholder="例: プログラミングの基礎から応用までを教えるAIメンター"
+          placeholder={t('descriptionPlaceholder')}
         />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">System Prompt</label>
-        <p className="text-xs text-gray-500 mb-1">
-          エージェントの振る舞いを定義するシステムプロンプトを入力してください。
-          どのような役割を果たし、どのように応答するべきかを詳細に記述します。
-        </p>
+        <div className="mb-2">
+          <p className="text-xs text-gray-500 whitespace-pre-line">{t('systemPromptInfo')}</p>
+          <div className="mt-1 p-2 bg-gray-50 rounded-md border border-gray-200">
+            <p className="text-xs text-gray-600 font-medium">{t('placeholders')}</p>
+            <div className="mt-1 flex items-center space-x-2">
+              <code className="text-xs bg-white px-2 py-1 rounded border border-gray-300">
+                {`{{projectPath}}`}
+              </code>
+              <span className="text-xs text-gray-500">{t('projectPathPlaceholder')}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText('{{projectPath}}')
+                }}
+                className="text-xs text-blue-600 hover:text-blue-800"
+              >
+                {t('copy')}
+              </button>
+            </div>
+          </div>
+        </div>
         <textarea
           value={formData.system}
           onChange={(e) => setFormData({ ...formData, system: e.target.value })}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm h-96"
           required
-          placeholder="例: あなたは経験豊富なプログラミングメンターです。以下の方針で指導を行ってください：
-- 初心者にも分かりやすい言葉で説明する
-- 具体的なコード例を示しながら説明する
-- 学習者の質問に対して丁寧に回答する
-- 適切なフィードバックを提供し、理解度を確認する"
+          placeholder={t('systemPromptPlaceholder')}
         />
+        {formData.system.includes('{{projectPath}}') && (
+          <div className="mt-2">
+            <button
+              type="button"
+              onClick={() => setShowPreview(!showPreview)}
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              {showPreview ? t('hidePreview') : t('showPreview')}
+            </button>
+            {showPreview && (
+              <div className="mt-2 p-4 bg-gray-50 rounded-md border border-gray-200">
+                <p className="text-xs text-gray-600 mb-2">{t('previewResult')}</p>
+                <p className="text-sm whitespace-pre-wrap">{getPreviewText(formData.system)}</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Scenarios（オプション）</label>
-        <p className="text-xs text-gray-500 mb-1">
-          よく使用するやり取りのパターンをシナリオとして登録できます。
-          シナリオのタイトルと具体的な内容を入力してください。
-        </p>
+        <label className="block text-sm font-medium text-gray-700">Scenarios {t('optional')}</label>
+        <p className="text-xs text-gray-500 mb-1">{t('scenariosDescription')}</p>
         <div className="space-y-2">
           {formData.scenarios.map((scenario, index) => (
             <div key={index} className="flex items-center space-x-2">
@@ -109,6 +142,7 @@ const AgentForm: React.FC<{
               <button
                 type="button"
                 onClick={() => removeScenario(index)}
+                title={t('deleteAgent')}
                 className="p-2 text-red-600 hover:text-red-800"
               >
                 <FiTrash />
@@ -121,14 +155,14 @@ const AgentForm: React.FC<{
             type="text"
             value={newScenario.title}
             onChange={(e) => setNewScenario({ ...newScenario, title: e.target.value })}
-            placeholder="シナリオのタイトル（例: Python基礎レッスン）"
+            placeholder={t('scenarioTitlePlaceholder')}
             className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
           <input
             type="text"
             value={newScenario.content}
             onChange={(e) => setNewScenario({ ...newScenario, content: e.target.value })}
-            placeholder="シナリオの内容（例: Pythonの基本文法について説明してください）"
+            placeholder={t('scenarioContentPlaceholder')}
             className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
           <button
@@ -146,13 +180,13 @@ const AgentForm: React.FC<{
           onClick={onCancel}
           className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
-          Cancel
+          {t('cancel')}
         </button>
         <button
           type="submit"
           className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
-          Save
+          {t('save')}
         </button>
       </div>
     </form>
@@ -163,6 +197,7 @@ const useAgentSettingsModal = () => {
   const { Modal, openModal: openModalBase, closeModal } = useModal()
   const [editingAgent, setEditingAgent] = useState<CustomAgent | null>(null)
   const { customAgents, saveCustomAgents } = useSetting()
+  const { t } = useTranslation()
 
   const handleSaveAgent = (agent: CustomAgent) => {
     const updatedAgents = editingAgent?.id
@@ -179,7 +214,7 @@ const useAgentSettingsModal = () => {
   }
 
   const AgentSettingsModal: React.FC = () => (
-    <Modal header="Custom Agents" size="4xl">
+    <Modal header={t('customAgents')} size="4xl">
       <div className="space-y-4">
         {editingAgent ? (
           <AgentForm
@@ -194,7 +229,7 @@ const useAgentSettingsModal = () => {
                 onClick={() => setEditingAgent({} as CustomAgent)}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
-                Add New Agent
+                {t('addNewAgent')}
               </button>
             </div>
             <div className="space-y-2">
@@ -211,12 +246,14 @@ const useAgentSettingsModal = () => {
                     <button
                       onClick={() => setEditingAgent(agent)}
                       className="p-2 text-blue-600 hover:text-blue-800"
+                      title={t('editAgent')}
                     >
                       <FiEdit2 />
                     </button>
                     <button
                       onClick={() => handleDeleteAgent(agent.id!)}
                       className="p-2 text-red-600 hover:text-red-800"
+                      title={t('deleteAgent')}
                     >
                       <FiTrash />
                     </button>

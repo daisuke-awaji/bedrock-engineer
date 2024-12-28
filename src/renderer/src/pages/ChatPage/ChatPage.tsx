@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import AILogo from '../../assets/images/icons/ai.svg'
 import { MessageList } from './components/MessageList'
 import { InputForm } from './components/InputForm'
@@ -12,13 +12,15 @@ import MD from '../../components/Markdown/MD'
 import useIgnoreFileModal from './modals/useIgnoreFileModal'
 import useToolSettingModal from './modals/useToolSettingModal'
 import useAgentSettingsModal from './modals/useAgentSettingsModal'
-import agents from './constants/agents'
+import { useDefaultAgents } from './hooks/useDefaultAgents'
 import { FiSettings } from 'react-icons/fi'
 import { Agent } from '@/types/agent-chat'
+import { useTranslation } from 'react-i18next'
 
 export default function ChatPage() {
   const [userInput, setUserInput] = useState('')
   const [agent, setAgent] = useState<Agent['id']>('softwareAgent')
+  const { t } = useTranslation()
 
   const { currentLLM: llm, projectPath, selectDirectory, sendMsgKey } = useSetting()
 
@@ -28,17 +30,12 @@ export default function ChatPage() {
     openModal: openAgentSettingsModal
   } = useAgentSettingsModal()
 
-  // デフォルトのエージェントとカスタムエージェントを結合
-  const allAgents = [
-    ...agents,
-    ...customAgents.map(
-      (customAgent): Agent => ({
-        ...customAgent,
-        system: customAgent.system,
-        scenarios: customAgent.scenarios
-      })
-    )
-  ]
+  const baseAgents = useDefaultAgents()
+
+  // カスタムエージェントと基本エージェントを結合
+  const allAgents = useMemo(() => {
+    return [...baseAgents, ...customAgents]
+  }, [baseAgents, customAgents])
 
   const currentAgent = allAgents.find((a) => a.id === agent)
   const systemPrompt = currentAgent?.system || ''
@@ -75,7 +72,7 @@ export default function ChatPage() {
             <button
               onClick={openAgentSettingsModal}
               className="p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
-              title="Agent Settings"
+              title={t('agent settings')}
             >
               <FiSettings className="w-5 h-5" />
             </button>
@@ -88,7 +85,7 @@ export default function ChatPage() {
           </div>
         </div>
 
-        <SystemPromptModal header="SYSTEM PROMPT" size="7xl">
+        <SystemPromptModal header={'SYSTEM PROMPT'} size="7xl">
           <MD>{systemPrompt}</MD>
         </SystemPromptModal>
         <AgentSettingsModal />
