@@ -2,6 +2,37 @@ import useModal from '@renderer/hooks/useModal'
 import useSetting from '@renderer/hooks/useSetting'
 import { useEffect, useState } from 'react'
 import { ToolState } from 'src/types/agent-chat'
+import {
+  FaFolderPlus,
+  FaFileSignature,
+  FaFileAlt,
+  FaList,
+  FaArrowRight,
+  FaCopy,
+  FaSearch
+} from 'react-icons/fa'
+
+// ツール名とアイコンのマッピング
+const toolIcons: { [key: string]: React.ReactElement } = {
+  createFolder: <FaFolderPlus className="text-blue-500 size-6" />,
+  writeToFile: <FaFileSignature className="text-green-500 size-6" />,
+  readFiles: <FaFileAlt className="text-yellow-500 size-6" />,
+  listFiles: <FaList className="text-purple-500 size-6" />,
+  moveFile: <FaArrowRight className="text-orange-500 size-6" />,
+  copyFile: <FaCopy className="text-indigo-500 size-6" />,
+  tavilySearch: <FaSearch className="text-red-500 size-6" />
+}
+
+// ツールの説明文
+const toolDescriptions: { [key: string]: string } = {
+  createFolder: 'Create new directories in your project',
+  writeToFile: 'Write or update file contents',
+  readFiles: 'Read contents from multiple files',
+  listFiles: 'View directory structure',
+  moveFile: 'Move files between locations',
+  copyFile: 'Create file duplicates',
+  tavilySearch: 'Search the web for information'
+}
 
 const useToolSettingModal = () => {
   const [tools, setStateTools] = useState<ToolState[]>()
@@ -46,28 +77,53 @@ const useToolSettingModal = () => {
 
   const ToolSettingModal = () => {
     return (
-      <Modal header="Available Tools">
-        <p className="text-gray-700 text-sm pb-2 dark:text-white">
-          Choose the tool you want to use
+      <Modal header="Available Tools" size="4xl">
+        <p className="text-gray-700 text-sm pb-4 dark:text-white">
+          Choose the tools you want to enable for the AI assistant
         </p>
-        <div className="grid grid-cols-3 items-center justify-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {tools?.map((tool) => {
+            const toolName = tool.toolSpec?.name
             return (
-              <label
-                key={tool.toolSpec?.name}
-                className="flex cursor-pointer content-center items-center h-10 w-[340px] gap-2"
+              <div
+                key={toolName}
+                className={`
+                  cursor-pointer p-4 rounded-lg
+                  border-2 transition-all duration-200
+                  ${
+                    tool.enabled
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                      : 'border-gray-200 dark:border-gray-700'
+                  }
+                  hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/10
+                `}
                 onClick={() => {
-                  if (tool.toolSpec?.name) {
-                    handleClickEnableTool(tool.toolSpec?.name)
+                  if (toolName) {
+                    handleClickEnableTool(toolName)
                   }
                 }}
               >
-                <input type="checkbox" className="sr-only peer" checked={tool.enabled} disabled />
-                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                <span className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300 hover:text-gray-500">
-                  {tool.toolSpec?.name}
-                </span>
-              </label>
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 mt-1">{toolName && toolIcons[toolName]}</div>
+                  <div className="flex-grow">
+                    <span
+                      className={`
+                      text-sm font-medium
+                      ${
+                        tool.enabled
+                          ? 'text-blue-700 dark:text-blue-300'
+                          : 'text-gray-900 dark:text-gray-300'
+                      }
+                    `}
+                    >
+                      {toolName}
+                    </span>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {toolName && toolDescriptions[toolName]}
+                    </p>
+                  </div>
+                </div>
+              </div>
             )
           })}
         </div>

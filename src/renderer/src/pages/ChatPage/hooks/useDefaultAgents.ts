@@ -71,10 +71,6 @@ const CODE_BUDDY_SYSTEM_PROMPT = `You are CodeBuddy, a friendly programming ment
 - Providing multiple examples for each concept
 - Suggesting simple projects for practice
 - Helping debug code with clear, friendly explanations
-- When expain lambda:
-  - 1st, write Lambda handler sample code in file
-  - 2nd, explain Lambda handler code in simple language
-  - 3rd, explain Lambda handler code in simple language with example
 
 3. Visual Learning Tools
 - Creating simple diagrams to explain concepts
@@ -221,21 +217,21 @@ export const useDefaultAgents = () => {
   const getBaseAgents = useCallback((): Agent[] => {
     return [
       {
-        name: 'ソフトウェア開発',
+        name: 'Software Developer',
         id: 'softwareAgent',
         description: t('softwareAgent.description'),
         system: SOFTWARE_AGENT_SYSTEM_PROMPT,
         scenarios: getSoftwareAgentScenarios()
       },
       {
-        name: 'プログラミングメンター',
+        name: 'Programming Mentor',
         id: 'codeBuddy',
         description: t('codeBuddy.description'),
         system: CODE_BUDDY_SYSTEM_PROMPT,
         scenarios: getCodeBuddyScenarios()
       },
       {
-        name: 'プロダクトデザイナー',
+        name: 'Product Designer',
         id: 'productDesigner',
         description: t('productDesigner.description'),
         system: PRODUCT_DESIGNER_SYSTEM_PROMPT,
@@ -249,7 +245,7 @@ export const useDefaultAgents = () => {
     const baseAgents = getBaseAgents()
     return baseAgents.map((agent) => ({
       ...agent,
-      name: i18n.language === 'ja' ? agent.name : t(agent.id),
+      name: agent.name,
       system: replacePlaceholders(agent.system),
       scenarios: localizeScenarios(agent.scenarios)
     }))
