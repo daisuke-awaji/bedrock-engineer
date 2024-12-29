@@ -3,7 +3,7 @@ import { electronAPI } from '@electron-toolkit/preload'
 import { api } from './api'
 import { store } from './store'
 import { file } from './file'
-import { tools } from './tools'
+import { tools } from './tools/tools'
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise

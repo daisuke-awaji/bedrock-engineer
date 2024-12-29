@@ -1,5 +1,6 @@
 import { Message, ToolConfiguration } from '@aws-sdk/client-bedrock-runtime'
-import { executeTool } from './tools'
+import { ipcRenderer } from 'electron'
+import { executeTool } from './tools/tools'
 
 export type CallConverseAPIProps = {
   modelId: string
@@ -11,6 +12,13 @@ export type CallConverseAPIProps = {
 export const api = {
   bedrock: {
     executeTool
+  },
+  contextMenu: {
+    onContextMenuCommand: (callback: (command: string) => void) => {
+      ipcRenderer.on('context-menu-command', (_event, command) => {
+        callback(command)
+      })
+    }
   }
 }
 

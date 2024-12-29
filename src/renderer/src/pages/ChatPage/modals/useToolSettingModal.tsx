@@ -1,7 +1,5 @@
 import useModal from '@renderer/hooks/useModal'
-import useSetting from '@renderer/hooks/useSetting'
-import { useEffect, useState } from 'react'
-import { ToolState } from 'src/types/agent-chat'
+import { useSettings } from '@renderer/contexts/SettingsContext'
 import {
   FaFolderPlus,
   FaFileSignature,
@@ -9,7 +7,8 @@ import {
   FaList,
   FaArrowRight,
   FaCopy,
-  FaSearch
+  FaSearch,
+  FaGlobe
 } from 'react-icons/fa'
 
 // ツール名とアイコンのマッピング
@@ -20,7 +19,8 @@ const toolIcons: { [key: string]: React.ReactElement } = {
   listFiles: <FaList className="text-purple-500 size-6" />,
   moveFile: <FaArrowRight className="text-orange-500 size-6" />,
   copyFile: <FaCopy className="text-indigo-500 size-6" />,
-  tavilySearch: <FaSearch className="text-red-500 size-6" />
+  tavilySearch: <FaSearch className="text-red-500 size-6" />,
+  fetchWebsite: <FaGlobe className="text-teal-500 size-6" />
 }
 
 // ツールの説明文
@@ -31,46 +31,23 @@ const toolDescriptions: { [key: string]: string } = {
   listFiles: 'View directory structure',
   moveFile: 'Move files between locations',
   copyFile: 'Create file duplicates',
-  tavilySearch: 'Search the web for information'
+  tavilySearch: 'Search the web for information',
+  fetchWebsite: 'Fetch and analyze content from websites'
 }
 
 const useToolSettingModal = () => {
-  const [tools, setStateTools] = useState<ToolState[]>()
-
-  useEffect(() => {
-    const tools = window.store.get('tools')
-    if (tools) {
-      setStateTools(tools)
-    }
-
-    if (window.tools?.length !== tools?.length) {
-      const t = window.tools
-        .map((tool) => {
-          if (!tool.toolSpec?.name) return
-          return { ...tool, enabled: true }
-        })
-        .filter((item) => item !== undefined)
-
-      console.log({ toolUpdated: t })
-      window.store.set('tools', t)
-    }
-  }, [])
+  const { tools, setTools, enabledTools } = useSettings()
 
   const handleClickEnableTool = (toolName: string) => {
-    const updatedTools = tools?.map((tool) => {
+    if (!tools) return
+
+    const updatedTools = tools.map((tool) => {
       if (tool.toolSpec?.name === toolName) {
         return { ...tool, enabled: !tool.enabled }
       }
       return tool
     })
-    if (updatedTools) {
-      setTools(updatedTools)
-    }
-  }
-
-  const setTools = (updateTools: ToolState[]) => {
-    window.store.set('tools', updateTools)
-    setStateTools(updateTools)
+    setTools(updatedTools)
   }
 
   const { Modal, openModal } = useModal()
@@ -130,17 +107,6 @@ const useToolSettingModal = () => {
       </Modal>
     )
   }
-
-  const { tavilySearchApiKey: apikey } = useSetting()
-  const tavilySearchEnabled = apikey !== 'tvly-xxxxxxxxxxxxxxxxxxx'
-  const enabledTools = tools
-    ?.filter((v) => v.enabled)
-    .filter((value) => {
-      if (value.toolSpec?.name === 'tavilySearch') {
-        return tavilySearchEnabled
-      }
-      return true
-    })
 
   return { tools, enabledTools, setTools, ToolSettingModal, openModal }
 }

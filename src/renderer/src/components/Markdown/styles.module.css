@@ -50,6 +50,16 @@
   font-family: Consolas, 'Liberation Mono', Menlo, Courier, monospace;
 }
 
+.reactMarkDown a {
+  color: #007bff;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.reactMarkDown img {
+  width: 50%;
+}
+
 @media (prefers-color-scheme: dark) {
   .reactMarkDown pre {
     background-color: #000;

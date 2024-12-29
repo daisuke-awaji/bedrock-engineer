@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { SendMsgKey } from 'src/types/agent-chat'
+import { SendMsgKey, ToolState } from 'src/types/agent-chat'
 import { InferenceParameters, LLM } from 'src/types/llm'
 import { listModels } from '@renderer/lib/api'
 import { CustomAgent } from '@/types/agent-chat'
+import { Tool } from '@aws-sdk/client-bedrock-runtime'
 
 const DEFAULT_INFERENCE_PARAMS: InferenceParameters = {
   maxTokens: 4096,
@@ -50,6 +51,11 @@ interface SettingsContextType {
   // Selected Agent Settings
   selectedAgentId: string
   setSelectedAgentId: (agentId: string) => void
+
+  // Tools Settings
+  tools: ToolState[]
+  setTools: (tools: ToolState[]) => void
+  enabledTools: ToolState[]
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined)
@@ -84,6 +90,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Selected Agent Settings
   const [selectedAgentId, setSelectedAgentId] = useState<string>('softwareAgent')
+
+  // Tools Settings
+  const [tools, setStateTools] = useState<ToolState[]>([])
 
   // Initialize all settings
   useEffect(() => {
@@ -133,6 +142,21 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const savedAgentId = window.store.get('selectedAgentId')
     if (savedAgentId) {
       setSelectedAgentId(savedAgentId)
+    }
+
+    // Load Tools Settings
+    const savedTools = window.store.get('tools')
+    if (savedTools) {
+      setStateTools(savedTools)
+    } else if (window.tools) {
+      const initialTools = window.tools
+        .map((tool) => {
+          if (!tool.toolSpec?.name) return
+          return { ...tool, enabled: true } as Tool
+        })
+        .filter((item): item is ToolState => item !== undefined)
+      setStateTools(initialTools)
+      window.store.set('tools', initialTools)
     }
   }, [])
 
@@ -215,7 +239,21 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     window.store.set('customAgents', agents)
   }
 
+  const setTools = (newTools: ToolState[]) => {
+    setStateTools(newTools)
+    window.store.set('tools', newTools)
+  }
+
   const enabledTavilySearch = tavilySearchApiKey.length > 0
+
+  const enabledTools = tools
+    .filter((tool) => tool.enabled)
+    .filter((tool) => {
+      if (tool.toolSpec?.name === 'tavilySearch') {
+        return enabledTavilySearch
+      }
+      return true
+    })
 
   const value = {
     // Advanced Settings
@@ -259,7 +297,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setSelectedAgentId: (agentId: string) => {
       setSelectedAgentId(agentId)
       window.store.set('selectedAgentId', agentId)
-    }
+    },
+
+    // Tools Settings
+    tools,
+    setTools,
+    enabledTools
   }
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>
