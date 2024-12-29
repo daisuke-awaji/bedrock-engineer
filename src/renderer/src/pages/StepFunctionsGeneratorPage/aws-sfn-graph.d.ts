@@ -1,1 +1,1 @@
-declare module "@tshepomgaga/aws-sfn-graph";
+declare module '@tshepomgaga/aws-sfn-graph'

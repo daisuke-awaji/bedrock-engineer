@@ -11,17 +11,19 @@ export const executeTool = async (toolName: string | undefined, toolInput: any) 
       return toolService.readFiles(toolInput['paths'])
     case 'writeToFile':
       return toolService.writeToFile(toolInput['path'], toolInput['content'])
-    case 'listFiles':
-      const ignoreFiles = store.get('agentChatConfig')?.ignoreFiles
+    case 'listFiles': {
+      const ignoreFiles = store.get('agentChatConfig').ignoreFiles
       console.log(ignoreFiles)
       return toolService.listFiles(toolInput['path'], '', ignoreFiles)
+    }
     case 'moveFile':
       return toolService.moveFile(toolInput['source'], toolInput['destination'])
     case 'copyFile':
       return toolService.copyFile(toolInput['source'], toolInput['destination'])
-    case 'tavilySearch':
-      const apiKey = store.get('tavilySearch')?.apikey
+    case 'tavilySearch': {
+      const apiKey = store.get('tavilySearch').apikey
       return toolService.tavilySearch(toolInput['query'], apiKey)
+    }
     case 'fetchWebsite':
       return toolService.fetchWebsite(toolInput['url'], toolInput['options'])
     default:

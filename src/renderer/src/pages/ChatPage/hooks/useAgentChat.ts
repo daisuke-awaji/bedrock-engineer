@@ -173,6 +173,7 @@ export const useAgentChat = (
       return toast.error('Please select a model')
     }
 
+    let result
     try {
       setLoading(true)
       const currentMessages = [...messages]
@@ -182,7 +183,7 @@ export const useAgentChat = (
           image: {
             format: image.file.type.split('/')[1] as ImageFormat,
             source: {
-              bytes: image.base64 // ここでbase64文字列をそのまま送信
+              bytes: image.base64
             }
           }
         })) ?? []
@@ -211,18 +212,18 @@ export const useAgentChat = (
       if (lastMessage.content?.find((v) => v.toolUse)) {
         if (!lastMessage.content) {
           console.warn(lastMessage)
-          return null
+          result = null
+        } else {
+          result = await recursivelyExecTool(lastMessage.content, currentMessages)
         }
-
-        await recursivelyExecTool(lastMessage.content, currentMessages)
       }
     } catch (error: any) {
       console.error('Error in handleSubmit:', error)
       toast.error(error.message || 'An error occurred')
     } finally {
       setLoading(false)
-      return
     }
+    return result
   }
 
   return {
