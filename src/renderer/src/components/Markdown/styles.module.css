@@ -56,6 +56,10 @@
   text-decoration: underline;
 }
 
+.reactMarkDown img {
+  width: 50%;
+}
+
 @media (prefers-color-scheme: dark) {
   .reactMarkDown pre {
     background-color: #000;

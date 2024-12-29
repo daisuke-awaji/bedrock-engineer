@@ -109,7 +109,7 @@ export class ToolService {
           query,
           search_depth: 'advanced',
           include_answer: true,
-          include_images: false,
+          include_images: true,
           include_raw_content: true,
           max_results: 3,
           include_domains: [],

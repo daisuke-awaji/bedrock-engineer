@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, Menu, MenuItem, clipboard } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../build/icon.ico?asset'
@@ -21,8 +21,30 @@ async function createWindow(): Promise<void> {
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      contextIsolation: true
     }
+  })
+
+  // コンテキストメニューの作成
+  const contextMenu = new Menu()
+  contextMenu.append(
+    new MenuItem({
+      label: 'コピー',
+      role: 'copy'
+    })
+  )
+  contextMenu.append(
+    new MenuItem({
+      label: 'ペースト',
+      role: 'paste'
+    })
+  )
+
+  // コンテキストメニューイベントの処理
+  mainWindow.webContents.on('context-menu', (_event, _params) => {
+    // メニューを表示
+    contextMenu.popup()
   })
 
   mainWindow.on('ready-to-show', () => {
@@ -34,13 +56,6 @@ async function createWindow(): Promise<void> {
     return { action: 'deny' }
   })
 
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
-  // if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-  //   mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
-  // } else {
-  //   mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
-  // }
   const port = await getRandomPort()
   store.set('apiEndpoint', `http://localhost:${port}`)
 
