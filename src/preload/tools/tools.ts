@@ -8,9 +8,7 @@ export const executeTool = async (toolName: string | undefined, toolInput: any) 
     case 'createFolder':
       return toolService.createFolder(toolInput['path'])
     case 'readFiles':
-      return toolService.readFiles(toolInput['paths'], {
-        chunkIndex: toolInput['chunkIndex']
-      })
+      return toolService.readFiles(toolInput['paths'])
     case 'writeToFile':
       return toolService.writeToFile(toolInput['path'], toolInput['content'])
     case 'listFiles':
@@ -77,8 +75,8 @@ export const tools: Tool[] = [
   {
     toolSpec: {
       name: 'readFiles',
-      description: `Read the contents of files at the specified paths. For large files, content will be automatically split into chunks.
-First call without a chunkIndex to get an overview of all files and their chunks. Then, if needed, call again with a specific chunkIndex to retrieve that chunk from a single file.`,
+      description:
+        'Read the contents of multiple files at the specified paths, including text files and Excel files (.xlsx, .xls). For Excel files, the content is converted to CSV format. Use this when you need to examine the contents of several existing files at once.',
       inputSchema: {
         json: {
           type: 'object',
@@ -89,12 +87,7 @@ First call without a chunkIndex to get an overview of all files and their chunks
                 type: 'string'
               },
               description:
-                'An array of file paths to read. When using chunkIndex, only provide one file path.'
-            },
-            chunkIndex: {
-              type: 'number',
-              description:
-                'Optional. When specified, retrieves a specific chunk from a single file (starting from 1). Only works when paths contains exactly one file.'
+                'An array of file paths to read. Supports text files and Excel files (.xlsx, .xls).'
             }
           },
           required: ['paths']
