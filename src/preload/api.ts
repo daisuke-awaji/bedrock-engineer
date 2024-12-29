@@ -1,5 +1,5 @@
 import { Message, ToolConfiguration } from '@aws-sdk/client-bedrock-runtime'
-import { executeTool } from './tools'
+import { executeTool } from './tools/tools'
 
 export type CallConverseAPIProps = {
   modelId: string

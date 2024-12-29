@@ -71,7 +71,7 @@ const init = () => {
   const inferenceParams = electronStore.get('inferenceParams')
   if (!inferenceParams) {
     electronStore.set('inferenceParams', {
-      maxTokens: 4096,
+      maxTokens: 8192,
       temperature: 0.5,
       topP: 0.9
     })
