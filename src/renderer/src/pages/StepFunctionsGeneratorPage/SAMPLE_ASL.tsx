@@ -1,367 +1,365 @@
 export const SAMPLE_ASL_001 = {
-  Comment: "A description of my state machine",
-  StartAt: "Decide Action",
+  Comment: 'A description of my state machine',
+  StartAt: 'Decide Action',
   States: {
-    "Decide Action": {
-      Type: "Choice",
+    'Decide Action': {
+      Type: 'Choice',
       Choices: [
         {
-          Variable: "$.action",
-          StringEquals: "complete",
-          Next: "Complete Order",
+          Variable: '$.action',
+          StringEquals: 'complete',
+          Next: 'Complete Order'
         },
         {
-          Variable: "$.action",
-          StringEquals: "cancel",
-          Next: "Cancel Order",
+          Variable: '$.action',
+          StringEquals: 'cancel',
+          Next: 'Cancel Order'
         },
         {
-          Variable: "$.action",
-          StringEquals: "make",
-          Next: "Claim Order",
+          Variable: '$.action',
+          StringEquals: 'make',
+          Next: 'Claim Order'
         },
         {
-          Variable: "$.action",
-          StringEquals: "unmake",
-          Next: "Claim Order",
-        },
+          Variable: '$.action',
+          StringEquals: 'unmake',
+          Next: 'Claim Order'
+        }
       ],
-      Default: "Customer Put Order",
+      Default: 'Customer Put Order'
     },
-    "Cancel Order": {
-      Type: "Pass",
-      Next: "DynamoDB Update Order Record",
+    'Cancel Order': {
+      Type: 'Pass',
+      Next: 'DynamoDB Update Order Record',
       Result: {
-        state: "Cancelled",
+        state: 'Cancelled'
       },
-      ResultPath: "$.result",
+      ResultPath: '$.result'
     },
-    "DynamoDB Update Order Record": {
-      Type: "Task",
-      Resource: "arn:aws:states:::dynamodb:updateItem",
+    'DynamoDB Update Order Record': {
+      Type: 'Task',
+      Resource: 'arn:aws:states:::dynamodb:updateItem',
       Parameters: {
-        TableName: "serverlesspresso-order-table",
+        TableName: 'serverlesspresso-order-table',
         Key: {
           PK: {
-            S: "orders",
+            S: 'orders'
           },
           SK: {
-            "S.$": "$.orderId",
-          },
+            'S.$': '$.orderId'
+          }
         },
-        UpdateExpression: "set #OS = :OS",
+        UpdateExpression: 'set #OS = :OS',
         ExpressionAttributeNames: {
-          "#OS": "ORDERSTATE",
+          '#OS': 'ORDERSTATE'
         },
         ExpressionAttributeValues: {
-          ":OS": {
-            "S.$": "$.result.state",
-          },
+          ':OS': {
+            'S.$': '$.result.state'
+          }
         },
-        ReturnValues: "ALL_NEW",
+        ReturnValues: 'ALL_NEW'
       },
-      ResultPath: "$.result",
-      Next: "Construct record (1)",
+      ResultPath: '$.result',
+      Next: 'Construct record (1)',
       ResultSelector: {
-        "Attributes.$": "$.Attributes",
-      },
+        'Attributes.$': '$.Attributes'
+      }
     },
-    "Construct record (1)": {
-      Type: "Pass",
-      Next: "Emit Completed || Cancelled",
-      ResultPath: "$.detail",
+    'Construct record (1)': {
+      Type: 'Pass',
+      Next: 'Emit Completed || Cancelled',
+      ResultPath: '$.detail',
       Parameters: {
-        "orderId.$": "$.orderId",
-        "userId.$": "$.result.Attributes.USERID.S",
-        "ORDERSTATE.$": "$.result.Attributes.ORDERSTATE.S",
-        Message: "Barrista has cancelled or completed teh order",
-      },
+        'orderId.$': '$.orderId',
+        'userId.$': '$.result.Attributes.USERID.S',
+        'ORDERSTATE.$': '$.result.Attributes.ORDERSTATE.S',
+        Message: 'Barrista has cancelled or completed teh order'
+      }
     },
-    "Emit Completed || Cancelled": {
-      Type: "Task",
-      Resource: "arn:aws:states:::events:putEvents",
+    'Emit Completed || Cancelled': {
+      Type: 'Task',
+      Resource: 'arn:aws:states:::events:putEvents',
       Parameters: {
         Entries: [
           {
-            "Detail.$": "States.JsonToString($.detail)",
-            "DetailType.$":
-              "States.Format('OrderManager.Order{}', $.detail.ORDERSTATE)",
-            EventBusName: "Serverlesspresso",
-            Source: "awsserverlessda.serverlesspresso",
-            "Time.$": "$$.State.EnteredTime",
-          },
-        ],
+            'Detail.$': 'States.JsonToString($.detail)',
+            'DetailType.$': "States.Format('OrderManager.Order{}', $.detail.ORDERSTATE)",
+            EventBusName: 'Serverlesspresso',
+            Source: 'awsserverlessda.serverlesspresso',
+            'Time.$': '$$.State.EnteredTime'
+          }
+        ]
       },
-      Next: "Resume Order Processor 1",
-      ResultPath: "$.eventEmit",
+      Next: 'Resume Order Processor 1',
+      ResultPath: '$.eventEmit'
     },
-    "Complete Order": {
-      Type: "Pass",
-      Next: "DynamoDB Update Order Record",
+    'Complete Order': {
+      Type: 'Pass',
+      Next: 'DynamoDB Update Order Record',
       Result: {
-        state: "Completed",
+        state: 'Completed'
       },
-      ResultPath: "$.result",
+      ResultPath: '$.result'
     },
-    "Customer Put Order": {
-      Type: "Pass",
-      Next: "get menu",
+    'Customer Put Order': {
+      Type: 'Pass',
+      Next: 'get menu'
     },
-    "get menu": {
-      Type: "Task",
-      Resource: "arn:aws:states:::dynamodb:getItem",
+    'get menu': {
+      Type: 'Task',
+      Resource: 'arn:aws:states:::dynamodb:getItem',
       Parameters: {
-        TableName: "serverlesspresso-config-table",
+        TableName: 'serverlesspresso-config-table',
         Key: {
           PK: {
-            S: "menu",
-          },
-        },
+            S: 'menu'
+          }
+        }
       },
-      Next: "Sanitize order",
-      ResultPath: "$.menu",
+      Next: 'Sanitize order',
+      ResultPath: '$.menu'
     },
-    "Sanitize order": {
-      Type: "Task",
-      Resource: "arn:aws:states:::lambda:invoke",
+    'Sanitize order': {
+      Type: 'Task',
+      Resource: 'arn:aws:states:::lambda:invoke',
       Parameters: {
-        "Payload.$": "$",
-        FunctionName: "serverless-workshop-SanitizeOrderLambda-kvBfvFESs6Ue",
+        'Payload.$': '$',
+        FunctionName: 'serverless-workshop-SanitizeOrderLambda-kvBfvFESs6Ue'
       },
       Retry: [
         {
           ErrorEquals: [
-            "Lambda.ServiceException",
-            "Lambda.AWSLambdaException",
-            "Lambda.SdkClientException",
+            'Lambda.ServiceException',
+            'Lambda.AWSLambdaException',
+            'Lambda.SdkClientException'
           ],
           IntervalSeconds: 2,
           MaxAttempts: 6,
-          BackoffRate: 2,
-        },
+          BackoffRate: 2
+        }
       ],
-      Next: "Is Order Valid?",
-      ResultPath: "$.sanitise",
+      Next: 'Is Order Valid?',
+      ResultPath: '$.sanitise'
     },
-    "Is Order Valid?": {
-      Type: "Choice",
+    'Is Order Valid?': {
+      Type: 'Choice',
       Choices: [
         {
-          Variable: "$.sanitise.Payload",
+          Variable: '$.sanitise.Payload',
           BooleanEquals: false,
-          Next: "not a valid order",
-        },
+          Next: 'not a valid order'
+        }
       ],
-      Default: "Update order",
+      Default: 'Update order'
     },
-    "not a valid order": {
-      Type: "Succeed",
+    'not a valid order': {
+      Type: 'Succeed'
     },
-    "Update order": {
-      Type: "Task",
-      Resource: "arn:aws:states:::dynamodb:updateItem",
+    'Update order': {
+      Type: 'Task',
+      Resource: 'arn:aws:states:::dynamodb:updateItem',
       Parameters: {
-        TableName: "serverlesspresso-order-table",
+        TableName: 'serverlesspresso-order-table',
         Key: {
           PK: {
-            S: "orders",
+            S: 'orders'
           },
           SK: {
-            "S.$": "$.orderId",
-          },
+            'S.$': '$.orderId'
+          }
         },
-        UpdateExpression: "set #drinkOrder = :drinkOrder",
-        ConditionExpression:
-          "#userId = :userId AND attribute_exists(TaskToken)",
+        UpdateExpression: 'set #drinkOrder = :drinkOrder',
+        ConditionExpression: '#userId = :userId AND attribute_exists(TaskToken)',
         ExpressionAttributeNames: {
-          "#drinkOrder": "drinkOrder",
-          "#userId": "USERID",
+          '#drinkOrder': 'drinkOrder',
+          '#userId': 'USERID'
         },
         ExpressionAttributeValues: {
-          ":drinkOrder": {
-            "S.$": "States.JsonToString($.body)",
+          ':drinkOrder': {
+            'S.$': 'States.JsonToString($.body)'
           },
-          ":userId": {
-            "S.$": "$.body.userId",
-          },
+          ':userId': {
+            'S.$': '$.body.userId'
+          }
         },
-        ReturnValues: "ALL_NEW",
+        ReturnValues: 'ALL_NEW'
       },
-      Next: "Resume Order Processor 2",
+      Next: 'Resume Order Processor 2',
       ResultSelector: {
-        "TaskToken.$": "$.Attributes.TaskToken.S",
+        'TaskToken.$': '$.Attributes.TaskToken.S'
       },
-      OutputPath: "$.record",
-      ResultPath: "$.record",
+      OutputPath: '$.record',
+      ResultPath: '$.record'
     },
-    "Resume Order Processor 1": {
-      Type: "Task",
+    'Resume Order Processor 1': {
+      Type: 'Task',
       Parameters: {
-        Output: "{}",
-        "TaskToken.$": "$.result.Attributes.TaskToken.S",
+        Output: '{}',
+        'TaskToken.$': '$.result.Attributes.TaskToken.S'
       },
-      Resource: "arn:aws:states:::aws-sdk:sfn:sendTaskSuccess",
-      End: true,
+      Resource: 'arn:aws:states:::aws-sdk:sfn:sendTaskSuccess',
+      End: true
     },
-    "Resume Order Processor 2": {
-      Type: "Task",
+    'Resume Order Processor 2': {
+      Type: 'Task',
       Parameters: {
-        Output: "{}",
-        "TaskToken.$": "$.TaskToken",
+        Output: '{}',
+        'TaskToken.$': '$.TaskToken'
       },
-      Resource: "arn:aws:states:::aws-sdk:sfn:sendTaskSuccess",
-      End: true,
+      Resource: 'arn:aws:states:::aws-sdk:sfn:sendTaskSuccess',
+      End: true
     },
-    "Claim Order": {
-      Type: "Pass",
-      Next: "Make OR Unmake?",
+    'Claim Order': {
+      Type: 'Pass',
+      Next: 'Make OR Unmake?'
     },
-    "Make OR Unmake?": {
-      Type: "Choice",
+    'Make OR Unmake?': {
+      Type: 'Choice',
       Choices: [
         {
-          Variable: "$.action",
-          StringEquals: "unmake",
-          Next: "Unmake Order",
+          Variable: '$.action',
+          StringEquals: 'unmake',
+          Next: 'Unmake Order'
         },
         {
-          Variable: "$.action",
-          StringEquals: "make",
-          Next: "DynamoDB Update Order",
-        },
+          Variable: '$.action',
+          StringEquals: 'make',
+          Next: 'DynamoDB Update Order'
+        }
       ],
-      Default: "DynamoDB Update Order",
+      Default: 'DynamoDB Update Order'
     },
-    "Unmake Order": {
-      Type: "Pass",
+    'Unmake Order': {
+      Type: 'Pass',
       Parameters: {
-        baristaUserId: "",
-        "orderId.$": "$.orderId",
+        baristaUserId: '',
+        'orderId.$': '$.orderId',
         Message:
-          "The barista has pressed the 'UnMake order' button, this Invokes a Lambda function via API Gateway, which updates the order in DynamoDB and emits a new 'make order' Event.",
+          "The barista has pressed the 'UnMake order' button, this Invokes a Lambda function via API Gateway, which updates the order in DynamoDB and emits a new 'make order' Event."
       },
-      Next: "DynamoDB Update Order",
+      Next: 'DynamoDB Update Order'
     },
-    "DynamoDB Update Order": {
-      Type: "Task",
-      Resource: "arn:aws:states:::dynamodb:updateItem",
+    'DynamoDB Update Order': {
+      Type: 'Task',
+      Resource: 'arn:aws:states:::dynamodb:updateItem',
       Parameters: {
-        TableName: "serverlesspresso-order-table",
+        TableName: 'serverlesspresso-order-table',
         Key: {
           PK: {
-            S: "orders",
+            S: 'orders'
           },
           SK: {
-            "S.$": "$.orderId",
-          },
+            'S.$': '$.orderId'
+          }
         },
-        UpdateExpression: "set #baristaUserId = :baristaUserId",
+        UpdateExpression: 'set #baristaUserId = :baristaUserId',
         ExpressionAttributeNames: {
-          "#baristaUserId": "baristaUserId",
+          '#baristaUserId': 'baristaUserId'
         },
         ExpressionAttributeValues: {
-          ":baristaUserId": {
-            "S.$": "$.baristaUserId",
-          },
+          ':baristaUserId': {
+            'S.$': '$.baristaUserId'
+          }
         },
-        ReturnValues: "ALL_NEW",
+        ReturnValues: 'ALL_NEW'
       },
       ResultSelector: {
-        "Attributes.$": "$.Attributes",
+        'Attributes.$': '$.Attributes'
       },
-      ResultPath: "$.result",
-      Next: "Construct record",
+      ResultPath: '$.result',
+      Next: 'Construct record'
     },
-    "Construct record": {
-      Type: "Pass",
-      Next: "EventBridge Emit Making Order",
-      ResultPath: "$.detail",
+    'Construct record': {
+      Type: 'Pass',
+      Next: 'EventBridge Emit Making Order',
+      ResultPath: '$.detail',
       Parameters: {
-        "baristaUserId.$": "$.result.Attributes.baristaUserId.S",
-        "orderId.$": "$.orderId",
-        "userId.$": "$.result.Attributes.USERID.S",
+        'baristaUserId.$': '$.result.Attributes.baristaUserId.S',
+        'orderId.$': '$.orderId',
+        'userId.$': '$.result.Attributes.USERID.S',
         Message:
-          "The barista has pressed the 'Make order' button, this Invokes a Lambda function via API Gateway, which updates the order in DynamoDB and emits a new 'make order' Event.",
-      },
+          "The barista has pressed the 'Make order' button, this Invokes a Lambda function via API Gateway, which updates the order in DynamoDB and emits a new 'make order' Event."
+      }
     },
-    "EventBridge Emit Making Order": {
-      Type: "Task",
-      Resource: "arn:aws:states:::events:putEvents",
+    'EventBridge Emit Making Order': {
+      Type: 'Task',
+      Resource: 'arn:aws:states:::events:putEvents',
       Parameters: {
         Entries: [
           {
-            "Detail.$": "States.JsonToString($.detail)",
-            DetailType: "OrderManager.MakeOrder",
-            EventBusName: "Serverlesspresso",
-            Source: "awsserverlessda.serverlesspresso",
-            "Time.$": "$$.State.EnteredTime",
-          },
-        ],
+            'Detail.$': 'States.JsonToString($.detail)',
+            DetailType: 'OrderManager.MakeOrder',
+            EventBusName: 'Serverlesspresso',
+            Source: 'awsserverlessda.serverlesspresso',
+            'Time.$': '$$.State.EnteredTime'
+          }
+        ]
       },
-      End: true,
-    },
-  },
-};
+      End: true
+    }
+  }
+}
 
 export const SAMPLE_ASL_PARALLEL = {
-  StartAt: "ParallelLambdas",
+  StartAt: 'ParallelLambdas',
   States: {
     ParallelLambdas: {
-      Type: "Parallel",
+      Type: 'Parallel',
       Branches: [
         {
-          StartAt: "InvokeLambda1",
+          StartAt: 'InvokeLambda1',
           States: {
             InvokeLambda1: {
-              Type: "Task",
-              Resource: "arn:aws:states:::lambda:invoke",
+              Type: 'Task',
+              Resource: 'arn:aws:states:::lambda:invoke',
               Parameters: {
                 Payload: {
-                  "Input.$": "$",
+                  'Input.$': '$'
                 },
-                FunctionName: "my-lambda-function-1",
+                FunctionName: 'my-lambda-function-1'
               },
-              Next: "DynamoDB",
+              Next: 'DynamoDB'
             },
             DynamoDB: {
-              Type: "Task",
-              Resource: "arn:aws:states:::aws-sdk:dynamodb:putItem",
+              Type: 'Task',
+              Resource: 'arn:aws:states:::aws-sdk:dynamodb:putItem',
               Parameters: {
-                TableName: "my-table",
+                TableName: 'my-table',
                 Item: {
                   PK: {
-                    "S.$": "$.id",
+                    'S.$': '$.id'
                   },
                   SK: {
-                    "S.$": "$.type",
+                    'S.$': '$.type'
                   },
                   Data: {
-                    "M.$": "$",
-                  },
-                },
+                    'M.$': '$'
+                  }
+                }
               },
-              End: true,
-            },
-          },
+              End: true
+            }
+          }
         },
         {
-          StartAt: "InvokeLambda2",
+          StartAt: 'InvokeLambda2',
           States: {
             InvokeLambda2: {
-              Type: "Task",
-              Resource: "arn:aws:states:::lambda:invoke",
+              Type: 'Task',
+              Resource: 'arn:aws:states:::lambda:invoke',
               Parameters: {
                 Payload: {
-                  "Input.$": "$",
+                  'Input.$': '$'
                 },
-                FunctionName: "my-lambda-function-2",
+                FunctionName: 'my-lambda-function-2'
               },
-              End: true,
-            },
-          },
-        },
+              End: true
+            }
+          }
+        }
       ],
-      End: true,
-    },
-  },
-};
+      End: true
+    }
+  }
+}

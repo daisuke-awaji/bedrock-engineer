@@ -41,7 +41,7 @@ export class ContentChunker {
 
   private static extractMainContent(html: string): string {
     // 基本的なHTMLクリーニング
-    let content = html
+    const content = html
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // スクリプトの削除
       .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '') // スタイルの削除
       .replace(/<[^>]+>/g, '\n') // タグを改行に変換

@@ -35,7 +35,7 @@ When asked to make edits or improvements:
 
 When you use search:
 - Make sure you use the best query to get the most accurate and up-to-date information
-- Try creating and searching at least two different queries to get a better idea of ​​the search results.
+- Try creating and searching at least two different queries to get a better idea of the search results.
 - If you have any reference URLs, please let us know.
 
 When fetching and analyzing website content:
