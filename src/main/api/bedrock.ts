@@ -4,7 +4,8 @@ import {
   ConverseCommandOutput,
   ConverseStreamCommand,
   ConverseStreamCommandOutput,
-  Message
+  Message,
+  ContentBlock
 } from '@aws-sdk/client-bedrock-runtime'
 import { BedrockClient, ListFoundationModelsCommand } from '@aws-sdk/client-bedrock'
 import {
@@ -24,16 +25,91 @@ export type CallConverseAPIProps = {
   toolConfig?: ConverseCommand['input']['toolConfig']
 }
 
+// Helper function to reconstruct Uint8Array from serialized object
+function reconstructUint8Array(obj: any): Uint8Array {
+  if (obj && typeof obj === 'object' && Object.keys(obj).every((key) => !isNaN(Number(key)))) {
+    return new Uint8Array(Object.values(obj))
+  }
+  return obj
+}
+
+// Helper function to ensure image data is in the correct format
+function processImageContent(content: ContentBlock[]): ContentBlock[] {
+  return content.map((block) => {
+    if ('image' in block && block.image) {
+      const imageBlock = block.image
+      if (imageBlock.source && typeof imageBlock.source === 'object') {
+        const source = imageBlock.source as any
+        if (source.bytes) {
+          // Reconstruct Uint8Array if it was serialized
+          const bytes = reconstructUint8Array(source.bytes)
+          if (bytes instanceof Uint8Array) {
+            return {
+              image: {
+                format: imageBlock.format,
+                source: { bytes }
+              }
+            }
+          }
+          // If bytes is a base64 string
+          if (typeof bytes === 'string') {
+            return {
+              image: {
+                format: imageBlock.format,
+                source: {
+                  bytes: new Uint8Array(Buffer.from(bytes, 'base64'))
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return block
+  })
+}
+
 const converse = async (props: CallConverseAPIProps): Promise<ConverseCommandOutput> => {
   const { modelId, messages, system, toolConfig } = props
+
+  // Process messages to ensure image data is in correct format
+  const processedMessages = messages.map((msg) => ({
+    ...msg,
+    content: Array.isArray(msg.content) ? processImageContent(msg.content) : msg.content
+  }))
+
   const { maxTokens, temperature, topP } = store.get('inferenceParams')
   const command = new ConverseCommand({
     modelId,
-    messages,
+    messages: processedMessages,
     system,
     toolConfig,
     inferenceConfig: { maxTokens, temperature, topP }
   })
+
+  console.debug(
+    'Processed message sample:',
+    processedMessages.map((msg) => ({
+      ...msg,
+      content: Array.isArray(msg.content)
+        ? msg.content.map((content) => {
+            if ('image' in content && content.image?.source?.bytes instanceof Uint8Array) {
+              return {
+                ...content,
+                image: {
+                  ...content.image,
+                  source: {
+                    bytes: `[Uint8Array:${content.image.source.bytes.length}bytes]`
+                  }
+                }
+              }
+            }
+            return content
+          })
+        : msg.content
+    }))
+  )
+
   const { region, accessKeyId, secretAccessKey } = store.get('aws')
   const runtimeClient = new BedrockRuntimeClient({
     credentials: {
@@ -62,26 +138,55 @@ const converseStream = async (
 
   try {
     const { modelId, messages, system, toolConfig } = props
+
+    // Process messages to ensure image data is in correct format
+    const processedMessages = messages.map((msg) => ({
+      ...msg,
+      content: Array.isArray(msg.content) ? processImageContent(msg.content) : msg.content
+    }))
+
     const command = new ConverseStreamCommand({
       modelId,
-      messages,
+      messages: processedMessages,
       system,
       toolConfig,
       inferenceConfig: store.get('inferenceParams')
     })
+
+    console.debug(
+      'Sending command with processed messages:',
+      processedMessages.map((msg) => ({
+        ...msg,
+        content: Array.isArray(msg.content)
+          ? msg.content.map((content) => {
+              if ('image' in content && content.image?.source?.bytes instanceof Uint8Array) {
+                return {
+                  ...content,
+                  image: {
+                    ...content.image,
+                    source: {
+                      bytes: `[Uint8Array:${content.image.source.bytes.length}bytes]`
+                    }
+                  }
+                }
+              }
+              return content
+            })
+          : msg.content
+      }))
+    )
+
     return await runtimeClient.send(command)
   } catch (error: any) {
     if (error.name === 'ThrottlingException') {
       console.log({ retry: retries, error, errorName: error.name })
       if (retries >= MAX_RETRIES) {
-        // 最大再試行回数に達した場合はエラーをスローする
         throw error
       }
-
-      // 一定時間待ってから再試行
       await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY))
       return converseStream(props, retries + 1)
     }
+    console.log({ error })
     throw error
   }
 }
@@ -105,7 +210,6 @@ const getAccountId = async () => {
   }
 }
 
-// 利用可能なモデルの取得とキャッシュ
 const modelCache: { [key: string]: any } = {}
 const CACHE_LIFETIME = 1000 * 60 * 60 // 1時間
 
@@ -140,28 +244,21 @@ const listModels = async () => {
   const cacheKey = `${region}-${accessKeyId}`
   const cachedData = modelCache[cacheKey]
 
-  // キャッシュが有効な場合はキャッシュを返す
   if (cachedData && cachedData._timestamp && Date.now() - cachedData._timestamp < CACHE_LIFETIME) {
     return cachedData.filter((model) => !model._timestamp)
   }
 
   try {
-    // 利用可能なモデルを取得
     const availableModels = await listAvailableModels(region, { accessKeyId, secretAccessKey })
-
-    // models のうち、availableModels に存在しない要素を除外
     const availableModelIds = availableModels.map((model) => model.modelId)
     const filteredModels = models.filter(
       (model: LLM) =>
         availableModelIds.includes(model.modelId) ||
-        availableModelIds.includes(model.modelId.slice(3)) // cross region inference
+        availableModelIds.includes(model.modelId.slice(3))
     )
 
-    // Prompt Routerを取得
     const accountId = await getAccountId()
     const promptRouterModels = accountId ? getDefaultPromptRouter(accountId, region) : []
-
-    // 結果をキャッシュに保存
     const result = [...filteredModels, ...promptRouterModels]
     modelCache[cacheKey] = [...result, { _timestamp: Date.now() } as any]
 

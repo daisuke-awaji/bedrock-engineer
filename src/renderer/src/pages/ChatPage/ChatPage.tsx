@@ -3,17 +3,18 @@ import AILogo from '../../assets/images/icons/ai.svg'
 import { MessageList } from './components/MessageList'
 import { InputForm } from './components/InputForm'
 import { ExampleScenarios } from './components/ExampleScenarios'
-import { useChat } from './hooks/useChat'
+import { useAgentChat } from './hooks/useAgentChat'
 import { AgentSelector } from './components/AgentSelector'
 import useSetting from '@renderer/hooks/useSetting'
 import useScroll from '@renderer/hooks/useScroll'
 import useIgnoreFileModal from './modals/useIgnoreFileModal'
 import useToolSettingModal from './modals/useToolSettingModal'
 import useAgentSettingsModal from './modals/useAgentSettingsModal'
-import { useDefaultAgents } from './hooks/useDefaultAgents'
 import { FiSettings } from 'react-icons/fi'
 import { useTranslation } from 'react-i18next'
 import SystemPromptModal from './components/SystemPromptModal'
+import { AttachedImage } from './components/InputForm/TextArea'
+import { useDefaultAgents } from './hooks/useDefaultAgents'
 
 export default function ChatPage() {
   const [userInput, setUserInput] = useState('')
@@ -48,13 +49,14 @@ export default function ChatPage() {
   const currentScenarios = currentAgent?.scenarios || []
 
   const { enabledTools, ToolSettingModal, openModal: openToolSettingModal } = useToolSettingModal()
-  const { messages, loading, handleSubmit } = useChat(
+  const { messages, loading, handleSubmit } = useAgentChat(
     llm?.modelId,
     systemPrompt,
     enabledTools?.filter((tool) => tool.enabled)
   )
-  const onSubmit = (input: string) => {
-    handleSubmit(input)
+
+  const onSubmit = (input: string, images: AttachedImage[]) => {
+    handleSubmit(input, images)
     setUserInput('')
   }
 
@@ -136,7 +138,7 @@ export default function ChatPage() {
           loading={loading}
           projectPath={projectPath}
           sendMsgKey={sendMsgKey}
-          onSubmit={onSubmit}
+          onSubmit={(input, attachedImages) => onSubmit(input, attachedImages)}
           onChange={setUserInput}
           onOpenToolSettings={openToolSettingModal}
           onSelectDirectory={selectDirectory}

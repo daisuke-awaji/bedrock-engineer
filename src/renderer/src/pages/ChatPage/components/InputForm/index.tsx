@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { TextArea } from './TextArea'
+import { AttachedImage, TextArea } from './TextArea'
 import { ToolSettings } from './ToolSettings'
 import { DirectorySelector } from './DirectorySelector'
 import { SendMsgKey } from '@/types/agent-chat'
@@ -9,7 +9,7 @@ type InputFormProps = {
   loading: boolean
   projectPath?: string
   sendMsgKey?: SendMsgKey
-  onSubmit: (input: string) => void
+  onSubmit: (input: string, attachedImages: AttachedImage[]) => void
   onChange: (input: string) => void
   onOpenToolSettings: () => void
   onSelectDirectory: () => void
@@ -48,7 +48,7 @@ export const InputForm: React.FC<InputFormProps> = ({
           value={userInput}
           onChange={onChange}
           disabled={loading}
-          onSubmit={() => onSubmit(userInput)}
+          onSubmit={(userInput, attachedImages) => onSubmit(userInput, attachedImages)}
           isComposing={isComposing}
           setIsComposing={setIsComposing}
           sendMsgKey={sendMsgKey}
