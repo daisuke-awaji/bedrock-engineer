@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, Menu, MenuItem, clipboard } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, Menu, MenuItem } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../build/icon.ico?asset'
@@ -42,7 +42,7 @@ async function createWindow(): Promise<void> {
   )
 
   // コンテキストメニューイベントの処理
-  mainWindow.webContents.on('context-menu', (_event, _params) => {
+  mainWindow.webContents.on('context-menu', () => {
     // メニューを表示
     contextMenu.popup()
   })

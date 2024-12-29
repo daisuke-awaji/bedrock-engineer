@@ -132,7 +132,6 @@ export class ToolService {
       const { chunkIndex, ...requestOptions } = options || {}
 
       // 既存のチャンクストアからチャンクを取得を試みる
-      // @ts-ignore
       const chunkStore: Map<string, ContentChunk[]> = global.chunkStore || new Map()
       let chunks: ContentChunk[] | undefined = chunkStore.get(url)
 
@@ -145,7 +144,6 @@ export class ToolService {
 
         // 新しいチャンクを保存
         chunkStore.set(url, chunks)
-        // @ts-ignore
         global.chunkStore = chunkStore
       }
 
@@ -179,7 +177,7 @@ export class ToolService {
     const summary = [
       `Content successfully retrieved and split into ${chunks.length} chunks:`,
       `URL: ${chunks[0].metadata?.url}`,
-      `Timestamp: ${new Date(chunks[0].metadata?.timestamp!).toISOString()}`,
+      `Timestamp: ${new Date(chunks[0].metadata?.timestamp ?? '').toISOString()}`,
       '\nTo retrieve specific chunks, use the fetchWebsite tool with chunkIndex option:',
       `Total Chunks: ${chunks.length}`,
       'Example usage:',

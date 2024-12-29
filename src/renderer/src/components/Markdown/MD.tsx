@@ -7,10 +7,16 @@ type MDProps = {
   children: string | null | undefined
 }
 
+type AnchorProps = {
+  href?: string
+  children?: React.ReactNode
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void
+}
+
 const MD = (props: MDProps) => {
   const components: Partial<Components> = useMemo(() => {
     return {
-      a: ({ node, ...props }) => (
+      a: (props: AnchorProps) => (
         <a
           {...props}
           onClick={(e) => {
