@@ -8,7 +8,8 @@ import {
   FaArrowRight,
   FaCopy,
   FaSearch,
-  FaGlobe
+  FaGlobe,
+  FaImage
 } from 'react-icons/fa'
 
 // ツール名とアイコンのマッピング
@@ -20,7 +21,8 @@ const toolIcons: { [key: string]: React.ReactElement } = {
   moveFile: <FaArrowRight className="text-orange-500 size-6" />,
   copyFile: <FaCopy className="text-indigo-500 size-6" />,
   tavilySearch: <FaSearch className="text-red-500 size-6" />,
-  fetchWebsite: <FaGlobe className="text-teal-500 size-6" />
+  fetchWebsite: <FaGlobe className="text-teal-500 size-6" />,
+  generateImage: <FaImage className="text-pink-500 size-6" />
 }
 
 // ツールの説明文
@@ -32,7 +34,8 @@ const toolDescriptions: { [key: string]: string } = {
   moveFile: 'Move files between locations',
   copyFile: 'Create file duplicates',
   tavilySearch: 'Search the web for information',
-  fetchWebsite: 'Fetch and analyze content from websites'
+  fetchWebsite: 'Fetch and analyze content from websites',
+  generateImage: 'Generate images using Amazon Bedrock Stable Diffusion models'
 }
 
 const useToolSettingModal = () => {

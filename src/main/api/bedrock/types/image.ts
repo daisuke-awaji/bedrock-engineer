@@ -1,9 +1,9 @@
 export interface ImageGenerationOptions {
-  aspect_ratio: '1:1' | '16:9' | '2:3' | '3:2' | '4:5' | '5:4' | '9:16' | '9:21'
+  aspect_ratio: AspectRatio
   /** Seed for deterministic generation */
   seed?: number
   /** Image style to apply */
-  output_format: 'png' | 'jpeg' | 'webp'
+  output_format: OutputFormat
 }
 
 export type StabilityModel =
@@ -15,6 +15,7 @@ export type StabilityModel =
   | 'stability.stable-image-ultra-v1:1'
 
 export type AspectRatio = '1:1' | '16:9' | '2:3' | '3:2' | '4:5' | '5:4' | '9:16' | '9:21'
+export type OutputFormat = 'png' | 'jpeg' | 'webp'
 
 export interface GenerateImageRequest {
   modelId: StabilityModel

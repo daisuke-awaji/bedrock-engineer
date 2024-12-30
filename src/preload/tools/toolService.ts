@@ -3,6 +3,7 @@ import * as path from 'path'
 import GitignoreLikeMatcher from '../lib/gitignore-like-matcher'
 import { ipcRenderer } from 'electron'
 import { ContentChunker, ContentChunk } from '../lib/contentChunker'
+import { AspectRatio, BedrockService, OutputFormat, StabilityModel } from '../../main/api/bedrock'
 
 export class ToolService {
   async createFolder(folderPath: string): Promise<string> {
@@ -199,6 +200,84 @@ export class ToolService {
       return JSON.stringify(res)
     } catch (e: any) {
       throw `Error pexelsSearch: ${JSON.stringify(e)}`
+    }
+  }
+
+  /**
+   * Generate image from text prompt using Bedrock service.
+   * @param bedrock
+   * @param toolInput
+   * @returns
+   */
+  async generateImage(
+    bedrock: BedrockService,
+    toolInput: {
+      prompt: string
+      outputPath: string
+      modelId?: StabilityModel
+      negativePrompt?: string
+      aspect_ratio?: AspectRatio
+      seed?: number
+      output_format?: OutputFormat
+    }
+  ): Promise<string> {
+    const {
+      prompt,
+      outputPath,
+      modelId = 'stability.sd3-5-large-v1:0',
+      negativePrompt,
+      aspect_ratio,
+      seed,
+      output_format = 'png'
+    } = toolInput
+
+    try {
+      // Generate image
+      const result = await bedrock.generateImage({
+        modelId,
+        prompt,
+        negativePrompt,
+        aspect_ratio,
+        seed,
+        output_format
+      })
+
+      if (!result.images || result.images.length === 0) {
+        throw new Error('No image was generated')
+      }
+
+      // Save the first generated image
+      const imageData = result.images[0]
+      const binaryData = Buffer.from(imageData, 'base64')
+      await fs.writeFile(outputPath, new Uint8Array(binaryData))
+
+      return JSON.stringify({
+        success: true,
+        message: `Image generated successfully and saved to ${outputPath}`,
+        modelUsed: modelId,
+        seed: result.seeds?.[0]
+      })
+    } catch (error: any) {
+      if (error.name === 'ThrottlingException') {
+        const alternativeModels = [
+          'stability.sd3-large-v1:0',
+          'stability.stable-image-core-v1:1',
+          'stability.stable-image-ultra-v1:1'
+        ].filter((m) => m !== modelId)
+
+        return JSON.stringify({
+          success: false,
+          error: 'Rate limit exceeded. Please try again with a different model.',
+          suggestedModels: alternativeModels,
+          message: error.message
+        })
+      }
+
+      return JSON.stringify({
+        success: false,
+        error: 'Failed to generate image',
+        message: error.message
+      })
     }
   }
 }

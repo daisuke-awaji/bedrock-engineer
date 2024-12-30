@@ -146,9 +146,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     // Load Tools Settings
     const savedTools = window.store.get('tools')
-    if (savedTools) {
-      setStateTools(savedTools)
-    } else if (window.tools) {
+    if (savedTools.length !== window.tools.length) {
       const initialTools = window.tools
         .map((tool) => {
           if (!tool.toolSpec?.name) return
@@ -157,6 +155,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .filter((item): item is ToolState => item !== undefined)
       setStateTools(initialTools)
       window.store.set('tools', initialTools)
+    } else if (savedTools) {
+      setStateTools(savedTools)
     }
   }, [])
 

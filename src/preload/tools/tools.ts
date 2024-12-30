@@ -1,9 +1,11 @@
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { ToolService } from './toolService'
 import { store } from '../store'
+import { BedrockService } from '../../main/api/bedrock'
 
 export const executeTool = async (toolName: string | undefined, toolInput: any) => {
   const toolService = new ToolService()
+  const bedrock = new BedrockService({ store })
   switch (toolName) {
     case 'createFolder':
       return toolService.createFolder(toolInput['path'])
@@ -26,6 +28,17 @@ export const executeTool = async (toolName: string | undefined, toolInput: any) 
     }
     case 'fetchWebsite':
       return toolService.fetchWebsite(toolInput['url'], toolInput['options'])
+    case 'generateImage': {
+      return toolService.generateImage(bedrock, {
+        prompt: toolInput['prompt'],
+        outputPath: toolInput['outputPath'],
+        modelId: toolInput['modelId'],
+        negativePrompt: toolInput['negativePrompt'],
+        aspect_ratio: toolInput['aspect_ratio'],
+        seed: toolInput['seed'],
+        output_format: toolInput['output_format']
+      })
+    }
     default:
       throw new Error(`Unknown tool: ${toolName}`)
   }
@@ -223,6 +236,61 @@ First call without a chunkIndex(Must be 1 or greater) to get an overview and tot
             }
           },
           required: ['url']
+        }
+      }
+    }
+  },
+  {
+    toolSpec: {
+      name: 'generateImage',
+      description:
+        'Generate an image using Amazon Bedrock Stable Diffusion models. By default uses stability.sd3-5-large-v1:0, but can use other models to avoid throttling. Images are saved to the specified path.',
+      inputSchema: {
+        json: {
+          type: 'object',
+          properties: {
+            prompt: {
+              type: 'string',
+              description: 'Text description of the image you want to generate'
+            },
+            outputPath: {
+              type: 'string',
+              description:
+                'Path where the generated image should be saved, including filename (e.g., "/path/to/image.png")'
+            },
+            modelId: {
+              type: 'string',
+              description:
+                'Stable Diffusion model to use. If experiencing throttling, try different models.',
+              enum: [
+                'stability.sd3-5-large-v1:0',
+                'stability.sd3-large-v1:0',
+                'stability.stable-image-core-v1:1',
+                'stability.stable-image-ultra-v1:1'
+              ],
+              default: 'stability.sd3-5-large-v1:0'
+            },
+            negativePrompt: {
+              type: 'string',
+              description: 'Optional. Things to exclude from the image'
+            },
+            aspect_ratio: {
+              type: 'string',
+              description: 'Optional. Aspect ratio of the generated image',
+              enum: ['1:1', '16:9', '2:3', '3:2', '4:5', '5:4', '9:16', '9:21']
+            },
+            seed: {
+              type: 'number',
+              description: 'Optional. Seed for deterministic generation'
+            },
+            output_format: {
+              type: 'string',
+              description: 'Optional. Output format of the generated image',
+              enum: ['png', 'jpeg', 'webp'],
+              default: 'png'
+            }
+          },
+          required: ['prompt', 'outputPath']
         }
       }
     }

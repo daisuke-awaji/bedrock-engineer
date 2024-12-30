@@ -7,6 +7,7 @@ import { handleFileOpen } from '../preload/file'
 import Store from 'electron-store'
 import getRandomPort from '../preload/lib/random-port'
 import { store } from '../preload/store'
+import fs from 'fs'
 Store.initRenderer()
 
 async function createWindow(): Promise<void> {
@@ -104,6 +105,20 @@ app.whenReady().then(() => {
       properties: ['openDirectory']
     })
   )
+
+  // ローカル画像読み込みハンドラー
+  ipcMain.handle('get-local-image', async (_, path: string) => {
+    try {
+      const data = await fs.promises.readFile(path)
+      const ext = path.split('.').pop()?.toLowerCase() || 'png'
+      const base64 = data.toString('base64')
+      return `data:image/${ext};base64,${base64}`
+    } catch (error) {
+      console.error('Failed to read image:', error)
+      throw error
+    }
+  })
+
   // Tool として実行される Web fetch ハンドラー
   ipcMain.handle('fetch-website', async (_event, url: string, options?: any) => {
     try {
