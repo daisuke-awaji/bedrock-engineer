@@ -131,7 +131,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [llmError, setLLMError] = useState<any>()
   const [currentLLM, setCurrentLLM] = useState<LLM>({
     modelId: 'anthropic.claude-3-haiku-20240307-v1:0',
-    modelName: 'Claude 3 Haiku'
+    modelName: 'Claude 3 Haiku',
+    toolUse: true
   })
   const [availableModels, setAvailableModels] = useState<LLM[]>([])
   const [inferenceParams, setInferenceParams] =
@@ -237,43 +238,27 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     fetchModels()
     if (awsRegion) {
-      const updatedTools = tools.map((tool) => {
-        if (tool.toolSpec?.name && isGenerateImageTool(tool.toolSpec?.name)) {
-          if (supportGenerateImageToolRegions.includes(awsRegion)) {
-            console.log('generateImage tool is enabled.')
-            return {
-              ...tool,
-              toolSpec: {
-                ...tool.toolSpec,
-                inputSchema: {
-                  ...tool.toolSpec.inputSchema,
-                  json: {
-                    ...(tool.toolSpec.inputSchema?.json as any),
-                    properties: {
-                      ...(tool.toolSpec.inputSchema?.json as any).properties,
-                      modelId: {
-                        ...((tool.toolSpec.inputSchema?.json as any).properties.modelId as any),
-                        enum: availableImageGenerationModelsMap[awsRegion],
-                        default: availableImageGenerationModelsMap[awsRegion][0]
-                      }
-                    }
-                  }
-                }
-              },
-              enabled: true
-            }
-          } else {
-            console.log('generateImage tool is disabled.')
-            return { ...tool, enabled: false }
-          }
-        }
-        return tool
-      })
-      console.log(updatedTools)
+      const updatedTools = replaceGenerateImageModels(tools, awsRegion)
       setStateTools(updatedTools)
       window.store.set('tools', updatedTools)
     }
   }, [awsRegion, awsAccessKeyId, awsSecretAccessKey])
+
+  useEffect(() => {
+    if (currentLLM) {
+      // currentLLM が ToolUse をサポートしないモデルだった場合ツールを全て disabled にする
+      if (!currentLLM.toolUse) {
+        const updatedTools = tools.map((tool) => ({ ...tool, enabled: false }))
+        setStateTools(updatedTools)
+        window.store.set('tools', updatedTools)
+      } else {
+        // currentLLM が ToolUse をサポートするモデルだった場合、ツールを全て enabled 状態にする
+        const updatedTools = tools.map((tool) => ({ ...tool, enabled: true }))
+        setStateTools(updatedTools)
+        window.store.set('tools', updatedTools)
+      }
+    }
+  }, [currentLLM])
 
   // Methods
   const updateSendMsgKey = (key: SendMsgKey) => {
@@ -425,4 +410,40 @@ export const useSettings = () => {
     throw new Error('useSettings must be used within a SettingsProvider')
   }
   return context
+}
+function replaceGenerateImageModels(tools: ToolState[], awsRegion: string) {
+  const updatedTools = tools.map((tool) => {
+    if (tool.toolSpec?.name && isGenerateImageTool(tool.toolSpec?.name)) {
+      if (supportGenerateImageToolRegions.includes(awsRegion)) {
+        console.log('generateImage tool is enabled.')
+        return {
+          ...tool,
+          toolSpec: {
+            ...tool.toolSpec,
+            inputSchema: {
+              ...tool.toolSpec.inputSchema,
+              json: {
+                ...(tool.toolSpec.inputSchema?.json as any),
+                properties: {
+                  ...(tool.toolSpec.inputSchema?.json as any).properties,
+                  modelId: {
+                    ...((tool.toolSpec.inputSchema?.json as any).properties.modelId as any),
+                    enum: availableImageGenerationModelsMap[awsRegion],
+                    default: availableImageGenerationModelsMap[awsRegion][0]
+                  }
+                }
+              }
+            }
+          },
+          enabled: true
+        }
+      } else {
+        console.log('generateImage tool is disabled.')
+        return { ...tool, enabled: false }
+      }
+    }
+    return tool
+  })
+  console.log(updatedTools)
+  return updatedTools
 }

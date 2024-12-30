@@ -11,6 +11,7 @@ import {
   FaGlobe,
   FaImage
 } from 'react-icons/fa'
+import toast from 'react-hot-toast'
 
 // ツール名とアイコンのマッピング
 const toolIcons: { [key: string]: React.ReactElement } = {
@@ -39,7 +40,7 @@ const toolDescriptions: { [key: string]: string } = {
 }
 
 const useToolSettingModal = () => {
-  const { tools, setTools, enabledTools } = useSettings()
+  const { tools, setTools, enabledTools, currentLLM } = useSettings()
 
   const handleClickEnableTool = (toolName: string) => {
     if (!tools) return
@@ -78,6 +79,11 @@ const useToolSettingModal = () => {
                   hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/10
                 `}
                 onClick={() => {
+                  if (!currentLLM.toolUse) {
+                    // この LLM が ToolUse をサポートしていない場合は toast にワーニングメッセージ
+                    toast(`${currentLLM.modelName} does not support ToolUse.`)
+                    return
+                  }
                   if (toolName) {
                     handleClickEnableTool(toolName)
                   }
