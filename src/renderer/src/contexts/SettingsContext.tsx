@@ -210,24 +210,26 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     // Load Tools Settings
     const savedTools = window.store.get('tools')
-    const toolsNeedUpdate = compareTools(savedTools, window.tools)
-    if (toolsNeedUpdate) {
-      const initialTools = window.tools
-        .map((tool) => {
-          if (!tool.toolSpec?.name) {
-            return
-          }
-          return {
-            ...tool,
-            enabled: true
-          } as Tool
-        })
-        .filter((item): item is ToolState => item !== undefined)
+    if (savedTools) {
+      const toolsNeedUpdate = compareTools(savedTools, window.tools)
+      if (toolsNeedUpdate) {
+        const initialTools = window.tools
+          .map((tool) => {
+            if (!tool.toolSpec?.name) {
+              return
+            }
+            return {
+              ...tool,
+              enabled: true
+            } as Tool
+          })
+          .filter((item): item is ToolState => item !== undefined)
 
-      setStateTools(initialTools)
-      window.store.set('tools', initialTools)
-    } else if (savedTools) {
-      setStateTools(savedTools)
+        setStateTools(initialTools)
+        window.store.set('tools', initialTools)
+      } else if (savedTools) {
+        setStateTools(savedTools)
+      }
     }
   }, [])
 
