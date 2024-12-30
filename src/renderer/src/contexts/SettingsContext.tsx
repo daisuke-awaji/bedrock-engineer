@@ -76,7 +76,7 @@ const compareTools = (savedTools: ToolState[], windowTools: typeof window.tools)
 
 interface SettingsContextType {
   // Advanced Settings
-  sendMsgKey: SendMsgKey | undefined
+  sendMsgKey: SendMsgKey
   updateSendMsgKey: (key: SendMsgKey) => void
 
   // LLM Settings
@@ -125,7 +125,7 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Advanced Settings
-  const [sendMsgKey, setSendMsgKey] = useState<SendMsgKey>()
+  const [sendMsgKey, setSendMsgKey] = useState<SendMsgKey>('Enter')
 
   // LLM Settings
   const [llmError, setLLMError] = useState<any>()
@@ -217,13 +217,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           if (!tool.toolSpec?.name) {
             return
           }
-          // 既存の enabled 状態を保持
-          const existingTool = savedTools.find(
-            (saved) => saved.toolSpec?.name === tool.toolSpec?.name
-          )
           return {
             ...tool,
-            enabled: existingTool ? existingTool.enabled : true
+            enabled: true
           } as Tool
         })
         .filter((item): item is ToolState => item !== undefined)
@@ -245,18 +241,16 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [awsRegion, awsAccessKeyId, awsSecretAccessKey])
 
   useEffect(() => {
-    if (currentLLM) {
+    if (currentLLM && currentLLM.toolUse === false) {
       // currentLLM が ToolUse をサポートしないモデルだった場合ツールを全て disabled にする
-      if (!currentLLM.toolUse) {
-        const updatedTools = tools.map((tool) => ({ ...tool, enabled: false }))
-        setStateTools(updatedTools)
-        window.store.set('tools', updatedTools)
-      } else {
-        // currentLLM が ToolUse をサポートするモデルだった場合、ツールを全て enabled 状態にする
-        const updatedTools = tools.map((tool) => ({ ...tool, enabled: true }))
-        setStateTools(updatedTools)
-        window.store.set('tools', updatedTools)
-      }
+      const updatedTools = window.tools.map((tool) => ({ ...tool, enabled: false }))
+      setStateTools(updatedTools)
+      window.store.set('tools', updatedTools)
+    }
+    if (currentLLM && currentLLM.toolUse === true) {
+      const updatedTools = window.tools.map((tool) => ({ ...tool, enabled: true }))
+      setStateTools(updatedTools)
+      window.store.set('tools', updatedTools)
     }
   }, [currentLLM])
 
@@ -411,6 +405,13 @@ export const useSettings = () => {
   }
   return context
 }
+
+/**
+ * ToolSpec の中で、generateImage のツールでは指定できる modelId がリージョンによって異なる
+ * @param tools
+ * @param awsRegion
+ * @returns
+ */
 function replaceGenerateImageModels(tools: ToolState[], awsRegion: string) {
   const updatedTools = tools.map((tool) => {
     if (tool.toolSpec?.name && isGenerateImageTool(tool.toolSpec?.name)) {
@@ -444,6 +445,5 @@ function replaceGenerateImageModels(tools: ToolState[], awsRegion: string) {
     }
     return tool
   })
-  console.log(updatedTools)
   return updatedTools
 }

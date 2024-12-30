@@ -80,11 +80,12 @@ export default function ChatPage() {
       <div className={`flex flex-col h-[calc(100vh-11rem)] overflow-y-auto`} id="main">
         <div className="flex justify-between items-center mb-4">
           <div>
-            {messages.length === 0 && allAgents.length > 1 ? (
+            {allAgents.length > 1 ? (
               <AgentSelector
                 agents={allAgents}
                 selectedAgent={selectedAgentId}
                 onSelectAgent={setSelectedAgentId}
+                openable={messages.length === 0}
               />
             ) : null}
           </div>
