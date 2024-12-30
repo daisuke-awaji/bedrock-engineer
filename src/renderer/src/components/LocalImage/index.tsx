@@ -32,9 +32,7 @@ const LocalImage: React.FC<LocalImageProps> = ({ src, alt, className }) => {
   }, [src])
 
   if (loading) {
-    return (
-      <div className="animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg w-full h-48"></div>
-    )
+    return <div className="animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg w-full h-48"></div>
   }
 
   if (error) {

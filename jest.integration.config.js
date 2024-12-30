@@ -7,12 +7,13 @@ module.exports = {
   testTimeout: 90000,
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   transform: {
-    '^.+\\.tsx?$': ['ts-jest', {
-      tsconfig: 'tsconfig.test.json'
-    }]
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        tsconfig: 'tsconfig.test.json'
+      }
+    ]
   },
-  testMatch: [
-    "**/*.integration.test.ts"
-  ],
+  testMatch: ['**/*.integration.test.ts'],
   setupFiles: ['<rootDir>/jest.integration.setup.js']
 }

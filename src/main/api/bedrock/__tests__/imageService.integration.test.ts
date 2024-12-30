@@ -1,4 +1,4 @@
-import { describe, expect, test, beforeAll } from '@jest/globals'
+import { describe, test, beforeAll } from '@jest/globals'
 import { BedrockService } from '../index'
 import type { Store } from '../types'
 import * as fs from 'fs/promises'
