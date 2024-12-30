@@ -4,7 +4,7 @@ import type {
   AspectRatio,
   GenerateImageRequest,
   GeneratedImage,
-  StabilityModel
+  ImageGeneratorModel
 } from '../types/image'
 
 type ModelType = 'core' | 'ultra' | 'sd3' | 'nova' | 'titan'
@@ -61,7 +61,7 @@ interface CoreModelResponse {
 }
 
 interface NovaModelResponse {
-  image: string
+  images: string[]
   error?: string
 }
 
@@ -125,7 +125,7 @@ export class ImageService {
     })
   }
 
-  private getModelType(modelId: StabilityModel): ModelType {
+  private getModelType(modelId: ImageGeneratorModel): ModelType {
     if (modelId.includes('core')) return 'core'
     if (modelId.includes('ultra')) return 'ultra'
     if (modelId.includes('sd3')) return 'sd3'
@@ -180,7 +180,8 @@ export class ImageService {
     if (!aspectRatio) return { width: 1024, height: 1024 }
 
     const [w, h] = aspectRatio.split(':').map(Number)
-    const maxSize = modelType === 'nova' ? 4096 : 1024
+    // const maxSize = modelType === 'nova' ? 4096 : 1024
+    const maxSize = 1024
     const baseSize = maxSize
 
     if (w > h) {
@@ -306,11 +307,11 @@ export class ImageService {
         if (result.error) {
           throw new Error(`Nova error: ${result.error}`)
         }
-        if (!result.image) {
+        if (!result.images) {
           throw new Error('Invalid response format from Nova')
         }
         return {
-          images: [result.image]
+          images: result.images
         }
       } else if (modelType === 'titan') {
         const result = JSON.parse(responseBody) as TitanModelResponse
@@ -339,11 +340,11 @@ export class ImageService {
   }
 
   // Helper method to validate model compatibility
-  isModelSupported(modelId: string): modelId is StabilityModel {
-    return this.getSupportedModels().includes(modelId as StabilityModel)
+  isModelSupported(modelId: string): modelId is ImageGeneratorModel {
+    return this.getSupportedModels().includes(modelId as ImageGeneratorModel)
   }
 
-  private getSupportedModels(): StabilityModel[] {
+  private getSupportedModels(): ImageGeneratorModel[] {
     return [
       'stability.sd3-large-v1:0',
       'stability.sd3-5-large-v1:0',

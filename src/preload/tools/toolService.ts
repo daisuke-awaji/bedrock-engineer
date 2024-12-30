@@ -3,7 +3,12 @@ import * as path from 'path'
 import GitignoreLikeMatcher from '../lib/gitignore-like-matcher'
 import { ipcRenderer } from 'electron'
 import { ContentChunker, ContentChunk } from '../lib/contentChunker'
-import { AspectRatio, BedrockService, OutputFormat, StabilityModel } from '../../main/api/bedrock'
+import {
+  AspectRatio,
+  BedrockService,
+  OutputFormat,
+  ImageGeneratorModel
+} from '../../main/api/bedrock'
 
 export class ToolService {
   async createFolder(folderPath: string): Promise<string> {
@@ -214,7 +219,7 @@ export class ToolService {
     toolInput: {
       prompt: string
       outputPath: string
-      modelId?: StabilityModel
+      modelId: ImageGeneratorModel
       negativePrompt?: string
       aspect_ratio?: AspectRatio
       seed?: number
@@ -224,7 +229,7 @@ export class ToolService {
     const {
       prompt,
       outputPath,
-      modelId = 'stability.sd3-5-large-v1:0',
+      modelId,
       negativePrompt,
       aspect_ratio,
       seed,
@@ -265,19 +270,19 @@ export class ToolService {
           'stability.stable-image-ultra-v1:1'
         ].filter((m) => m !== modelId)
 
-        return JSON.stringify({
+        throw `Error generateImage: ${JSON.stringify({
           success: false,
           error: 'Rate limit exceeded. Please try again with a different model.',
           suggestedModels: alternativeModels,
           message: error.message
-        })
+        })}`
       }
 
-      return JSON.stringify({
+      throw `Error generateImage: ${JSON.stringify({
         success: false,
         error: 'Failed to generate image',
         message: error.message
-      })
+      })}`
     }
   }
 }

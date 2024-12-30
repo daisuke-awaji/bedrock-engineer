@@ -244,7 +244,7 @@ First call without a chunkIndex(Must be 1 or greater) to get an overview and tot
     toolSpec: {
       name: 'generateImage',
       description:
-        'Generate an image using Amazon Bedrock Stable Diffusion models. By default uses stability.sd3-5-large-v1:0, but can use other models to avoid throttling. Images are saved to the specified path.',
+        'Generate an image using Amazon Bedrock Foundation Models. By default uses stability.sd3-5-large-v1:0. Images are saved to the specified path. For Titan models, specific aspect ratios and sizes are supported.',
       inputSchema: {
         json: {
           type: 'object',
@@ -261,12 +261,15 @@ First call without a chunkIndex(Must be 1 or greater) to get an overview and tot
             modelId: {
               type: 'string',
               description:
-                'Stable Diffusion model to use. If experiencing throttling, try different models.',
+                'Model to use. Includes Stability.ai models and Amazon models. Note that Amazon models have specific region availability.',
               enum: [
                 'stability.sd3-5-large-v1:0',
                 'stability.sd3-large-v1:0',
                 'stability.stable-image-core-v1:1',
-                'stability.stable-image-ultra-v1:1'
+                'stability.stable-image-ultra-v1:1',
+                'amazon.nova-canvas-v1:0',
+                'amazon.titan-image-generator-v2:0',
+                'amazon.titan-image-generator-v1'
               ],
               default: 'stability.sd3-5-large-v1:0'
             },
@@ -276,12 +279,32 @@ First call without a chunkIndex(Must be 1 or greater) to get an overview and tot
             },
             aspect_ratio: {
               type: 'string',
-              description: 'Optional. Aspect ratio of the generated image',
-              enum: ['1:1', '16:9', '2:3', '3:2', '4:5', '5:4', '9:16', '9:21']
+              description:
+                'Optional. Aspect ratio of the generated image. For Titan models, specific sizes will be chosen based on the aspect ratio.',
+              enum: [
+                '1:1',
+                '16:9',
+                '2:3',
+                '3:2',
+                '4:5',
+                '5:4',
+                '9:16',
+                '9:21',
+                '5:3',
+                '3:5',
+                '7:9',
+                '9:7',
+                '6:11',
+                '11:6',
+                '5:11',
+                '11:5',
+                '9:5'
+              ]
             },
             seed: {
               type: 'number',
-              description: 'Optional. Seed for deterministic generation'
+              description:
+                'Optional. Seed for deterministic generation. For Titan models, range is 0 to 2147483647.'
             },
             output_format: {
               type: 'string',
@@ -290,7 +313,7 @@ First call without a chunkIndex(Must be 1 or greater) to get an overview and tot
               default: 'png'
             }
           },
-          required: ['prompt', 'outputPath']
+          required: ['prompt', 'outputPath', 'modelId']
         }
       }
     }
