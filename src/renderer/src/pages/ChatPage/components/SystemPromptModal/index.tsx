@@ -15,7 +15,7 @@ const SystemPromptModal = React.memo(
     return (
       <Modal dismissible show={isOpen} onClose={onClose} size="7xl">
         <Modal.Header>SYSTEM PROMPT</Modal.Header>
-        <Modal.Body>
+        <Modal.Body className="dark:text-white">
           <MD>{systemPrompt}</MD>
         </Modal.Body>
       </Modal>

@@ -2,6 +2,7 @@ import Markdown, { Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import style from './styles.module.css'
 import { useMemo } from 'react'
+import LocalImage from '../LocalImage'
 
 type MDProps = {
   children: string | null | undefined
@@ -11,6 +12,12 @@ type AnchorProps = {
   href?: string
   children?: React.ReactNode
   onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void
+}
+
+type ImgProps = {
+  src?: string
+  alt?: string
+  className?: string
 }
 
 const MD = (props: MDProps) => {
@@ -27,7 +34,13 @@ const MD = (props: MDProps) => {
           }}
           style={{ cursor: 'pointer' }}
         />
-      )
+      ),
+      img: ({ src, alt, ...props }: ImgProps) => {
+        if (src?.startsWith('/')) {
+          return <LocalImage src={src} alt={alt || ''} {...props} />
+        }
+        return <img src={src} alt={alt} {...props} />
+      }
     }
   }, [])
 

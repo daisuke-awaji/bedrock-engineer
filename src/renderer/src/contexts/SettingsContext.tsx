@@ -11,9 +11,72 @@ const DEFAULT_INFERENCE_PARAMS: InferenceParameters = {
   topP: 0.9
 }
 
+// TODO: リージョンに応じて動的にツールの enum を設定したい
+// "us-east-1",  "us-west-2", "ap-northeast-1" 以外は generateImage ツールを無効化する
+const isGenerateImageTool = (name: string) => name === 'generateImage'
+
+const supportGenerateImageToolRegions: string[] = [
+  'us-east-1',
+  'us-west-2',
+  'ap-northeast-1',
+  'eu-west-1',
+  'eu-west-2',
+  'ap-south-1'
+]
+const availableImageGenerationModelsMap: Record<string, string[]> = {
+  'us-east-1': [
+    'amazon.nova-canvas-v1:0',
+    'amazon.titan-image-generator-v1',
+    'amazon.titan-image-generator-v2:0'
+  ],
+  'us-west-2': [
+    'stability.sd3-large-v1:0',
+    'stability.sd3-5-large-v1:0',
+    'stability.stable-image-core-v1:0',
+    'stability.stable-image-core-v1:1',
+    'stability.stable-image-ultra-v1:0',
+    'stability.stable-image-ultra-v1:1',
+    'amazon.titan-image-generator-v2:0',
+    'amazon.titan-image-generator-v1'
+  ],
+  'ap-northeast-1': ['amazon.titan-image-generator-v2:0', 'amazon.titan-image-generator-v1'],
+  'ap-south-1': ['amazon.titan-image-generator-v1'],
+  'eu-west-1': ['amazon.titan-image-generator-v1'],
+  'eu-west-2': ['amazon.titan-image-generator-v1']
+}
+
+const compareTools = (savedTools: ToolState[], windowTools: typeof window.tools): boolean => {
+  if (savedTools.length !== windowTools.length) return true
+
+  const savedToolNames = new Set(savedTools.map((tool) => tool.toolSpec?.name))
+  const windowToolNames = new Set(windowTools.map((tool) => tool.toolSpec?.name))
+
+  // 名前のセットが異なる場合は変更があったとみなす
+  if (savedToolNames.size !== windowToolNames.size) return true
+
+  // 各ツールの名前を比較
+  for (const name of savedToolNames) {
+    if (!windowToolNames.has(name)) return true
+  }
+
+  // ツールの詳細な内容を比較
+  for (const windowTool of windowTools) {
+    const savedTool = savedTools.find((tool) => tool.toolSpec?.name === windowTool.toolSpec?.name)
+
+    if (!savedTool) return true
+
+    // ツールの重要なプロパティを比較
+    if (JSON.stringify(windowTool.toolSpec) !== JSON.stringify(savedTool.toolSpec)) {
+      return true
+    }
+  }
+
+  return false
+}
+
 interface SettingsContextType {
   // Advanced Settings
-  sendMsgKey: SendMsgKey | undefined
+  sendMsgKey: SendMsgKey
   updateSendMsgKey: (key: SendMsgKey) => void
 
   // LLM Settings
@@ -62,13 +125,14 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Advanced Settings
-  const [sendMsgKey, setSendMsgKey] = useState<SendMsgKey>()
+  const [sendMsgKey, setSendMsgKey] = useState<SendMsgKey>('Enter')
 
   // LLM Settings
   const [llmError, setLLMError] = useState<any>()
   const [currentLLM, setCurrentLLM] = useState<LLM>({
     modelId: 'anthropic.claude-3-haiku-20240307-v1:0',
-    modelName: 'Claude 3 Haiku'
+    modelName: 'Claude 3 Haiku',
+    toolUse: true
   })
   const [availableModels, setAvailableModels] = useState<LLM[]>([])
   const [inferenceParams, setInferenceParams] =
@@ -147,22 +211,50 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Load Tools Settings
     const savedTools = window.store.get('tools')
     if (savedTools) {
-      setStateTools(savedTools)
-    } else if (window.tools) {
-      const initialTools = window.tools
-        .map((tool) => {
-          if (!tool.toolSpec?.name) return
-          return { ...tool, enabled: true } as Tool
-        })
-        .filter((item): item is ToolState => item !== undefined)
-      setStateTools(initialTools)
-      window.store.set('tools', initialTools)
+      const toolsNeedUpdate = compareTools(savedTools, window.tools)
+      if (toolsNeedUpdate) {
+        const initialTools = window.tools
+          .map((tool) => {
+            if (!tool.toolSpec?.name) {
+              return
+            }
+            return {
+              ...tool,
+              enabled: true
+            } as Tool
+          })
+          .filter((item): item is ToolState => item !== undefined)
+
+        setStateTools(initialTools)
+        window.store.set('tools', initialTools)
+      } else if (savedTools) {
+        setStateTools(savedTools)
+      }
     }
   }, [])
 
   useEffect(() => {
     fetchModels()
+    if (awsRegion) {
+      const updatedTools = replaceGenerateImageModels(tools, awsRegion)
+      setStateTools(updatedTools)
+      window.store.set('tools', updatedTools)
+    }
   }, [awsRegion, awsAccessKeyId, awsSecretAccessKey])
+
+  useEffect(() => {
+    if (currentLLM && currentLLM.toolUse === false) {
+      // currentLLM が ToolUse をサポートしないモデルだった場合ツールを全て disabled にする
+      const updatedTools = window.tools.map((tool) => ({ ...tool, enabled: false }))
+      setStateTools(updatedTools)
+      window.store.set('tools', updatedTools)
+    }
+    if (currentLLM && currentLLM.toolUse === true) {
+      const updatedTools = window.tools.map((tool) => ({ ...tool, enabled: true }))
+      setStateTools(updatedTools)
+      window.store.set('tools', updatedTools)
+    }
+  }, [currentLLM])
 
   // Methods
   const updateSendMsgKey = (key: SendMsgKey) => {
@@ -314,4 +406,46 @@ export const useSettings = () => {
     throw new Error('useSettings must be used within a SettingsProvider')
   }
   return context
+}
+
+/**
+ * ToolSpec の中で、generateImage のツールでは指定できる modelId がリージョンによって異なる
+ * @param tools
+ * @param awsRegion
+ * @returns
+ */
+function replaceGenerateImageModels(tools: ToolState[], awsRegion: string) {
+  const updatedTools = tools.map((tool) => {
+    if (tool.toolSpec?.name && isGenerateImageTool(tool.toolSpec?.name)) {
+      if (supportGenerateImageToolRegions.includes(awsRegion)) {
+        console.log('generateImage tool is enabled.')
+        return {
+          ...tool,
+          toolSpec: {
+            ...tool.toolSpec,
+            inputSchema: {
+              ...tool.toolSpec.inputSchema,
+              json: {
+                ...(tool.toolSpec.inputSchema?.json as any),
+                properties: {
+                  ...(tool.toolSpec.inputSchema?.json as any).properties,
+                  modelId: {
+                    ...((tool.toolSpec.inputSchema?.json as any).properties.modelId as any),
+                    enum: availableImageGenerationModelsMap[awsRegion],
+                    default: availableImageGenerationModelsMap[awsRegion][0]
+                  }
+                }
+              }
+            }
+          },
+          enabled: true
+        }
+      } else {
+        console.log('generateImage tool is disabled.')
+        return { ...tool, enabled: false }
+      }
+    }
+    return tool
+  })
+  return updatedTools
 }

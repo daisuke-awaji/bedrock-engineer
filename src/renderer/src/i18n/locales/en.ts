@@ -1,4 +1,5 @@
 import { chatPage } from './chat'
+import { iamPolicy } from './settings'
 
 const HomePage = {
   'set your aws credential':
@@ -145,7 +146,8 @@ const en = {
   ...SettingPage,
   ...StepFunctionsGeneratorPage,
   ...chatPage.en,
-  ...WebsiteGeneratorPage
+  ...WebsiteGeneratorPage,
+  ...iamPolicy.en
 }
 
 export default en

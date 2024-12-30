@@ -7,7 +7,109 @@ import { handleFileOpen } from '../preload/file'
 import Store from 'electron-store'
 import getRandomPort from '../preload/lib/random-port'
 import { store } from '../preload/store'
+import fs from 'fs'
 Store.initRenderer()
+
+function createMenu(window: BrowserWindow) {
+  const isMac = process.platform === 'darwin'
+  const template = [
+    // Application Menu (macOS only)
+    ...(isMac
+      ? [
+          {
+            label: app.name,
+            submenu: [
+              { role: 'about' },
+              { type: 'separator' },
+              { role: 'services' },
+              { type: 'separator' },
+              { role: 'hide' },
+              { role: 'hideOthers' },
+              { role: 'unhide' },
+              { type: 'separator' },
+              { role: 'quit' }
+            ]
+          }
+        ]
+      : []),
+    // Edit Menu
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        ...(isMac
+          ? [{ role: 'pasteAndMatchStyle' }, { role: 'delete' }, { role: 'selectAll' }]
+          : [{ role: 'delete' }, { type: 'separator' }, { role: 'selectAll' }])
+      ]
+    },
+    // View Menu
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        {
+          label: 'Zoom In',
+          accelerator: 'CommandOrControl+Plus',
+          click: () => {
+            const currentZoom = window.webContents.getZoomFactor()
+            window.webContents.setZoomFactor(currentZoom + 0.1)
+          }
+        },
+        {
+          label: 'Zoom Out',
+          accelerator: 'CommandOrControl+-',
+          click: () => {
+            const currentZoom = window.webContents.getZoomFactor()
+            window.webContents.setZoomFactor(Math.max(0.1, currentZoom - 0.1))
+          }
+        },
+        {
+          label: 'Reset Zoom',
+          accelerator: 'CommandOrControl+0',
+          click: () => {
+            window.webContents.setZoomFactor(1.0)
+          }
+        },
+        { type: 'separator' },
+        { role: 'togglefullscreen' }
+      ]
+    },
+    // Window Menu
+    {
+      label: 'Window',
+      submenu: [
+        { role: 'minimize' },
+        { role: 'zoom' },
+        ...(isMac
+          ? [{ type: 'separator' }, { role: 'front' }, { role: 'window' }]
+          : [{ role: 'close' }])
+      ]
+    },
+    // Help Menu
+    {
+      role: 'help',
+      submenu: [
+        {
+          label: 'GitHub Repository',
+          click: async () => {
+            await shell.openExternal('https://github.com/daisuke-awaji/bedrock-engineer')
+          }
+        }
+      ]
+    }
+  ]
+
+  const menu = Menu.buildFromTemplate(template as any)
+  Menu.setApplicationMenu(menu)
+}
 
 async function createWindow(): Promise<void> {
   // Create the browser window.
@@ -17,33 +119,56 @@ async function createWindow(): Promise<void> {
     width: 1800,
     height: 1340,
     show: false,
-    autoHideMenuBar: true,
+    autoHideMenuBar: false,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
-      contextIsolation: true
+      contextIsolation: true,
+      // Zoom related settings
+      zoomFactor: 1.0,
+      enableWebSQL: false
     }
   })
 
-  // コンテキストメニューの作成
+  // Create menu with mainWindow
+  createMenu(mainWindow)
+
+  // Add zoom-related shortcut keys
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.control || input.meta) {
+      if (input.key === '=' || input.key === '+') {
+        const currentZoom = mainWindow.webContents.getZoomFactor()
+        mainWindow.webContents.setZoomFactor(currentZoom + 0.1)
+        event.preventDefault()
+      } else if (input.key === '-') {
+        const currentZoom = mainWindow.webContents.getZoomFactor()
+        mainWindow.webContents.setZoomFactor(Math.max(0.1, currentZoom - 0.1))
+        event.preventDefault()
+      } else if (input.key === '0') {
+        mainWindow.webContents.setZoomFactor(1.0)
+        event.preventDefault()
+      }
+    }
+  })
+
+  // Create context menu
   const contextMenu = new Menu()
   contextMenu.append(
     new MenuItem({
-      label: 'コピー',
+      label: 'Copy',
       role: 'copy'
     })
   )
   contextMenu.append(
     new MenuItem({
-      label: 'ペースト',
+      label: 'Paste',
       role: 'paste'
     })
   )
 
-  // コンテキストメニューイベントの処理
+  // Handle context menu events
   mainWindow.webContents.on('context-menu', () => {
-    // メニューを表示
     contextMenu.popup()
   })
 
@@ -104,7 +229,21 @@ app.whenReady().then(() => {
       properties: ['openDirectory']
     })
   )
-  // Tool として実行される Web fetch ハンドラー
+
+  // Local image loading handler
+  ipcMain.handle('get-local-image', async (_, path: string) => {
+    try {
+      const data = await fs.promises.readFile(path)
+      const ext = path.split('.').pop()?.toLowerCase() || 'png'
+      const base64 = data.toString('base64')
+      return `data:image/${ext};base64,${base64}`
+    } catch (error) {
+      console.error('Failed to read image:', error)
+      throw error
+    }
+  })
+
+  // Web fetch handler for Tool execution
   ipcMain.handle('fetch-website', async (_event, url: string, options?: any) => {
     try {
       const response = await fetch(url, {

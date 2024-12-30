@@ -80,25 +80,31 @@ const AgentForm: React.FC<{
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700">Name</label>
-        <p className="text-xs text-gray-500 mb-1">{t('nameDescription')}</p>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Name</label>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('nameDescription')}</p>
         <input
           type="text"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 
+            text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           required
           placeholder={t('namePlaceholder')}
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700">Description</label>
-        <p className="text-xs text-gray-500 mb-1">{t('descriptionDescription')}</p>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+          Description
+        </label>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+          {t('descriptionDescription')}
+        </p>
         <input
           type="text"
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 
+            text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           required
           placeholder={t('descriptionPlaceholder')}
         />
@@ -108,44 +114,57 @@ const AgentForm: React.FC<{
           type="button"
           onClick={handleAutoGenerate}
           disabled={isGenerating}
-          className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+          className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-white bg-green-600 dark:bg-green-700
+            border border-transparent rounded-md shadow-sm hover:bg-green-700 dark:hover:bg-green-600
+            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-900 
+            disabled:opacity-50"
         >
           <FiZap />
           <span>{isGenerating ? t('generating') : t('autoGenerate')}</span>
         </button>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700">System Prompt</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+          System Prompt
+        </label>
         <div className="mb-2">
-          <p className="text-xs text-gray-500 whitespace-pre-line">{t('systemPromptInfo')}</p>
-          <div className="mt-1 p-2 bg-gray-50 rounded-md border border-gray-200">
-            <p className="text-xs text-gray-600 font-medium">{t('placeholders')}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 whitespace-pre-line">
+            {t('systemPromptInfo')}
+          </p>
+          <div className="mt-1 p-2 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
+            <p className="text-xs text-gray-600 dark:text-gray-300 font-medium">
+              {t('placeholders')}
+            </p>
             <div className="mt-1 flex items-center space-x-2">
-              <code className="text-xs bg-white px-2 py-1 rounded border border-gray-300">
+              <code className="text-xs bg-white dark:bg-gray-700 px-2 py-1 rounded border border-gray-300 dark:border-gray-600">
                 {`{{projectPath}}`}
               </code>
-              <span className="text-xs text-gray-500">{t('projectPathPlaceholder')}</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t('projectPathPlaceholder')}
+              </span>
               <button
                 type="button"
                 onClick={() => {
                   navigator.clipboard.writeText('{{projectPath}}')
                 }}
-                className="text-xs text-blue-600 hover:text-blue-800"
+                className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
               >
                 {t('copy')}
               </button>
             </div>
             <div className="mt-1 flex items-center space-x-2">
-              <code className="text-xs bg-white px-2 py-1 rounded border border-gray-300">
+              <code className="text-xs bg-white dark:bg-gray-700 px-2 py-1 rounded border border-gray-300 dark:border-gray-600">
                 {`{{date}}`}
               </code>
-              <span className="text-xs text-gray-500">{t('datePlaceholder')}</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t('datePlaceholder')}
+              </span>
               <button
                 type="button"
                 onClick={() => {
                   navigator.clipboard.writeText('{{date}}')
                 }}
-                className="text-xs text-blue-600 hover:text-blue-800"
+                className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
               >
                 {t('copy')}
               </button>
@@ -155,7 +174,8 @@ const AgentForm: React.FC<{
         <textarea
           value={formData.system}
           onChange={(e) => setFormData({ ...formData, system: e.target.value })}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm h-96"
+          className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 
+            text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm h-96"
           required
           placeholder={t('systemPromptPlaceholder')}
         />
@@ -165,22 +185,28 @@ const AgentForm: React.FC<{
               <button
                 type="button"
                 onClick={() => setShowPreview(!showPreview)}
-                className="text-sm text-blue-600 hover:text-blue-800"
+                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
               >
                 {showPreview ? t('hidePreview') : t('showPreview')}
               </button>
               {showPreview && (
-                <div className="mt-2 p-4 bg-gray-50 rounded-md border border-gray-200">
-                  <p className="text-xs text-gray-600 mb-2">{t('previewResult')}</p>
-                  <p className="text-sm whitespace-pre-wrap">{getPreviewText(formData.system)}</p>
+                <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
+                  <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">
+                    {t('previewResult')}
+                  </p>
+                  <p className="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap">
+                    {getPreviewText(formData.system)}
+                  </p>
                 </div>
               )}
             </div>
           ))}
       </div>
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Scenarios {t('optional')}</label>
-        <p className="text-xs text-gray-500 mb-1">{t('scenariosDescription')}</p>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+          Scenarios {t('optional')}
+        </label>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('scenariosDescription')}</p>
         <div className="space-y-2">
           {formData.scenarios.map((scenario, index) => (
             <div key={index} className="flex items-center space-x-2">
@@ -188,19 +214,21 @@ const AgentForm: React.FC<{
                 type="text"
                 value={scenario.title}
                 readOnly
-                className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                className="flex-1 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 
+                  text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               />
               <input
                 type="text"
                 value={scenario.content}
                 readOnly
-                className="flex-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                className="flex-2 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 
+                  text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               />
               <button
                 type="button"
                 onClick={() => removeScenario(index)}
                 title={t('deleteScenario')}
-                className="p-2 text-red-600 hover:text-red-800"
+                className="p-2 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
               >
                 <FiTrash />
               </button>
@@ -213,19 +241,21 @@ const AgentForm: React.FC<{
             value={newScenario.title}
             onChange={(e) => setNewScenario({ ...newScenario, title: e.target.value })}
             placeholder={t('scenarioTitlePlaceholder')}
-            className="flex-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="flex-2 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 
+              text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
           <input
             type="text"
             value={newScenario.content}
             onChange={(e) => setNewScenario({ ...newScenario, content: e.target.value })}
             placeholder={t('scenarioContentPlaceholder')}
-            className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="flex-1 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 
+              text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
           <button
             type="button"
             onClick={addScenario}
-            className="p-2 text-blue-600 hover:text-blue-800"
+            className="p-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
           >
             <FiPlus />
           </button>
@@ -235,13 +265,17 @@ const AgentForm: React.FC<{
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 
+            border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 
+            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900"
         >
           {t('cancel')}
         </button>
         <button
           type="submit"
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 border border-transparent 
+            rounded-md shadow-sm hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 
+            focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900"
         >
           {t('save')}
         </button>
@@ -284,7 +318,9 @@ const useAgentSettingsModal = () => {
             <div className="flex justify-end">
               <button
                 onClick={() => setEditingAgent({} as CustomAgent)}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 border border-transparent 
+                  rounded-md shadow-sm hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 
+                  focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900"
               >
                 {t('addNewAgent')}
               </button>
@@ -293,23 +329,24 @@ const useAgentSettingsModal = () => {
               {customAgents.map((agent) => (
                 <div
                   key={agent.id}
-                  className="flex items-center justify-between p-4 border rounded-lg"
+                  className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 
+                    rounded-lg bg-white dark:bg-gray-800"
                 >
                   <div>
-                    <h3 className="font-medium">{agent.name}</h3>
-                    <p className="text-sm text-gray-500">{agent.description}</p>
+                    <h3 className="font-medium text-gray-900 dark:text-gray-100">{agent.name}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{agent.description}</p>
                   </div>
                   <div className="flex space-x-2">
                     <button
                       onClick={() => setEditingAgent(agent)}
-                      className="p-2 text-blue-600 hover:text-blue-800"
+                      className="p-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
                       title={t('editAgent')}
                     >
                       <FiEdit2 />
                     </button>
                     <button
                       onClick={() => handleDeleteAgent(agent.id!)}
-                      className="p-2 text-red-600 hover:text-red-800"
+                      className="p-2 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
                       title={t('deleteAgent')}
                     >
                       <FiTrash />
