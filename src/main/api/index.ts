@@ -2,7 +2,9 @@ import express, { Request, Response } from 'express'
 import cors from 'cors'
 import { RequestHandler, NextFunction } from 'express'
 import { RetrieveAndGenerateCommandInput } from '@aws-sdk/client-bedrock-agent-runtime'
-import { bedrock, CallConverseAPIProps } from './bedrock'
+import { BedrockService, CallConverseAPIProps } from './bedrock'
+import { store } from '../../preload/store'
+export const bedrock = new BedrockService({ store })
 
 interface PromiseRequestHandler {
   (req: Request, res: Response, next: NextFunction): Promise<unknown>

@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.node.json",
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "types": ["jest", "node"],
+    "module": "CommonJS",
+    "moduleResolution": "node"
+  },
+  "include": ["src/**/*.test.ts", "src/**/*.integration.test.ts"]
+}

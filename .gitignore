@@ -6,3 +6,5 @@ out
 .env
 
 ash_output/
+
+test-outputs

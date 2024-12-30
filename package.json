@@ -10,6 +10,8 @@
     "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
     "test": "jest",
     "test:watch": "jest --watchAll",
+    "test:integration": "jest --config jest.integration.config.js",
+    "test:integration:watch": "jest --config jest.integration.config.js --watchAll",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
@@ -70,6 +72,7 @@
     "@types/react-dom": "18.3.0",
     "@vitejs/plugin-react": "4.3.1",
     "autoprefixer": "10.4.20",
+    "dotenv": "^16.4.5",
     "electron": "31.0.2",
     "electron-builder": "24.13.3",
     "electron-vite": "2.3.0",
@@ -89,5 +92,15 @@
     "@rollup/rollup-linux-x64-gnu": "4.24.0",
     "@rollup/rollup-win32-x64-msvc": "4.20.0",
     "dmg-license": "1.0.11"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
+    "transform": {
+      "^.+\\.tsx?$": ["ts-jest", {
+        "tsconfig": "tsconfig.test.json"
+      }]
+    }
   }
 }

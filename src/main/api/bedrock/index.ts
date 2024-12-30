@@ -1,18 +1,21 @@
-import { store } from '../../../preload/store'
 import { ConverseService } from './services/converseService'
 import { ModelService } from './services/modelService'
 import { AgentService } from './services/agentService'
+import { ImageService } from './services/imageService'
 import type { ServiceContext } from './types'
+import type { GenerateImageRequest, GeneratedImage } from './types/image'
 
 export class BedrockService {
   private converseService: ConverseService
   private modelService: ModelService
   private agentService: AgentService
+  private imageService: ImageService
 
   constructor(context: ServiceContext) {
     this.converseService = new ConverseService(context)
     this.modelService = new ModelService(context)
     this.agentService = new AgentService(context)
+    this.imageService = new ImageService(context)
   }
 
   async listModels() {
@@ -30,10 +33,16 @@ export class BedrockService {
   async retrieveAndGenerate(props: Parameters<AgentService['retrieveAndGenerate']>[0]) {
     return this.agentService.retrieveAndGenerate(props)
   }
-}
 
-// Create default instance with electron store
-export const bedrock = new BedrockService({ store })
+  async generateImage(request: GenerateImageRequest): Promise<GeneratedImage> {
+    return this.imageService.generateImage(request)
+  }
+
+  isImageModelSupported(modelId: string): boolean {
+    return this.imageService.isModelSupported(modelId)
+  }
+}
 
 // Re-export types for convenience
 export * from './types'
+export * from './types/image'
