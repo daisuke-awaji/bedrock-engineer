@@ -14,20 +14,24 @@ function createMenu(window: BrowserWindow) {
   const isMac = process.platform === 'darwin'
   const template = [
     // Application Menu (macOS only)
-    ...(isMac ? [{
-      label: app.name,
-      submenu: [
-        { role: 'about' },
-        { type: 'separator' },
-        { role: 'services' },
-        { type: 'separator' },
-        { role: 'hide' },
-        { role: 'hideOthers' },
-        { role: 'unhide' },
-        { type: 'separator' },
-        { role: 'quit' }
-      ]
-    }] : []),
+    ...(isMac
+      ? [
+          {
+            label: app.name,
+            submenu: [
+              { role: 'about' },
+              { type: 'separator' },
+              { role: 'services' },
+              { type: 'separator' },
+              { role: 'hide' },
+              { role: 'hideOthers' },
+              { role: 'unhide' },
+              { type: 'separator' },
+              { role: 'quit' }
+            ]
+          }
+        ]
+      : []),
     // Edit Menu
     {
       label: 'Edit',
@@ -38,15 +42,9 @@ function createMenu(window: BrowserWindow) {
         { role: 'cut' },
         { role: 'copy' },
         { role: 'paste' },
-        ...(isMac ? [
-          { role: 'pasteAndMatchStyle' },
-          { role: 'delete' },
-          { role: 'selectAll' }
-        ] : [
-          { role: 'delete' },
-          { type: 'separator' },
-          { role: 'selectAll' }
-        ])
+        ...(isMac
+          ? [{ role: 'pasteAndMatchStyle' }, { role: 'delete' }, { role: 'selectAll' }]
+          : [{ role: 'delete' }, { type: 'separator' }, { role: 'selectAll' }])
       ]
     },
     // View Menu
@@ -90,13 +88,9 @@ function createMenu(window: BrowserWindow) {
       submenu: [
         { role: 'minimize' },
         { role: 'zoom' },
-        ...(isMac ? [
-          { type: 'separator' },
-          { role: 'front' },
-          { role: 'window' }
-        ] : [
-          { role: 'close' }
-        ])
+        ...(isMac
+          ? [{ type: 'separator' }, { role: 'front' }, { role: 'window' }]
+          : [{ role: 'close' }])
       ]
     },
     // Help Menu
@@ -106,7 +100,7 @@ function createMenu(window: BrowserWindow) {
         {
           label: 'GitHub Repository',
           click: async () => {
-            await shell.openExternal('https://github.com/hedrall/bedrock-engineer')
+            await shell.openExternal('https://github.com/daisuke-awaji/bedrock-engineer')
           }
         }
       ]
@@ -133,7 +127,7 @@ async function createWindow(): Promise<void> {
       contextIsolation: true,
       // Zoom related settings
       zoomFactor: 1.0,
-      enableWebSQL: false,
+      enableWebSQL: false
     }
   })
 

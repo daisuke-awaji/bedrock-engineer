@@ -71,7 +71,7 @@ async function saveBase64Image(base64Data: string, prompt: string): Promise<stri
     })
 
     // Save the generated image
-    const filePath = await saveBase64Image(result[0].images[0], prompt)
+    const filePath = await saveBase64Image(result.images[0], prompt)
     console.log(`Image saved to: ${filePath}`)
   }, 30000)
 
@@ -116,4 +116,48 @@ async function saveBase64Image(base64Data: string, prompt: string): Promise<stri
     const filePath = await saveBase64Image(result.images[0], prompt)
     console.log(`Image saved to: ${filePath}`)
   }, 90000)
+
+  test('should generate image using Nova Canvas model', async () => {
+    const prompt = 'A watercolor painting of a cherry blossom tree'
+
+    const result = await bedrockService.generateImage({
+      modelId: 'amazon.nova-canvas-v1:0',
+      prompt,
+      aspect_ratio: '1:1',
+      output_format: 'png'
+    })
+
+    const filePath = await saveBase64Image(result.images[0], prompt)
+    console.log(`Image saved to: ${filePath}`)
+  }, 30000)
+
+  test('should generate image using Titan Image Generator v2', async () => {
+    const prompt = 'A futuristic cityscape with flying cars'
+    const negativePrompt = 'blurry, low quality, distorted'
+
+    const result = await bedrockService.generateImage({
+      modelId: 'amazon.titan-image-generator-v2:0',
+      prompt,
+      negativePrompt,
+      aspect_ratio: '16:9',
+      output_format: 'png'
+    })
+
+    const filePath = await saveBase64Image(result.images[0], prompt)
+    console.log(`Image saved to: ${filePath}`)
+  }, 45000)
+
+  test('should generate image using Titan Image Generator v1', async () => {
+    const prompt = 'An underwater scene with colorful coral and fish'
+
+    const result = await bedrockService.generateImage({
+      modelId: 'amazon.titan-image-generator-v1',
+      prompt,
+      aspect_ratio: '4:5',
+      output_format: 'png'
+    })
+
+    const filePath = await saveBase64Image(result.images[0], prompt)
+    console.log(`Image saved to: ${filePath}`)
+  }, 45000)
 })
