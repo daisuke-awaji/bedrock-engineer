@@ -12,14 +12,16 @@ export type StreamChatCompletionProps = {
 const API_ENDPOINT = window.store.get('apiEndpoint')
 
 export async function* streamChatCompletion(
-  props: StreamChatCompletionProps
+  props: StreamChatCompletionProps,
+  abortSignal?: AbortSignal
 ): AsyncGenerator<ConverseStreamOutput, void, unknown> {
   const res = await fetch(`${API_ENDPOINT}/converse/stream`, {
     method: 'POST',
     body: JSON.stringify(props),
     headers: {
       'Content-Type': 'application/json'
-    }
+    },
+    signal: abortSignal
   })
   const reader = res.body?.getReader()
 
@@ -35,34 +37,39 @@ export async function* streamChatCompletion(
     throw new Error(msg)
   }
 
-  let done = false
-  while (!done) {
-    const { done: readDone, value } = await reader.read()
-    if (readDone) {
-      done = readDone
-      reader.releaseLock()
-    } else {
-      let token = decoder.decode(value, { stream: true })
+  try {
+    let done = false
+    while (!done) {
+      const { done: readDone, value } = await reader.read()
+      if (readDone) {
+        done = readDone
+        reader.releaseLock()
+      } else {
+        let token = decoder.decode(value, { stream: true })
 
-      const boundary = token.lastIndexOf(`\n`)
-      // 2つ以上の JSON オブジェクトが連なっている場合
-      if (boundary !== -1) {
-        const completeData = token.substring(0, boundary)
-        token = token.substring(boundary + 1)
+        const boundary = token.lastIndexOf(`\n`)
+        // 2つ以上の JSON オブジェクトが連なっている場合
+        if (boundary !== -1) {
+          const completeData = token.substring(0, boundary)
+          token = token.substring(boundary + 1)
 
-        for (const chunk of completeData.split('\n')) {
-          if (chunk) {
-            try {
-              yield JSON.parse(chunk)
-            } catch (e) {
-              console.error(`Error parsing JSON:`, e)
+          for (const chunk of completeData.split('\n')) {
+            if (chunk) {
+              try {
+                yield JSON.parse(chunk)
+              } catch (e) {
+                console.error(`Error parsing JSON:`, e)
+              }
             }
           }
+        } else {
+          yield JSON.parse(token)
         }
-      } else {
-        yield JSON.parse(token)
       }
     }
+  } catch (error) {
+    reader.releaseLock()
+    throw error
   }
 }
 
@@ -73,24 +80,29 @@ type ConverseProps = {
   toolConfig?: ToolConfiguration
 }
 
-export async function converse(props: ConverseProps) {
+export async function converse(props: ConverseProps, abortSignal?: AbortSignal) {
   const res = await fetch(`${API_ENDPOINT}/converse`, {
     method: 'POST',
     body: JSON.stringify(props),
     headers: {
       'Content-Type': 'application/json'
-    }
+    },
+    signal: abortSignal
   })
   return res.json()
 }
 
-export async function retrieveAndGenerate(props: RetrieveAndGenerateCommandInput) {
+export async function retrieveAndGenerate(
+  props: RetrieveAndGenerateCommandInput,
+  abortSignal?: AbortSignal
+) {
   const res = await fetch(`${API_ENDPOINT}/retrieveAndGenerate`, {
     method: 'POST',
     body: JSON.stringify(props),
     headers: {
       'Content-Type': 'application/json'
-    }
+    },
+    signal: abortSignal
   })
   return res
 }
