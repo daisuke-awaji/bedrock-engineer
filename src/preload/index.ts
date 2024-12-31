@@ -4,6 +4,7 @@ import { api } from './api'
 import { store } from './store'
 import { file } from './file'
 import { tools } from './tools/tools'
+import { chatHistory } from './chat-history'
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
@@ -15,6 +16,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('store', store)
     contextBridge.exposeInMainWorld('file', file)
     contextBridge.exposeInMainWorld('tools', tools)
+    contextBridge.exposeInMainWorld('chatHistory', chatHistory)
   } catch (error) {
     console.error(error)
   }
@@ -29,4 +31,6 @@ if (process.contextIsolated) {
   window.file = file
   // @ts-ignore (define in dts)
   window.tools = tools
+  // @ts-ignore (define in dts)
+  window.chatHistory = chatHistory
 }

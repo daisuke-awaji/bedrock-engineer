@@ -6,27 +6,77 @@ import {
   ImageFormat
 } from '@aws-sdk/client-bedrock-runtime'
 import { StreamChatCompletionProps, streamChatCompletion } from '@renderer/lib/api'
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { ToolState } from '@/types/agent-chat'
 import { AttachedImage } from '../components/InputForm/TextArea'
+import { ChatMessage } from '@/types/chat/history'
 
 export const useAgentChat = (
   modelId: string,
   systemPrompt?: string,
-  enabledTools: ToolState[] = []
+  enabledTools: ToolState[] = [],
+  sessionId?: string
 ) => {
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
+  const [currentSessionId, setCurrentSessionId] = useState<string | undefined>(sessionId)
   const { t } = useTranslation()
+
+  // セッションの初期化
+  useEffect(() => {
+    if (sessionId) {
+      const session = window.chatHistory.getSession(sessionId)
+      if (session) {
+        setMessages(session.messages as Message[])
+        setCurrentSessionId(sessionId)
+      }
+    } else {
+      const newSessionId = window.chatHistory.createSession('defaultAgent', modelId, systemPrompt)
+      setCurrentSessionId(newSessionId)
+    }
+  }, [sessionId])
+
+  // currentSessionId が変わった時にメッセージをストアから取り出す
+  useEffect(() => {
+    if (currentSessionId) {
+      const session = window.chatHistory.getSession(currentSessionId)
+      if (session) {
+        console.log({ sessionをHistoryから復元: session })
+        setMessages(session.messages as Message[])
+        window.chatHistory.setActiveSession(currentSessionId)
+      }
+    }
+  }, [currentSessionId])
+
+  // メッセージの永続化を行うラッパー関数
+  const persistMessage = useCallback(
+    (message: Message) => {
+      console.log({ message, currentSessionId })
+      if (currentSessionId && message.role && message.content) {
+        const chatMessage: ChatMessage = {
+          id: `msg_${Date.now()}`,
+          role: message.role,
+          content: message.content,
+          timestamp: Date.now(),
+          metadata: {
+            modelId,
+            tools: enabledTools
+          }
+        }
+        window.chatHistory.addMessage(currentSessionId, chatMessage)
+      }
+    },
+    [currentSessionId, modelId, enabledTools]
+  )
 
   const streamChat = async (props: StreamChatCompletionProps, currentMessages: Message[]) => {
     const generator = streamChatCompletion(props)
 
     let s = ''
     let input = ''
-    let role: ConversationRole | undefined = 'assistant' // 必ず初回は assistant から帰ってくる
+    let role: ConversationRole = 'assistant' // デフォルト値を設定
     let toolUse: ToolUseBlockStart | undefined = undefined
     const content: ContentBlock[] = []
 
@@ -34,18 +84,19 @@ export const useAgentChat = (
     try {
       for await (const json of generator) {
         if (json.messageStart) {
-          role = json.messageStart.role
+          role = json.messageStart.role ?? 'assistant' // デフォルト値を設定
           messageStart = true
         } else if (json.messageStop) {
-          // messageStart で始まらず、messageStop が連続して2回以上帰ってくる場合がある。これは Claude のバグな気がするが、、、念の為リトライしておく
           if (!messageStart) {
             console.warn('messageStop without messageStart')
             console.log(messages)
             await streamChat(props, currentMessages)
             return
           }
-          setMessages([...currentMessages, { role, content }])
-          currentMessages.push({ role, content })
+          const newMessage = { role, content }
+          setMessages([...currentMessages, newMessage])
+          currentMessages.push(newMessage)
+          persistMessage(newMessage)
           console.log(currentMessages)
 
           const stopReason = json.messageStop.stopReason
@@ -98,7 +149,12 @@ export const useAgentChat = (
     } catch (error: any) {
       console.error({ streamChatRequestError: error })
       toast.error(t('request error'))
-      setMessages([...currentMessages, { role: 'assistant', content: [{ text: error.message }] }])
+      const errorMessage = {
+        role: 'assistant' as const,
+        content: [{ text: error.message }]
+      }
+      setMessages([...currentMessages, errorMessage])
+      persistMessage(errorMessage)
       throw error
     }
     throw new Error('unexpected end of stream')
@@ -144,6 +200,7 @@ export const useAgentChat = (
     }
     currentMessages.push(toolResultMessage)
     setMessages((prev) => [...prev, toolResultMessage])
+    persistMessage(toolResultMessage)
 
     const stopReason = await streamChat(
       {
@@ -192,11 +249,12 @@ export const useAgentChat = (
         imageContents.length > 0 ? [...imageContents, { text: userInput }] : [{ text: userInput }]
       const userMessage: Message = {
         role: 'user',
-        content: content
+        content
       }
 
       currentMessages.push(userMessage)
       setMessages((prev) => [...prev, userMessage])
+      persistMessage(userMessage)
 
       await streamChat(
         {
@@ -230,6 +288,8 @@ export const useAgentChat = (
     messages,
     loading,
     handleSubmit,
-    setMessages
+    setMessages,
+    currentSessionId,
+    setCurrentSessionId
   }
 }

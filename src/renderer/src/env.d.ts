@@ -1,24 +1,30 @@
 /// <reference types="vite/client" />
 
-interface ImportMetaEnv {
-  readonly PRELOAD_VITE_PEXELS_API_KEY: string
-  // more env variables...
+import { ElectronAPI } from '@electron-toolkit/preload'
+import { ChatMessage, ChatSession } from '../../types/chat/history'
+
+interface ChatHistoryAPI {
+  createSession(agentId: string, modelId: string, systemPrompt?: string): string
+  addMessage(sessionId: string, message: ChatMessage): void
+  getSession(sessionId: string): ChatSession | null
+  updateSessionTitle(sessionId: string, title: string): void
+  deleteSession(sessionId: string): void
+  getAllSessions(): ChatSession[]
+  setActiveSession(sessionId: string | undefined): void
+  getActiveSessionId(): string | undefined
 }
 
-interface ImportMeta {
-  readonly env: ImportMetaEnv
-}
-
-interface Window {
-  api: {
-    bedrock: {
-      executeTool: (toolName: string, toolInput: any) => Promise<any>
+declare global {
+  interface Window {
+    electron: ElectronAPI
+    api: {
+      bedrock: {
+        executeTool: (name: string, input: any) => Promise<string>
+      }
     }
-    contextMenu: {
-      onContextMenuCommand: (callback: (command: string) => void) => void
-    }
-    images: {
-      getLocalImage: (path: string) => Promise<string>
-    }
+    store: any
+    file: any
+    tools: any
+    chatHistory: ChatHistoryAPI
   }
 }
