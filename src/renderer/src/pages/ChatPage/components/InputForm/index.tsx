@@ -3,6 +3,7 @@ import { AttachedImage, TextArea } from './TextArea'
 import { ToolSettings } from './ToolSettings'
 import { DirectorySelector } from './DirectorySelector'
 import { SendMsgKey } from '@/types/agent-chat'
+import { FiTrash2 } from 'react-icons/fi'
 
 type InputFormProps = {
   userInput: string
@@ -14,6 +15,8 @@ type InputFormProps = {
   onOpenToolSettings: () => void
   onSelectDirectory: () => void
   onOpenIgnoreModal: () => void
+  onClearChat: () => void
+  hasMessages: boolean
 }
 
 export const InputForm: React.FC<InputFormProps> = ({
@@ -25,7 +28,9 @@ export const InputForm: React.FC<InputFormProps> = ({
   onChange,
   onOpenToolSettings,
   onSelectDirectory,
-  onOpenIgnoreModal
+  onOpenIgnoreModal,
+  onClearChat,
+  hasMessages
 }) => {
   const [isComposing, setIsComposing] = useState(false)
 
@@ -42,6 +47,19 @@ export const InputForm: React.FC<InputFormProps> = ({
               onOpenIgnoreModal={onOpenIgnoreModal}
             />
           </div>
+
+          {/* right */}
+          {hasMessages && (
+            <div className="flex items-end mb-1">
+              <button
+                onClick={onClearChat}
+                className="p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100 transition-colors duration-200"
+                title={'Clear chat'}
+              >
+                <FiTrash2 />
+              </button>
+            </div>
+          )}
         </div>
 
         <TextArea

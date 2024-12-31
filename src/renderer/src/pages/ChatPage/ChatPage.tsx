@@ -49,11 +49,12 @@ export default function ChatPage() {
   const currentScenarios = currentAgent?.scenarios || []
 
   const { enabledTools, ToolSettingModal, openModal: openToolSettingModal } = useToolSettingModal()
-  const { messages, loading, handleSubmit, currentSessionId, setCurrentSessionId } = useAgentChat(
-    llm?.modelId,
-    systemPrompt,
-    enabledTools?.filter((tool) => tool.enabled)
-  )
+  const { messages, loading, handleSubmit, currentSessionId, setCurrentSessionId, clearChat } =
+    useAgentChat(
+      llm?.modelId,
+      systemPrompt,
+      enabledTools?.filter((tool) => tool.enabled)
+    )
 
   const onSubmit = (input: string, images: AttachedImage[]) => {
     handleSubmit(input, images)
@@ -69,6 +70,13 @@ export default function ChatPage() {
   }
   const handleCloseSystemPrompt = () => {
     setShowSystemPrompt(false)
+  }
+
+  const handleClearChat = () => {
+    if (window.confirm(t('confirmClearChat'))) {
+      clearChat()
+      setUserInput('')
+    }
   }
 
   useEffect(() => {
@@ -180,6 +188,8 @@ export default function ChatPage() {
             onOpenToolSettings={openToolSettingModal}
             onSelectDirectory={selectDirectory}
             onOpenIgnoreModal={openIgnoreModal}
+            onClearChat={handleClearChat}
+            hasMessages={messages.length > 0}
           />
         </div>
       </div>

@@ -23,7 +23,8 @@ export const chatPage = {
           sendMessage: 'Send message',
           sending: 'Sending...'
         }
-      }
+      },
+      confirmClearChat: 'Are you sure you want to clear the chat?'
     }
   },
   ja: {
@@ -45,7 +46,8 @@ export const chatPage = {
           sendMessage: 'メッセージを送信',
           sending: '送信中...'
         }
-      }
+      },
+      confirmClearChat: 'チャットをクリアしてもよろしいですか？'
     }
   }
 }

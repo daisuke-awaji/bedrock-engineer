@@ -6,7 +6,7 @@ import {
   ImageFormat
 } from '@aws-sdk/client-bedrock-runtime'
 import { StreamChatCompletionProps, streamChatCompletion } from '@renderer/lib/api'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { ToolState } from '@/types/agent-chat'
@@ -22,13 +22,25 @@ export const useAgentChat = (
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
   const [currentSessionId, setCurrentSessionId] = useState<string | undefined>(sessionId)
+  const abortController = useRef<AbortController | null>(null)
   const { t } = useTranslation()
+
+  // 通信を中断する関数
+  const abortCurrentRequest = useCallback(() => {
+    if (abortController.current) {
+      abortController.current.abort()
+      abortController.current = null
+    }
+    setLoading(false)
+  }, [])
 
   // セッションの初期化
   useEffect(() => {
     if (sessionId) {
       const session = window.chatHistory.getSession(sessionId)
       if (session) {
+        // 既存の通信があれば中断
+        abortCurrentRequest()
         setMessages(session.messages as Message[])
         setCurrentSessionId(sessionId)
       }
@@ -38,9 +50,19 @@ export const useAgentChat = (
     }
   }, [sessionId])
 
-  // currentSessionId が変わった時にメッセージをストアから取り出す
+  // コンポーネントのアンマウント時にアクティブな通信を中断
+  useEffect(() => {
+    return () => {
+      abortCurrentRequest()
+    }
+  }, [])
+
+  // currentSessionId が変わった時の処理
   useEffect(() => {
     if (currentSessionId) {
+      // セッション切り替え時に進行中の通信を中断
+      abortCurrentRequest()
+
       const session = window.chatHistory.getSession(currentSessionId)
       if (session) {
         console.log({ sessionをHistoryから復元: session })
@@ -72,7 +94,15 @@ export const useAgentChat = (
   )
 
   const streamChat = async (props: StreamChatCompletionProps, currentMessages: Message[]) => {
-    const generator = streamChatCompletion(props)
+    // 既存の通信があれば中断
+    if (abortController.current) {
+      abortController.current.abort()
+    }
+
+    // 新しい AbortController を作成
+    abortController.current = new AbortController()
+
+    const generator = streamChatCompletion(props, abortController.current.signal)
 
     let s = ''
     let input = ''
@@ -147,6 +177,10 @@ export const useAgentChat = (
         }
       }
     } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.log('Chat stream aborted')
+        return
+      }
       console.error({ streamChatRequestError: error })
       toast.error(t('request error'))
       const errorMessage = {
@@ -156,6 +190,11 @@ export const useAgentChat = (
       setMessages([...currentMessages, errorMessage])
       persistMessage(errorMessage)
       throw error
+    } finally {
+      // 使用済みの AbortController をクリア
+      if (abortController.current?.signal.aborted) {
+        abortController.current = null
+      }
     }
     throw new Error('unexpected end of stream')
   }
@@ -284,12 +323,35 @@ export const useAgentChat = (
     return result
   }
 
+  // チャットをクリアする機能
+  const clearChat = useCallback(() => {
+    // 進行中の通信を中断
+    abortCurrentRequest()
+
+    // 新しいセッションを作成
+    const newSessionId = window.chatHistory.createSession('defaultAgent', modelId, systemPrompt)
+    setCurrentSessionId(newSessionId)
+
+    // メッセージをクリア
+    setMessages([])
+  }, [modelId, systemPrompt, abortCurrentRequest])
+
+  const setSession = useCallback(
+    (newSessionId: string) => {
+      // 進行中の通信を中断してから新しいセッションを設定
+      abortCurrentRequest()
+      setCurrentSessionId(newSessionId)
+    },
+    [abortCurrentRequest]
+  )
+
   return {
     messages,
     loading,
     handleSubmit,
     setMessages,
     currentSessionId,
-    setCurrentSessionId
+    setCurrentSessionId: setSession, // 中断処理付きのセッション切り替え関数を返す
+    clearChat
   }
 }
