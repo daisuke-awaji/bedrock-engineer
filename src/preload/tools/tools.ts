@@ -1,9 +1,11 @@
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { ToolService } from './toolService'
 import { store } from '../store'
+import { BedrockService } from '../../main/api/bedrock'
 
 export const executeTool = async (toolName: string | undefined, toolInput: any) => {
   const toolService = new ToolService()
+  const bedrock = new BedrockService({ store })
   switch (toolName) {
     case 'createFolder':
       return toolService.createFolder(toolInput['path'])
@@ -26,6 +28,17 @@ export const executeTool = async (toolName: string | undefined, toolInput: any) 
     }
     case 'fetchWebsite':
       return toolService.fetchWebsite(toolInput['url'], toolInput['options'])
+    case 'generateImage': {
+      return toolService.generateImage(bedrock, {
+        prompt: toolInput['prompt'],
+        outputPath: toolInput['outputPath'],
+        modelId: toolInput['modelId'],
+        negativePrompt: toolInput['negativePrompt'],
+        aspect_ratio: toolInput['aspect_ratio'],
+        seed: toolInput['seed'],
+        output_format: toolInput['output_format']
+      })
+    }
     default:
       throw new Error(`Unknown tool: ${toolName}`)
   }
@@ -223,6 +236,84 @@ First call without a chunkIndex(Must be 1 or greater) to get an overview and tot
             }
           },
           required: ['url']
+        }
+      }
+    }
+  },
+  {
+    toolSpec: {
+      name: 'generateImage',
+      description:
+        'Generate an image using Amazon Bedrock Foundation Models. By default uses stability.sd3-5-large-v1:0. Images are saved to the specified path. For Titan models, specific aspect ratios and sizes are supported.',
+      inputSchema: {
+        json: {
+          type: 'object',
+          properties: {
+            prompt: {
+              type: 'string',
+              description: 'Text description of the image you want to generate'
+            },
+            outputPath: {
+              type: 'string',
+              description:
+                'Path where the generated image should be saved, including filename (e.g., "/path/to/image.png")'
+            },
+            modelId: {
+              type: 'string',
+              description:
+                'Model to use. Includes Stability.ai models and Amazon models. Note that Amazon models have specific region availability.',
+              enum: [
+                'stability.sd3-5-large-v1:0',
+                'stability.sd3-large-v1:0',
+                'stability.stable-image-core-v1:1',
+                'stability.stable-image-ultra-v1:1',
+                'amazon.nova-canvas-v1:0',
+                'amazon.titan-image-generator-v2:0',
+                'amazon.titan-image-generator-v1'
+              ],
+              default: 'stability.sd3-5-large-v1:0'
+            },
+            negativePrompt: {
+              type: 'string',
+              description: 'Optional. Things to exclude from the image'
+            },
+            aspect_ratio: {
+              type: 'string',
+              description:
+                'Optional. Aspect ratio of the generated image. For Titan models, specific sizes will be chosen based on the aspect ratio.',
+              enum: [
+                '1:1',
+                '16:9',
+                '2:3',
+                '3:2',
+                '4:5',
+                '5:4',
+                '9:16',
+                '9:21',
+                '5:3',
+                '3:5',
+                '7:9',
+                '9:7',
+                '6:11',
+                '11:6',
+                '5:11',
+                '11:5',
+                '9:5'
+              ]
+            },
+            seed: {
+              type: 'number',
+              description:
+                'Optional. Seed for deterministic generation. For Titan models, range is 0 to 2147483647.'
+            },
+            output_format: {
+              type: 'string',
+              description: 'Optional. Output format of the generated image',
+              enum: ['png', 'jpeg', 'webp'],
+              default: 'png'
+            }
+          },
+          required: ['prompt', 'outputPath', 'modelId']
         }
       }
     }

@@ -8,8 +8,10 @@ import {
   FaArrowRight,
   FaCopy,
   FaSearch,
-  FaGlobe
+  FaGlobe,
+  FaImage
 } from 'react-icons/fa'
+import toast from 'react-hot-toast'
 
 // ツール名とアイコンのマッピング
 const toolIcons: { [key: string]: React.ReactElement } = {
@@ -20,7 +22,8 @@ const toolIcons: { [key: string]: React.ReactElement } = {
   moveFile: <FaArrowRight className="text-orange-500 size-6" />,
   copyFile: <FaCopy className="text-indigo-500 size-6" />,
   tavilySearch: <FaSearch className="text-red-500 size-6" />,
-  fetchWebsite: <FaGlobe className="text-teal-500 size-6" />
+  fetchWebsite: <FaGlobe className="text-teal-500 size-6" />,
+  generateImage: <FaImage className="text-pink-500 size-6" />
 }
 
 // ツールの説明文
@@ -32,11 +35,12 @@ const toolDescriptions: { [key: string]: string } = {
   moveFile: 'Move files between locations',
   copyFile: 'Create file duplicates',
   tavilySearch: 'Search the web for information',
-  fetchWebsite: 'Fetch and analyze content from websites'
+  fetchWebsite: 'Fetch and analyze content from websites',
+  generateImage: 'Generate images using Amazon Bedrock Stable Diffusion models'
 }
 
 const useToolSettingModal = () => {
-  const { tools, setTools, enabledTools } = useSettings()
+  const { tools, setTools, enabledTools, currentLLM } = useSettings()
 
   const handleClickEnableTool = (toolName: string) => {
     if (!tools) return
@@ -75,6 +79,11 @@ const useToolSettingModal = () => {
                   hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/10
                 `}
                 onClick={() => {
+                  if (!currentLLM.toolUse) {
+                    // この LLM が ToolUse をサポートしていない場合は toast にワーニングメッセージ
+                    toast(`${currentLLM.modelName} does not support ToolUse.`)
+                    return
+                  }
                   if (toolName) {
                     handleClickEnableTool(toolName)
                   }

@@ -112,7 +112,9 @@ function StepFunctionsGeneratorPage() {
   return (
     <div className={'flex flex-col h-[calc(100vh-11rem)] overflow-y-auto z-10'}>
       <SystemPromptModal header="SYSTEM PROMPT" size="7xl">
-        <MD>{systemPrompt}</MD>
+        <div className="dark:text-white">
+          <MD>{systemPrompt}</MD>
+        </div>
       </SystemPromptModal>
       <div className="flex pb-2 justify-between">
         <span className="font-bold flex gap-2">

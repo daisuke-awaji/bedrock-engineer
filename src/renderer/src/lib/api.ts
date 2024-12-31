@@ -1,3 +1,4 @@
+import { LLM } from '@/types/llm'
 import { RetrieveAndGenerateCommandInput } from '@aws-sdk/client-bedrock-agent-runtime'
 import { ConverseStreamOutput, Message, ToolConfiguration } from '@aws-sdk/client-bedrock-runtime'
 
@@ -94,7 +95,7 @@ export async function retrieveAndGenerate(props: RetrieveAndGenerateCommandInput
   return res
 }
 
-export async function listModels() {
+export async function listModels(): Promise<LLM[]> {
   const res = await fetch(`${API_ENDPOINT}/listModels`, {
     method: 'GET',
     headers: {

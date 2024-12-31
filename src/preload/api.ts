@@ -19,6 +19,9 @@ export const api = {
         callback(command)
       })
     }
+  },
+  images: {
+    getLocalImage: (path: string) => ipcRenderer.invoke('get-local-image', path)
   }
 }
 

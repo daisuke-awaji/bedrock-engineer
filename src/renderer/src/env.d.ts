@@ -8,3 +8,17 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+interface Window {
+  api: {
+    bedrock: {
+      executeTool: (toolName: string, toolInput: any) => Promise<any>
+    }
+    contextMenu: {
+      onContextMenuCommand: (callback: (command: string) => void) => void
+    }
+    images: {
+      getLocalImage: (path: string) => Promise<string>
+    }
+  }
+}
