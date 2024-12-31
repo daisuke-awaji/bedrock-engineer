@@ -9,6 +9,8 @@ import {
   OutputFormat,
   ImageGeneratorModel
 } from '../../main/api/bedrock'
+import { CommandConfig } from '../../main/api/command/types'
+import { CommandService } from '../../main/api/command/commandService'
 
 export class ToolService {
   async createFolder(folderPath: string): Promise<string> {
@@ -283,6 +285,23 @@ export class ToolService {
         error: 'Failed to generate image',
         message: error.message
       })}`
+    }
+  }
+
+  async executeCommand(command: string, config: CommandConfig) {
+    try {
+      const commandService = new CommandService(config)
+      const result = await commandService.executeCommand(command)
+      console.log(result)
+      return JSON.stringify({
+        success: true,
+        ...result
+      })
+    } catch (error) {
+      throw JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      })
     }
   }
 }

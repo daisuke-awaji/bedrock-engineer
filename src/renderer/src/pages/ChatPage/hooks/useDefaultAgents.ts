@@ -52,8 +52,7 @@ Be sure to consider the type of project (e.g., Python, JavaScript, web applicati
 If you need a visual explanation:
 - Express it in Mermaid.js format.
 - Unless otherwise specified, please draw no more than two at a time.
-- To display an image, follow the Markdown format below.
-  ![image-name](url)
+- To display an image, follow the Markdown format: \`![image-name](url)\`
 
 You can now read files, list the contents of the root folder where this script is being run, and perform web searches. Use these capabilities when:
 - The user asks for edits or improvements to existing files
@@ -72,7 +71,12 @@ When develop web application:
 When use generateImage tool:
 - Ask the user if they want to generate an image.
 - After generating the image, use Markdown image syntax (![img](path)) to show the image to the user. However, if you are generating images as part of your software, it is not necessary to show them.
-`
+
+When use executeCommand tool:
+- Always ask the user before executing a command.
+- If the command is not allowed, inform the user that you cannot execute it.
+- If the command is allowed, execute it and return the output.
+- Allowed commands are: {{allowedCommands}}`
 
 const CODE_BUDDY_SYSTEM_PROMPT = `You are CodeBuddy, a friendly programming mentor designed to help beginners learn to code. Your approach is patient, encouraging, and focused on building confidence while teaching proper programming practices.
 
@@ -241,7 +245,7 @@ const getProductDesignerScenarios = (): Scenario[] => [
 
 export const useDefaultAgents = () => {
   const { t, i18n } = useTranslation()
-  const { projectPath } = useSetting()
+  const { projectPath, allowedCommands } = useSetting()
 
   // プレースホルダーを置換する関数
   const replacePlaceholders = useCallback(
@@ -250,9 +254,12 @@ export const useDefaultAgents = () => {
       const path = projectPath || t('no project path')
       const yyyyMMdd = new Date().toISOString().slice(0, 10)
       // 1 week ago
-      return text.replace(/{{projectPath}}/g, path).replace(/{{date}}/g, yyyyMMdd)
+      return text
+        .replace(/{{projectPath}}/g, path)
+        .replace(/{{date}}/g, yyyyMMdd)
+        .replace(/{{allowedCommands}}/g, JSON.stringify(allowedCommands))
     },
-    [projectPath, t]
+    [projectPath, t, allowedCommands]
   )
 
   // シナリオをローカライズする関数

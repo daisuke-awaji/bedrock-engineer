@@ -13,7 +13,7 @@ const AgentForm: React.FC<{
   onSave: (agent: CustomAgent) => void
   onCancel: () => void
 }> = ({ agent, onSave, onCancel }) => {
-  const { projectPath } = useSetting()
+  const { projectPath, allowedCommands } = useSetting()
   const { t } = useTranslation()
   const { generateAgentSystemPrompt, generatedAgentSystemPrompt, isGenerating } =
     useAgentGenerator()
@@ -57,6 +57,7 @@ const AgentForm: React.FC<{
     return text
       .replace(/{{projectPath}}/g, path)
       .replace(/{{date}}/g, new Date().toISOString().slice(0, 10))
+      .replace(/{{allowedCommands}}/g, JSON.stringify(allowedCommands))
   }
 
   const handleAutoGenerate = async () => {
@@ -86,7 +87,7 @@ const AgentForm: React.FC<{
           type="text"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 
+          className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
             text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           required
           placeholder={t('namePlaceholder')}
@@ -103,7 +104,7 @@ const AgentForm: React.FC<{
           type="text"
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 
+          className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
             text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           required
           placeholder={t('descriptionPlaceholder')}
@@ -116,7 +117,7 @@ const AgentForm: React.FC<{
           disabled={isGenerating}
           className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-white bg-green-600 dark:bg-green-700
             border border-transparent rounded-md shadow-sm hover:bg-green-700 dark:hover:bg-green-600
-            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-900 
+            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-900
             disabled:opacity-50"
         >
           <FiZap />
@@ -169,38 +170,56 @@ const AgentForm: React.FC<{
                 {t('copy')}
               </button>
             </div>
+            <div className="mt-1 flex items-center space-x-2">
+              <code className="text-xs bg-white dark:bg-gray-700 px-2 py-1 rounded border border-gray-300 dark:border-gray-600">
+                {`{{allowedCommands}}`}
+              </code>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t('allowedCommandsPlaceholder')}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText('{{allowedCommands}}')
+                }}
+                className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+              >
+                {t('copy')}
+              </button>
+            </div>
           </div>
         </div>
         <textarea
           value={formData.system}
           onChange={(e) => setFormData({ ...formData, system: e.target.value })}
-          className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 
+          className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
             text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm h-96"
           required
           placeholder={t('systemPromptPlaceholder')}
         />
-        {formData.system.includes('{{projectPath}}') ||
-          (formData.system.includes('{{date}}') && (
-            <div className="mt-2">
-              <button
-                type="button"
-                onClick={() => setShowPreview(!showPreview)}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-              >
-                {showPreview ? t('hidePreview') : t('showPreview')}
-              </button>
-              {showPreview && (
-                <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
-                  <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">
-                    {t('previewResult')}
-                  </p>
-                  <p className="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap">
-                    {getPreviewText(formData.system)}
-                  </p>
-                </div>
-              )}
-            </div>
-          ))}
+        {(formData.system.includes('{{projectPath}}') ||
+          formData.system.includes('{{date}}') ||
+          formData.system.includes('{{allowedCommands}}')) && (
+          <div className="mt-2">
+            <button
+              type="button"
+              onClick={() => setShowPreview(!showPreview)}
+              className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+            >
+              {showPreview ? t('hidePreview') : t('showPreview')}
+            </button>
+            {showPreview && (
+              <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
+                <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">
+                  {t('previewResult')}
+                </p>
+                <p className="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap">
+                  {getPreviewText(formData.system)}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
@@ -214,14 +233,14 @@ const AgentForm: React.FC<{
                 type="text"
                 value={scenario.title}
                 readOnly
-                className="flex-1 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 
+                className="flex-1 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
                   text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               />
               <input
                 type="text"
                 value={scenario.content}
                 readOnly
-                className="flex-2 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 
+                className="flex-2 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
                   text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               />
               <button
@@ -241,7 +260,7 @@ const AgentForm: React.FC<{
             value={newScenario.title}
             onChange={(e) => setNewScenario({ ...newScenario, title: e.target.value })}
             placeholder={t('scenarioTitlePlaceholder')}
-            className="flex-2 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 
+            className="flex-2 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
               text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
           <input
@@ -249,7 +268,7 @@ const AgentForm: React.FC<{
             value={newScenario.content}
             onChange={(e) => setNewScenario({ ...newScenario, content: e.target.value })}
             placeholder={t('scenarioContentPlaceholder')}
-            className="flex-1 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 
+            className="flex-1 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
               text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
           <button
@@ -265,16 +284,16 @@ const AgentForm: React.FC<{
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 
-            border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 
+          className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800
+            border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700
             focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900"
         >
           {t('cancel')}
         </button>
         <button
           type="submit"
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 border border-transparent 
-            rounded-md shadow-sm hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 border border-transparent
+            rounded-md shadow-sm hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2
             focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900"
         >
           {t('save')}
@@ -318,8 +337,8 @@ const useAgentSettingsModal = () => {
             <div className="flex justify-end">
               <button
                 onClick={() => setEditingAgent({} as CustomAgent)}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 border border-transparent 
-                  rounded-md shadow-sm hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 border border-transparent
+                  rounded-md shadow-sm hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2
                   focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900"
               >
                 {t('addNewAgent')}
@@ -329,7 +348,7 @@ const useAgentSettingsModal = () => {
               {customAgents.map((agent) => (
                 <div
                   key={agent.id}
-                  className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 
+                  className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700
                     rounded-lg bg-white dark:bg-gray-800"
                 >
                   <div>

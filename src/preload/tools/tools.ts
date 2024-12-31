@@ -39,6 +39,10 @@ export const executeTool = async (toolName: string | undefined, toolInput: any) 
         output_format: toolInput['output_format']
       })
     }
+    case 'executeCommand':
+      return toolService.executeCommand(toolInput['command'], {
+        allowedCommands: store.get('command').allowedCommands
+      })
     default:
       throw new Error(`Unknown tool: ${toolName}`)
   }
@@ -314,6 +318,25 @@ First call without a chunkIndex(Must be 1 or greater) to get an overview and tot
             }
           },
           required: ['prompt', 'outputPath', 'modelId']
+        }
+      }
+    }
+  },
+  {
+    toolSpec: {
+      name: 'executeCommand',
+      description:
+        'Execute a specified command if it matches the allowed command patterns. Supports wildcards.',
+      inputSchema: {
+        json: {
+          type: 'object',
+          properties: {
+            command: {
+              type: 'string',
+              description: 'The command to execute'
+            }
+          },
+          required: ['command']
         }
       }
     }
