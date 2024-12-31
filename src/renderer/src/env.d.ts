@@ -17,11 +17,7 @@ interface ChatHistoryAPI {
 declare global {
   interface Window {
     electron: ElectronAPI
-    api: {
-      bedrock: {
-        executeTool: (name: string, input: any) => Promise<string>
-      }
-    }
+    api: API
     store: any
     file: any
     tools: any
