@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { ChatSession } from '@/types/chat/history'
 import { useTranslation } from 'react-i18next'
 import { FiMoreHorizontal, FiEdit2, FiTrash2 } from 'react-icons/fi'
+import { RiArchiveStackLine } from 'react-icons/ri'
 
 interface ChatHistoryProps {
   onSessionSelect: (sessionId: string) => void
@@ -93,7 +94,8 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({ onSessionSelect, curre
 
   return (
     <div className="chat-history p-4">
-      <h2 className="text-md font-semibold mb-4 text-gray-800 dark:text-gray-200">
+      <h2 className="text-sm font-semibold mb-4 text-gray-800 dark:text-gray-200">
+        <RiArchiveStackLine className="inline-block mr-2 w-5 h-5" />
         {t('Chat History')}
       </h2>
       <div className="session-list space-y-2">

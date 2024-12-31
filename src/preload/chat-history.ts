@@ -30,5 +30,13 @@ export const chatHistory = {
 
   getAllSessions() {
     return chatSessionManager.getAllSessions()
+  },
+
+  setActiveSession(sessionId: string | undefined) {
+    return chatSessionManager.setActiveSession(sessionId)
+  },
+
+  getActiveSessionId() {
+    return chatSessionManager.getActiveSessionId()
   }
 }

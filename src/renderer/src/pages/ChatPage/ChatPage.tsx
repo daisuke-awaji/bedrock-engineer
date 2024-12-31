@@ -123,7 +123,7 @@ export default function ChatPage() {
           <div className="flex flex-row h-full">
             {/* チャット履歴サイドパネル */}
             <div
-              className={`dark:bg-gray-800 transition-all duration-300 ${
+              className={`dark:bg-gray-900 transition-all duration-300 ${
                 isHistoryOpen ? 'w-96' : 'w-0'
               } overflow-y-scroll`}
             >
@@ -137,7 +137,7 @@ export default function ChatPage() {
             <div className="flex items-center">
               <div
                 onClick={() => setIsHistoryOpen(!isHistoryOpen)}
-                className="w-4 h-16 bg-gray-100 hover:bg-gray-200 cursor-pointer flex items-center justify-center transition-colors duration-200 rounded-lg"
+                className="w-4 h-16 dark:bg-gray-800 hover:dark:bg-gray-700 bg-gray-100 hover:bg-gray-200 cursor-pointer flex items-center justify-center transition-colors duration-200 rounded-lg"
                 title={t('Toggle chat history')}
               >
                 <FiChevronRight

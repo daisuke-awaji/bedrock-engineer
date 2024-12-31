@@ -96,12 +96,20 @@ export class ChatSessionManager {
     const sessions = this.store.get('sessions')
     return recentIds
       .map((id) => sessions[id])
-      .filter((id) => id.messages.length > 0) // TODO: そもそも Session を作成するタイミングを調整することで length === 0 の Session が含まれないようにする
+      .filter((id) => id.messages.length > 0)
       .filter(Boolean)
   }
 
   getAllSessions(): ChatSession[] {
     const sessions = this.store.get('sessions')
     return Object.values(sessions).filter((i) => i.messages.length > 0)
+  }
+
+  setActiveSession(sessionId: string | undefined): void {
+    this.store.set('activeSessionId', sessionId)
+  }
+
+  getActiveSessionId(): string | undefined {
+    return this.store.get('activeSessionId')
   }
 }
