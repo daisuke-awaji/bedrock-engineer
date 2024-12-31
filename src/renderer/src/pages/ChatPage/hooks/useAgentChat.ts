@@ -75,7 +75,6 @@ export const useAgentChat = (
   // メッセージの永続化を行うラッパー関数
   const persistMessage = useCallback(
     (message: Message) => {
-      console.log({ message, currentSessionId })
       if (currentSessionId && message.role && message.content) {
         const chatMessage: ChatMessage = {
           id: `msg_${Date.now()}`,
