@@ -7,21 +7,21 @@ describe('CommandService', () => {
 
   beforeEach(() => {
     const config: CommandConfig = {
-      allowedCommands: ['npm run dev', 'npm run *', 'aws ec2 describe-instances --output table']
+      allowedCommands: ['ls *', 'pwd', 'aws ec2 describe-instances --output table']
     }
     commandService = new CommandService(config)
   })
 
   describe('executeCommand', () => {
     it('should execute allowed command', async () => {
-      const result = await commandService.executeCommand('npm run lint')
+      const result = await commandService.executeCommand('pwd')
       expect(result).toHaveProperty('stdout')
       expect(result).toHaveProperty('stderr')
       expect(result).toHaveProperty('exitCode')
     })
 
     it('should execute command with wildcard', async () => {
-      const result = await commandService.executeCommand('npm run typecheck')
+      const result = await commandService.executeCommand('ls -l')
       expect(result).toHaveProperty('stdout')
       expect(result).toHaveProperty('stderr')
       expect(result).toHaveProperty('exitCode')
@@ -37,11 +37,7 @@ describe('CommandService', () => {
   describe('getAllowedCommands', () => {
     it('should return list of allowed commands', () => {
       const allowed = commandService.getAllowedCommands()
-      expect(allowed).toEqual([
-        'npm run dev',
-        'npm run *',
-        'aws ec2 describe-instances --output table'
-      ])
+      expect(allowed).toEqual(['ls *', 'pwd', 'aws ec2 describe-instances --output table'])
     })
   })
 
