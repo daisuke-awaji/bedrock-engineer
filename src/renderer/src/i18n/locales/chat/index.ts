@@ -1,12 +1,14 @@
 import { agent } from './agent'
 import { examples } from './examples'
 import { messages } from './messages'
+import { history } from './history'
 
 export const chatPage = {
   en: {
     ...agent.en,
     ...examples.en,
     ...messages.en,
+    ...history.en,
     ...{
       textarea: {
         placeholder: 'Type message or add images ({{modifier}}+V / drop)',
@@ -21,13 +23,15 @@ export const chatPage = {
           sendMessage: 'Send message',
           sending: 'Sending...'
         }
-      }
+      },
+      confirmClearChat: 'Are you sure you want to clear the chat?'
     }
   },
   ja: {
     ...agent.ja,
     ...examples.ja,
     ...messages.ja,
+    ...history.ja,
     ...{
       textarea: {
         placeholder: 'メッセージを入力、または画像を追加 ({{modifier}}+V / ドロップ)',
@@ -42,7 +46,8 @@ export const chatPage = {
           sendMessage: 'メッセージを送信',
           sending: '送信中...'
         }
-      }
+      },
+      confirmClearChat: 'チャットをクリアしてもよろしいですか？'
     }
   }
 }

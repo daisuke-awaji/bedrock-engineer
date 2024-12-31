@@ -6,27 +6,106 @@ import {
   ImageFormat
 } from '@aws-sdk/client-bedrock-runtime'
 import { StreamChatCompletionProps, streamChatCompletion } from '@renderer/lib/api'
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { ToolState } from '@/types/agent-chat'
 import { AttachedImage } from '../components/InputForm/TextArea'
+import { ChatMessage } from '@/types/chat/history'
 
 export const useAgentChat = (
   modelId: string,
   systemPrompt?: string,
-  enabledTools: ToolState[] = []
+  enabledTools: ToolState[] = [],
+  sessionId?: string
 ) => {
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
+  const [currentSessionId, setCurrentSessionId] = useState<string | undefined>(sessionId)
+  const abortController = useRef<AbortController | null>(null)
   const { t } = useTranslation()
 
+  // 通信を中断する関数
+  const abortCurrentRequest = useCallback(() => {
+    if (abortController.current) {
+      abortController.current.abort()
+      abortController.current = null
+    }
+    setLoading(false)
+  }, [])
+
+  // セッションの初期化
+  useEffect(() => {
+    if (sessionId) {
+      const session = window.chatHistory.getSession(sessionId)
+      if (session) {
+        // 既存の通信があれば中断
+        abortCurrentRequest()
+        setMessages(session.messages as Message[])
+        setCurrentSessionId(sessionId)
+      }
+    } else {
+      const newSessionId = window.chatHistory.createSession('defaultAgent', modelId, systemPrompt)
+      setCurrentSessionId(newSessionId)
+    }
+  }, [sessionId])
+
+  // コンポーネントのアンマウント時にアクティブな通信を中断
+  useEffect(() => {
+    return () => {
+      abortCurrentRequest()
+    }
+  }, [])
+
+  // currentSessionId が変わった時の処理
+  useEffect(() => {
+    if (currentSessionId) {
+      // セッション切り替え時に進行中の通信を中断
+      abortCurrentRequest()
+
+      const session = window.chatHistory.getSession(currentSessionId)
+      if (session) {
+        console.log({ sessionをHistoryから復元: session })
+        setMessages(session.messages as Message[])
+        window.chatHistory.setActiveSession(currentSessionId)
+      }
+    }
+  }, [currentSessionId])
+
+  // メッセージの永続化を行うラッパー関数
+  const persistMessage = useCallback(
+    (message: Message) => {
+      if (currentSessionId && message.role && message.content) {
+        const chatMessage: ChatMessage = {
+          id: `msg_${Date.now()}`,
+          role: message.role,
+          content: message.content,
+          timestamp: Date.now(),
+          metadata: {
+            modelId,
+            tools: enabledTools
+          }
+        }
+        window.chatHistory.addMessage(currentSessionId, chatMessage)
+      }
+    },
+    [currentSessionId, modelId, enabledTools]
+  )
+
   const streamChat = async (props: StreamChatCompletionProps, currentMessages: Message[]) => {
-    const generator = streamChatCompletion(props)
+    // 既存の通信があれば中断
+    if (abortController.current) {
+      abortController.current.abort()
+    }
+
+    // 新しい AbortController を作成
+    abortController.current = new AbortController()
+
+    const generator = streamChatCompletion(props, abortController.current.signal)
 
     let s = ''
     let input = ''
-    let role: ConversationRole | undefined = 'assistant' // 必ず初回は assistant から帰ってくる
+    let role: ConversationRole = 'assistant' // デフォルト値を設定
     let toolUse: ToolUseBlockStart | undefined = undefined
     const content: ContentBlock[] = []
 
@@ -34,18 +113,19 @@ export const useAgentChat = (
     try {
       for await (const json of generator) {
         if (json.messageStart) {
-          role = json.messageStart.role
+          role = json.messageStart.role ?? 'assistant' // デフォルト値を設定
           messageStart = true
         } else if (json.messageStop) {
-          // messageStart で始まらず、messageStop が連続して2回以上帰ってくる場合がある。これは Claude のバグな気がするが、、、念の為リトライしておく
           if (!messageStart) {
             console.warn('messageStop without messageStart')
             console.log(messages)
             await streamChat(props, currentMessages)
             return
           }
-          setMessages([...currentMessages, { role, content }])
-          currentMessages.push({ role, content })
+          const newMessage = { role, content }
+          setMessages([...currentMessages, newMessage])
+          currentMessages.push(newMessage)
+          persistMessage(newMessage)
           console.log(currentMessages)
 
           const stopReason = json.messageStop.stopReason
@@ -96,10 +176,24 @@ export const useAgentChat = (
         }
       }
     } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.log('Chat stream aborted')
+        return
+      }
       console.error({ streamChatRequestError: error })
       toast.error(t('request error'))
-      setMessages([...currentMessages, { role: 'assistant', content: [{ text: error.message }] }])
+      const errorMessage = {
+        role: 'assistant' as const,
+        content: [{ text: error.message }]
+      }
+      setMessages([...currentMessages, errorMessage])
+      persistMessage(errorMessage)
       throw error
+    } finally {
+      // 使用済みの AbortController をクリア
+      if (abortController.current?.signal.aborted) {
+        abortController.current = null
+      }
     }
     throw new Error('unexpected end of stream')
   }
@@ -144,6 +238,7 @@ export const useAgentChat = (
     }
     currentMessages.push(toolResultMessage)
     setMessages((prev) => [...prev, toolResultMessage])
+    persistMessage(toolResultMessage)
 
     const stopReason = await streamChat(
       {
@@ -192,11 +287,12 @@ export const useAgentChat = (
         imageContents.length > 0 ? [...imageContents, { text: userInput }] : [{ text: userInput }]
       const userMessage: Message = {
         role: 'user',
-        content: content
+        content
       }
 
       currentMessages.push(userMessage)
       setMessages((prev) => [...prev, userMessage])
+      persistMessage(userMessage)
 
       await streamChat(
         {
@@ -226,10 +322,35 @@ export const useAgentChat = (
     return result
   }
 
+  // チャットをクリアする機能
+  const clearChat = useCallback(() => {
+    // 進行中の通信を中断
+    abortCurrentRequest()
+
+    // 新しいセッションを作成
+    const newSessionId = window.chatHistory.createSession('defaultAgent', modelId, systemPrompt)
+    setCurrentSessionId(newSessionId)
+
+    // メッセージをクリア
+    setMessages([])
+  }, [modelId, systemPrompt, abortCurrentRequest])
+
+  const setSession = useCallback(
+    (newSessionId: string) => {
+      // 進行中の通信を中断してから新しいセッションを設定
+      abortCurrentRequest()
+      setCurrentSessionId(newSessionId)
+    },
+    [abortCurrentRequest]
+  )
+
   return {
     messages,
     loading,
     handleSubmit,
-    setMessages
+    setMessages,
+    currentSessionId,
+    setCurrentSessionId: setSession, // 中断処理付きのセッション切り替え関数を返す
+    clearChat
   }
 }
