@@ -137,7 +137,7 @@ const AgentForm: React.FC<{
               {t('placeholders')}
             </p>
             <div className="mt-1 flex items-center space-x-2">
-              <code className="text-xs bg-white dark:bg-gray-700 px-2 py-1 rounded border border-gray-300 dark:border-gray-600">
+              <code className="text-xs bg-white dark:bg-gray-700 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 dark:text-gray-300">
                 {`{{projectPath}}`}
               </code>
               <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -154,7 +154,7 @@ const AgentForm: React.FC<{
               </button>
             </div>
             <div className="mt-1 flex items-center space-x-2">
-              <code className="text-xs bg-white dark:bg-gray-700 px-2 py-1 rounded border border-gray-300 dark:border-gray-600">
+              <code className="text-xs bg-white dark:bg-gray-700 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 dark:text-gray-300">
                 {`{{date}}`}
               </code>
               <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -171,7 +171,7 @@ const AgentForm: React.FC<{
               </button>
             </div>
             <div className="mt-1 flex items-center space-x-2">
-              <code className="text-xs bg-white dark:bg-gray-700 px-2 py-1 rounded border border-gray-300 dark:border-gray-600">
+              <code className="text-xs bg-white dark:bg-gray-700 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 dark:text-gray-300">
                 {`{{allowedCommands}}`}
               </code>
               <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -233,14 +233,14 @@ const AgentForm: React.FC<{
                 type="text"
                 value={scenario.title}
                 readOnly
-                className="flex-1 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
+                className="flex-2 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
                   text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               />
               <input
                 type="text"
                 value={scenario.content}
                 readOnly
-                className="flex-2 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
+                className="flex-1 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
                   text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               />
               <button

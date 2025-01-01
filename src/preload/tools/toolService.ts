@@ -9,11 +9,7 @@ import {
   OutputFormat,
   ImageGeneratorModel
 } from '../../main/api/bedrock'
-import {
-  CommandConfig,
-  CommandInput,
-  CommandStdinInput
-} from '../../main/api/command/types'
+import { CommandConfig, CommandInput, CommandStdinInput } from '../../main/api/command/types'
 import { CommandService } from '../../main/api/command/commandService'
 
 // コマンドサービスのインスタンスをシングルトンとして保持
@@ -39,7 +35,7 @@ export class ToolService {
   async writeToFile(filePath: string, content: string): Promise<string> {
     try {
       await fs.writeFile(filePath, content)
-      return `Content written to file: ${filePath}`
+      return `Content written to file: ${filePath}\n\n${content}`
     } catch (e: any) {
       throw `Error writing to file: ${e.message}`
     }

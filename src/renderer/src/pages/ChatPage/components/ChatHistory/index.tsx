@@ -18,6 +18,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({ onSessionSelect, curre
   const [editingSessionId, setEditingSessionId] = useState<string>()
   const [editTitle, setEditTitle] = useState('')
   const [menuOpenSessionId, setMenuOpenSessionId] = useState<string>()
+  const [isGlobalMenuOpen, setIsGlobalMenuOpen] = useState(false)
   const [isComposing, setIsComposing] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const { currentLLM } = useSettings()
@@ -33,6 +34,9 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({ onSessionSelect, curre
       const target = e.target as HTMLElement
       if (editingSessionId && !target.closest('.editing-input')) {
         setEditingSessionId(undefined)
+      }
+      if (!target.closest('.global-menu') && !target.closest('.global-menu-button')) {
+        setIsGlobalMenuOpen(false)
       }
       setMenuOpenSessionId(undefined)
     }
@@ -51,6 +55,18 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({ onSessionSelect, curre
     window.chatHistory.deleteSession(sessionId)
     setRecentSessions(window.chatHistory.getAllSessions())
     setMenuOpenSessionId(undefined)
+  }
+
+  const handleDeleteAllSessions = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const confirmed = window.confirm(t('Are you sure you want to delete all chat sessions?'))
+    if (confirmed) {
+      recentSessions.forEach((session) => {
+        window.chatHistory.deleteSession(session.id)
+      })
+      setRecentSessions([])
+      setIsGlobalMenuOpen(false)
+    }
   }
 
   const startEditing = (session: ChatSession, e: React.MouseEvent) => {
@@ -131,9 +147,30 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({ onSessionSelect, curre
     }
   }
 
+  const generateAITitleForAllSession = async (e: React.MouseEvent) => {
+    try {
+      setIsGenerating(true)
+      const sessions = window.chatHistory.getAllSessions()
+      for (const session of sessions) {
+        // タイトルが 'Chat' で始まるセッションのみ対象とする
+        if (session.title.startsWith('Chat')) {
+          await generateAITitle(session, e)
+        }
+      }
+      setIsGlobalMenuOpen(false)
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
   const toggleMenu = (sessionId: string, e: React.MouseEvent) => {
     e.stopPropagation()
     setMenuOpenSessionId(menuOpenSessionId === sessionId ? undefined : sessionId)
+  }
+
+  const toggleGlobalMenu = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setIsGlobalMenuOpen(!isGlobalMenuOpen)
   }
 
   const handleCompositionStart = () => {
@@ -160,11 +197,49 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({ onSessionSelect, curre
     )
   }
 
+  const menuButtonClasses =
+    'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-400 p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 h-8 w-8 flex items-center justify-center'
+
   return (
-    <div className="chat-history p-4">
-      <h2 className="text-sm font-semibold mb-4 text-gray-800 dark:text-gray-200">
-        <RiArchiveStackLine className="inline-block mr-2 w-5 h-5" />
-        {t('Chat History')}
+    <div className="chat-history p-3">
+      <h2
+        className="text-sm font-semibold mb-4 text-gray-800 dark:text-gray-200 flex items-center justify-between hover:cursor-pointer hover:text-gray-600 dark:hover:text-gray-300"
+        onClick={toggleGlobalMenu}
+      >
+        <div className="flex items-center">
+          <RiArchiveStackLine className="inline-block mr-2 w-4 h-4" />
+          {t('Chat History')}
+        </div>
+        <div className="relative">
+          {isGlobalMenuOpen && (
+            <div
+              className="global-menu absolute right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="py-1">
+                <button
+                  onClick={generateAITitleForAllSession}
+                  disabled={isGenerating}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                >
+                  {isGenerating ? (
+                    <span className="animate-spin w-4 h-4">⌛</span>
+                  ) : (
+                    <FiZap className="w-4 h-4" />
+                  )}
+                  {t('Generate All Titles')}
+                </button>
+                <button
+                  onClick={handleDeleteAllSessions}
+                  className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 border-t border-gray-100 dark:border-gray-700"
+                >
+                  <FiTrash2 className="w-4 h-4" />
+                  {t('Delete All')}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </h2>
       <div className="session-list space-y-2">
         {recentSessions.map((session) => (
@@ -204,13 +279,13 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({ onSessionSelect, curre
                   <div className="relative flex-shrink-0">
                     <button
                       onClick={(e) => toggleMenu(session.id, e)}
-                      className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-400 p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600"
+                      className={menuButtonClasses}
                     >
                       <FiMoreHorizontal className="w-4 h-4" />
                     </button>
                     {menuOpenSessionId === session.id && (
                       <div
-                        className="absolute right-1 mt-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-10"
+                        className="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-10"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="py-1">
@@ -231,7 +306,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({ onSessionSelect, curre
                             ) : (
                               <FiZap className="w-4 h-4" />
                             )}
-                            {t('Geneate title')}
+                            {t('Generate title')}
                           </button>
                           <button
                             onClick={(e) => handleDeleteSession(session.id, e)}

@@ -73,7 +73,7 @@ When use generateImage tool:
 - After generating the image, use Markdown image syntax (![img](path)) to show the image to the user. However, if you are generating images as part of your software, it is not necessary to show them.
 
 When use executeCommand tool:
-- Always ask the user before executing a command.
+- IMPORTANT!! Always ask the user before executing a command.
 - If the command is not allowed, inform the user that you cannot execute it.
 - If the command is allowed, execute it and return the output.
 - Allowed commands are: {{allowedCommands}}`

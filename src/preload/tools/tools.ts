@@ -63,7 +63,9 @@ export const executeTool = async (toolName: string | undefined, toolInput: any) 
           }
         )
       } else {
-        throw new Error('Invalid input format for executeCommand: requires either (command, cwd) or (pid, stdin)')
+        throw new Error(
+          'Invalid input format for executeCommand: requires either (command, cwd) or (pid, stdin)'
+        )
       }
     default:
       throw new Error(`Unknown tool: ${toolName}`)
@@ -363,7 +365,8 @@ First call without a chunkIndex(Must be 1 or greater) to get an overview and tot
             },
             pid: {
               type: 'number',
-              description: 'Process ID to send input to (used when sending input to existing process)'
+              description:
+                'Process ID to send input to (used when sending input to existing process)'
             },
             stdin: {
               type: 'string',

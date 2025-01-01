@@ -86,7 +86,7 @@ const CommandForm = memo(
           {allowedCommands.map((command) => (
             <div
               key={command}
-              className="flex items-center justify-between p-2 text-sm bg-gray-100 dark:bg-gray-800 rounded"
+              className="flex items-center justify-between p-2 text-sm bg-gray-100 dark:bg-gray-900 dark:text-gray-300 rounded"
             >
               <span className="font-mono">{command}</span>
               <button
