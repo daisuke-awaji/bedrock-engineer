@@ -2,14 +2,63 @@ import { spawn } from 'child_process'
 import {
   CommandConfig,
   CommandExecutionResult,
+  CommandInput,
   CommandPattern,
+  CommandStdinInput,
   DetachedProcessInfo,
-  ProcessInfo
+  InputDetectionPattern,
+  ProcessState
 } from './types'
 
 export class CommandService {
   private config: CommandConfig
   private runningProcesses: Map<number, DetachedProcessInfo> = new Map()
+  private processStates: Map<number, ProcessState> = new Map()
+
+  // 入力待ち状態を検出するパターン
+  private inputDetectionPatterns: InputDetectionPattern[] = [
+    {
+      pattern: /\? .+\?.*$/m, // inquirer形式の質問
+      promptExtractor: (output) => {
+        const match = output.match(/\? (.+\?.*$)/m)
+        return match ? match[1] : output
+      }
+    },
+    {
+      pattern: /[^:]+: $/m, // 基本的なプロンプト（例: "Enter name: "）
+      promptExtractor: (output) => {
+        const lines = output.split('\n')
+        return lines[lines.length - 1]
+      }
+    }
+  ]
+
+  // サーバー起動状態を示すパターン
+  private serverReadyPatterns = [
+    'listening',
+    'ready',
+    'started',
+    'running',
+    'live',
+    'compiled successfully',
+    'compiled',
+    'waiting for file changes',
+    'development server running'
+  ]
+
+  // エラーを示すパターン
+  private errorPatterns = [
+    'EADDRINUSE',
+    'Error:',
+    'error:',
+    'ERR!',
+    'app crashed',
+    'Cannot find module',
+    'command not found',
+    'Failed to compile',
+    'Syntax error:',
+    'TypeError:'
+  ]
 
   constructor(config: CommandConfig) {
     this.config = config
@@ -53,19 +102,73 @@ export class CommandService {
     })
   }
 
-  async executeCommand(command: string, cwd: string): Promise<CommandExecutionResult> {
+  // 入力待ち状態かどうかを判定
+  private isWaitingForInput(output: string): { isWaiting: boolean; prompt?: string } {
+    for (const pattern of this.inputDetectionPatterns) {
+      if (output.match(pattern.pattern)) {
+        const prompt = pattern.promptExtractor ? pattern.promptExtractor(output) : output
+        return { isWaiting: true, prompt }
+      }
+    }
+    return { isWaiting: false }
+  }
+
+  private initializeProcessState(pid: number): void {
+    this.processStates.set(pid, {
+      isRunning: true,
+      hasError: false,
+      output: {
+        stdout: '',
+        stderr: '',
+        code: null
+      }
+    })
+  }
+
+  private updateProcessState(pid: number, updates: Partial<ProcessState>): void {
+    const currentState = this.processStates.get(pid)
+    if (currentState) {
+      this.processStates.set(pid, { ...currentState, ...updates })
+    }
+  }
+
+  // サーバーが正常に起動しているかチェック
+  private isServerReady(output: string): boolean {
+    return this.serverReadyPatterns.some((pattern) =>
+      output.toLowerCase().includes(pattern.toLowerCase())
+    )
+  }
+
+  // エラーチェック
+  private checkForErrors(stdout: string, stderr: string): boolean {
+    // エラーパターンのチェック
+    if (
+      this.errorPatterns.some((pattern) => stdout.includes(pattern) || stderr.includes(pattern))
+    ) {
+      return true
+    }
+
+    // クラッシュ状態のチェック
+    if (stdout.includes('app crashed') && !stdout.includes('waiting for file changes')) {
+      return true
+    }
+
+    return false
+  }
+
+  async executeCommand(input: CommandInput): Promise<CommandExecutionResult> {
     return new Promise((resolve, reject) => {
-      if (!this.isCommandAllowed(command)) {
-        reject(new Error(`Command not allowed: ${command}`))
+      if (!this.isCommandAllowed(input.command)) {
+        reject(new Error(`Command not allowed: ${input.command}`))
         return
       }
 
-      const [cmd, ...args] = command.split(' ')
+      const [cmd, ...args] = input.command.split(' ')
 
       const process = spawn(cmd, args, {
-        cwd,
+        cwd: input.cwd,
         detached: true,
-        stdio: ['ignore', 'pipe', 'pipe']
+        stdio: ['pipe', 'pipe', 'pipe']
       })
 
       if (typeof process.pid === 'undefined') {
@@ -73,28 +176,26 @@ export class CommandService {
         return
       }
 
-      // プロセス情報を保存
-      const processInfo: DetachedProcessInfo = {
-        pid: process.pid,
-        command,
-        timestamp: Date.now()
-      }
-      this.runningProcesses.set(process.pid, processInfo)
+      const pid = process.pid
 
-      let stdout = ''
-      let stderr = ''
-      let errorOccurred = false
+      // プロセス情報を初期化
+      this.initializeProcessState(pid)
+      this.runningProcesses.set(pid, {
+        pid,
+        command: input.command,
+        timestamp: Date.now()
+      })
+
+      // プロセスの状態を保存
+      this.updateProcessState(pid, { process })
+
+      let currentOutput = ''
+      let currentError = ''
       let isCompleted = false
-      // eslint-disable-next-line
-      let startupTimeout: NodeJS.Timeout
 
       const cleanup = () => {
-        if (process.pid) {
-          this.runningProcesses.delete(process.pid)
-        }
-        if (startupTimeout) {
-          clearTimeout(startupTimeout)
-        }
+        this.runningProcesses.delete(pid)
+        this.processStates.delete(pid)
       }
 
       const completeWithError = (error: string) => {
@@ -107,64 +208,101 @@ export class CommandService {
 
       const completeWithSuccess = () => {
         if (!isCompleted) {
+          const state = this.processStates.get(pid)
+          if (!state) {
+            reject(new Error('Process state not found'))
+            return
+          }
+
+          // 入力待ち状態のチェック
+          const { isWaiting, prompt } = this.isWaitingForInput(currentOutput)
+          if (isWaiting) {
+            resolve({
+              stdout: currentOutput,
+              stderr: currentError,
+              exitCode: 0,
+              processInfo: {
+                pid,
+                command: input.command,
+                detached: true
+              },
+              requiresInput: true,
+              prompt
+            })
+            return
+          }
+
+          // 開発サーバーの状態チェック
+          if (this.isServerReady(currentOutput)) {
+            resolve({
+              stdout: currentOutput,
+              stderr: currentError,
+              exitCode: 0,
+              processInfo: {
+                pid,
+                command: input.command,
+                detached: true
+              }
+            })
+            return
+          }
+
+          // 通常のコマンド完了
           isCompleted = true
           cleanup()
-          const processInfo: ProcessInfo = {
-            pid: process.pid!,
-            command,
-            detached: true
-          }
           resolve({
-            stdout,
-            stderr,
-            exitCode: 0,
-            processInfo
+            stdout: currentOutput,
+            stderr: currentError,
+            exitCode: state.output.code || 0,
+            processInfo: {
+              pid,
+              command: input.command,
+              detached: true
+            }
           })
         }
       }
 
       process.stdout.on('data', (data) => {
         const chunk = data.toString()
-        stdout += chunk
+        currentOutput += chunk
 
-        // 成功パターンの検出
-        if (
-          chunk.includes('listening') ||
-          chunk.includes('ready') ||
-          chunk.includes('started') ||
-          chunk.includes('running') ||
-          chunk.includes('live') ||
-          (chunk.includes('watching') && !errorOccurred) // errorOccurredフラグを確認
-        ) {
-          completeWithSuccess()
-        }
+        const state = this.processStates.get(pid)
+        if (state) {
+          this.updateProcessState(pid, {
+            output: { ...state.output, stdout: currentOutput }
+          })
 
-        // エラーパターンの検出
-        if (
-          chunk.includes('EADDRINUSE') ||
-          chunk.includes('Error:') ||
-          chunk.includes('error:') ||
-          chunk.includes('ERR!') ||
-          chunk.includes('app crashed')
-        ) {
-          errorOccurred = true
-          completeWithError(`Command failed: \n${stdout}\n${stderr}`)
+          // エラーチェック
+          if (this.checkForErrors(chunk, '')) {
+            this.updateProcessState(pid, { hasError: true })
+            completeWithError(`Command failed: \n${currentOutput}\n${currentError}`)
+            return
+          }
+
+          // 入力待ち状態または開発サーバーの状態をチェック
+          const { isWaiting } = this.isWaitingForInput(currentOutput)
+          if (isWaiting || this.isServerReady(currentOutput)) {
+            completeWithSuccess()
+          }
         }
       })
 
       process.stderr.on('data', (data) => {
         const chunk = data.toString()
-        stderr += chunk
+        currentError += chunk
 
-        // エラーパターンの検出
-        if (
-          chunk.includes('EADDRINUSE') ||
-          chunk.includes('Error:') ||
-          chunk.includes('error:') ||
-          chunk.includes('ERR!')
-        ) {
-          errorOccurred = true
-          completeWithError(`Command failed: \n${stdout}\n${stderr}`)
+        const state = this.processStates.get(pid)
+        if (state) {
+          this.updateProcessState(pid, {
+            output: { ...state.output, stderr: currentError }
+          })
+
+          // エラーチェック
+          if (this.checkForErrors('', chunk)) {
+            this.updateProcessState(pid, { hasError: true })
+            completeWithError(`Command failed: \n${currentOutput}\n${currentError}`)
+          }
         }
       })
 
@@ -175,26 +313,172 @@ export class CommandService {
       })
 
       process.on('exit', (code) => {
-        // エラーが発生していない場合のみ、通常の終了として処理
-        if (!errorOccurred && code === 0 && !isCompleted) {
-          completeWithSuccess()
-        } else if (!isCompleted) {
-          completeWithError(`Process exited with code ${code}\n${stderr}`)
+        const state = this.processStates.get(pid)
+        if (state) {
+          this.updateProcessState(pid, {
+            isRunning: false,
+            output: { ...state.output, code: code || 0 }
+          })
+
+          if (!this.checkForErrors(currentOutput, currentError) && code === 0) {
+            completeWithSuccess()
+          } else if (!isCompleted) {
+            completeWithError(`Process exited with code ${code}\n${currentOutput}\n${currentError}`)
+          }
         }
       })
 
-      // タイムアウトの設定
-      startupTimeout = setTimeout(() => {
+      // タイムアウト処理
+      setTimeout(() => {
         if (!isCompleted) {
-          if (errorOccurred) {
-            completeWithError(`Command failed to start: \n${stderr}`)
-          } else if (stdout.includes('waiting for file changes')) {
-            completeWithSuccess() // nodemonの待機状態は成功として扱う
+          const state = this.processStates.get(pid)
+          if (!state) return
+
+          if (state.hasError) {
+            completeWithError(`Command failed to start: \n${currentError}`)
           } else {
-            completeWithSuccess() // タイムアウト時は成功として扱う
+            // 開発サーバーの状態チェック
+            if (
+              this.isServerReady(currentOutput) ||
+              currentOutput.includes('waiting for file changes')
+            ) {
+              completeWithSuccess()
+            } else {
+              completeWithError('Command timed out')
+            }
           }
         }
-      }, 5000) // 5秒のタイムアウト
+      }, 30000)
+    })
+  }
+
+  async sendInput(input: CommandStdinInput): Promise<CommandExecutionResult> {
+    const state = this.processStates.get(input.pid)
+    if (!state || !state.process) {
+      throw new Error(`No running process found with PID: ${input.pid}`)
+    }
+
+    return new Promise((resolve, reject) => {
+      const { process } = state
+      let currentOutput = state.output.stdout
+      let currentError = state.output.stderr
+      let isCompleted = false
+
+      // 既存のリスナーを削除
+      process.stdout.removeAllListeners('data')
+      process.stderr.removeAllListeners('data')
+      process.removeAllListeners('error')
+      process.removeAllListeners('exit')
+
+      const completeWithError = (error: string) => {
+        if (!isCompleted) {
+          isCompleted = true
+          reject(new Error(error))
+        }
+      }
+
+      const completeWithSuccess = () => {
+        if (!isCompleted) {
+          isCompleted = true
+
+          // 入力待ち状態のチェック
+          const { isWaiting, prompt } = this.isWaitingForInput(currentOutput)
+
+          resolve({
+            stdout: currentOutput,
+            stderr: currentError,
+            exitCode: 0,
+            processInfo: {
+              pid: input.pid,
+              command: state.process.spawnargs.join(' '),
+              detached: true
+            },
+            requiresInput: isWaiting,
+            prompt: isWaiting ? prompt : undefined
+          })
+        }
+      }
+
+      process.stdout.on('data', (data) => {
+        const chunk = data.toString()
+        currentOutput += chunk
+
+        this.updateProcessState(input.pid, {
+          output: { ...state.output, stdout: currentOutput }
+        })
+
+        // エラーチェック
+        if (this.checkForErrors(chunk, '')) {
+          this.updateProcessState(input.pid, { hasError: true })
+          completeWithError(`Command failed: \n${currentOutput}\n${currentError}`)
+          return
+        }
+
+        // 入力待ち状態または開発サーバーの状態をチェック
+        const { isWaiting } = this.isWaitingForInput(currentOutput)
+        if (isWaiting || this.isServerReady(currentOutput)) {
+          completeWithSuccess()
+        }
+      })
+
+      process.stderr.on('data', (data) => {
+        const chunk = data.toString()
+        currentError += chunk
+
+        this.updateProcessState(input.pid, {
+          output: { ...state.output, stderr: currentError }
+        })
+
+        if (this.checkForErrors('', chunk)) {
+          this.updateProcessState(input.pid, { hasError: true })
+          completeWithError(`Command failed: \n${currentOutput}\n${currentError}`)
+        }
+      })
+
+      process.on('error', (error) => {
+        completeWithError(
+          `Command execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        )
+      })
+
+      process.on('exit', (code) => {
+        this.updateProcessState(input.pid, {
+          isRunning: false,
+          output: { ...state.output, code: code || 0 }
+        })
+
+        if (!this.checkForErrors(currentOutput, currentError) && code === 0) {
+          completeWithSuccess()
+        } else if (!isCompleted) {
+          completeWithError(`Process exited with code ${code}\n${currentOutput}\n${currentError}`)
+        }
+
+        // プロセスが終了したらクリーンアップ
+        this.runningProcesses.delete(input.pid)
+        this.processStates.delete(input.pid)
+      })
+
+      // 標準入力を送信
+      process.stdin.write(input.stdin + '\n')
+
+      // タイムアウト処理
+      setTimeout(() => {
+        if (!isCompleted) {
+          const currentState = this.processStates.get(input.pid)
+          if (!currentState) return
+
+          if (currentState.hasError) {
+            completeWithError(`Command failed: \n${currentError}`)
+          } else if (
+            this.isServerReady(currentOutput) ||
+            currentOutput.includes('waiting for file changes')
+          ) {
+            completeWithSuccess()
+          } else {
+            completeWithError('Command timed out waiting for response')
+          }
+        }
+      }, 5000)
     })
   }
 
@@ -204,6 +488,7 @@ export class CommandService {
       try {
         process.kill(-pid) // プロセスグループ全体を終了
         this.runningProcesses.delete(pid)
+        this.processStates.delete(pid)
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
         throw new Error(`Failed to stop process ${pid}: ${errorMessage}`)
