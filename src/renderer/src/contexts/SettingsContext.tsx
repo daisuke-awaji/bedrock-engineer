@@ -119,6 +119,9 @@ interface SettingsContextType {
   tools: ToolState[]
   setTools: (tools: ToolState[]) => void
   enabledTools: ToolState[]
+
+  allowedCommands: string[]
+  setAllowedCommands: (commands: string[]) => void
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined)
@@ -157,6 +160,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Tools Settings
   const [tools, setStateTools] = useState<ToolState[]>([])
+
+  // Command Settings
+  const [allowedCommands, setStateAllowedCommands] = useState<string[]>(['npm run *'])
 
   // Initialize all settings
   useEffect(() => {
@@ -230,6 +236,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       } else if (savedTools) {
         setStateTools(savedTools)
       }
+    }
+
+    // Load Command Settings
+    const commandSettings = window.store.get('command')
+    if (commandSettings?.allowedCommands) {
+      setStateAllowedCommands(commandSettings.allowedCommands)
     }
   }, [])
 
@@ -347,6 +359,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return true
     })
 
+  const setAllowedCommands = (commands: string[]) => {
+    setStateAllowedCommands(commands)
+    window.store.set('command', { allowedCommands: commands })
+  }
+
   const value = {
     // Advanced Settings
     sendMsgKey,
@@ -394,7 +411,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Tools Settings
     tools,
     setTools,
-    enabledTools
+    enabledTools,
+
+    allowedCommands,
+    setAllowedCommands
   }
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>

@@ -9,8 +9,20 @@ import {
   OutputFormat,
   ImageGeneratorModel
 } from '../../main/api/bedrock'
+import { CommandConfig, CommandInput, CommandStdinInput } from '../../main/api/command/types'
+import { CommandService } from '../../main/api/command/commandService'
+
+// コマンドサービスのインスタンスをシングルトンとして保持
+let commandServiceInstance: CommandService | null = null
 
 export class ToolService {
+  private getCommandService(config: CommandConfig): CommandService {
+    if (!commandServiceInstance) {
+      commandServiceInstance = new CommandService(config)
+    }
+    return commandServiceInstance
+  }
+
   async createFolder(folderPath: string): Promise<string> {
     try {
       await fs.mkdir(folderPath, { recursive: true })
@@ -23,7 +35,7 @@ export class ToolService {
   async writeToFile(filePath: string, content: string): Promise<string> {
     try {
       await fs.writeFile(filePath, content)
-      return `Content written to file: ${filePath}`
+      return `Content written to file: ${filePath}\n\n${content}`
     } catch (e: any) {
       throw `Error writing to file: ${e.message}`
     }
@@ -34,7 +46,6 @@ export class ToolService {
       const fileContents = await Promise.all(
         filePaths.map(async (filePath) => {
           const content = await fs.readFile(filePath, 'utf-8')
-
           return { path: filePath, content }
         })
       )
@@ -54,9 +65,7 @@ export class ToolService {
   async listFiles(dirPath: string, prefix: string = '', ignoreFiles?: string[]): Promise<string> {
     try {
       const files = await fs.readdir(dirPath, { withFileTypes: true })
-
       const matcher = new GitignoreLikeMatcher(ignoreFiles ?? [])
-
       let result = ''
 
       for (let i = 0; i < files.length; i++) {
@@ -64,10 +73,9 @@ export class ToolService {
         const isLast = i === files.length - 1
         const currentPrefix = prefix + (isLast ? '└── ' : '├── ')
         const nextPrefix = prefix + (isLast ? '    ' : '│   ')
-        const filePath = path.join(dirPath, file.name) // nosemgrep
+        const filePath = path.join(dirPath, file.name)
         const relativeFilePath = path.relative(process.cwd(), filePath)
 
-        // Check if the current file path matches any of the ignore file paths
         if (ignoreFiles && ignoreFiles.length && matcher.isIgnored(relativeFilePath)) {
           continue
         }
@@ -85,6 +93,7 @@ export class ToolService {
       throw `Error listing directory structure: ${e}`
     }
   }
+
   async moveFile(source: string, destination: string): Promise<string> {
     try {
       await fs.rename(source, destination)
@@ -136,24 +145,18 @@ export class ToolService {
   ): Promise<string> {
     try {
       const { chunkIndex, ...requestOptions } = options || {}
-
-      // 既存のチャンクストアからチャンクを取得を試みる
       const chunkStore: Map<string, ContentChunk[]> = global.chunkStore || new Map()
       let chunks: ContentChunk[] | undefined = chunkStore.get(url)
 
-      // チャンクが存在しない場合は、新たにコンテンツを取得して分割
       if (!chunks) {
         const response = await ipcRenderer.invoke('fetch-website', url, requestOptions)
         const rawContent =
           typeof response.data === 'string' ? response.data : JSON.stringify(response.data, null, 2)
         chunks = ContentChunker.splitContent(rawContent, { url })
-
-        // 新しいチャンクを保存
         chunkStore.set(url, chunks)
         global.chunkStore = chunkStore
       }
 
-      // チャンクインデックスが指定されている場合は特定のチャンクを返す
       if (typeof chunkIndex === 'number') {
         if (!chunks || chunks.length === 0) {
           throw new Error('No content chunks available')
@@ -167,12 +170,10 @@ export class ToolService {
         return `Chunk ${chunk.index}/${chunk.total}:\n\n${chunk.content}`
       }
 
-      // チャンクインデックスが指定されていない場合で、かつチャンクの長さが1の場合は、そのチャンクの内容を返す
       if (chunks.length === 1) {
         return `Content successfully retrieved:\n\n${chunks[0].content}`
       }
 
-      // チャンクインデックスが指定されていない場合はサマリーを返す
       return this.createChunkSummary(chunks)
     } catch (e: any) {
       throw `Error fetching website: ${e.message}`
@@ -195,25 +196,6 @@ export class ToolService {
     return summary
   }
 
-  async pexelsSearch(query: string): Promise<string> {
-    try {
-      const res = await fetch(`https://api.pexels.com/v1/search?${query}&per_page=1`, {
-        headers: {
-          Authorization: process.env.PRELOAD_VITE_PEXELS_API_KEY ?? ''
-        }
-      })
-      return JSON.stringify(res)
-    } catch (e: any) {
-      throw `Error pexelsSearch: ${JSON.stringify(e)}`
-    }
-  }
-
-  /**
-   * Generate image from text prompt using Bedrock service.
-   * @param bedrock
-   * @param toolInput
-   * @returns
-   */
   async generateImage(
     bedrock: BedrockService,
     toolInput: {
@@ -237,7 +219,6 @@ export class ToolService {
     } = toolInput
 
     try {
-      // Generate image
       const result = await bedrock.generateImage({
         modelId,
         prompt,
@@ -251,7 +232,6 @@ export class ToolService {
         throw new Error('No image was generated')
       }
 
-      // Save the first generated image
       const imageData = result.images[0]
       const binaryData = Buffer.from(imageData, 'base64')
       await fs.writeFile(outputPath, new Uint8Array(binaryData))
@@ -283,6 +263,36 @@ export class ToolService {
         error: 'Failed to generate image',
         message: error.message
       })}`
+    }
+  }
+
+  async executeCommand(
+    input: CommandInput | CommandStdinInput,
+    config: CommandConfig
+  ): Promise<string> {
+    try {
+      const commandService = this.getCommandService(config)
+      let result
+
+      if ('stdin' in input && 'pid' in input) {
+        // 標準入力を送信
+        result = await commandService.sendInput(input)
+      } else if ('command' in input && 'cwd' in input) {
+        // 新しいコマンドを実行
+        result = await commandService.executeCommand(input)
+      } else {
+        throw new Error('Invalid input format')
+      }
+
+      return JSON.stringify({
+        success: true,
+        ...result
+      })
+    } catch (error) {
+      throw JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      })
     }
   }
 }
