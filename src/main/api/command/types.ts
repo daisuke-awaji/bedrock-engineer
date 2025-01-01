@@ -3,6 +3,12 @@ export interface CommandConfig {
   allowedCommands: string[]
 }
 
+export interface ProcessInfo {
+  pid: number
+  command: string
+  detached: boolean
+}
+
 export interface DetachedProcessInfo {
   pid: number
   command: string
@@ -13,11 +19,7 @@ export interface CommandExecutionResult {
   stdout: string
   stderr: string
   exitCode: number
-  processInfo?: {
-    pid: number
-    command: string
-    detached: boolean
-  }
+  processInfo?: ProcessInfo
 }
 
 // コマンドマッチングのための型
