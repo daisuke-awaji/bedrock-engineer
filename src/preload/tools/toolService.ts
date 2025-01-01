@@ -288,10 +288,10 @@ export class ToolService {
     }
   }
 
-  async executeCommand(command: string, config: CommandConfig) {
+  async executeCommand(command: string, cwd: string, config: CommandConfig) {
     try {
       const commandService = new CommandService(config)
-      const result = await commandService.executeCommand(command)
+      const result = await commandService.executeCommand(command, cwd)
       console.log(result)
       return JSON.stringify({
         success: true,

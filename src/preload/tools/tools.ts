@@ -40,7 +40,7 @@ export const executeTool = async (toolName: string | undefined, toolInput: any) 
       })
     }
     case 'executeCommand':
-      return toolService.executeCommand(toolInput['command'], {
+      return toolService.executeCommand(toolInput['command'], toolInput['cwd'], {
         allowedCommands: store.get('command').allowedCommands
       })
     default:
@@ -334,9 +334,13 @@ First call without a chunkIndex(Must be 1 or greater) to get an overview and tot
             command: {
               type: 'string',
               description: 'The command to execute'
+            },
+            cwd: {
+              type: 'string',
+              description: 'The working directory for the command execution'
             }
           },
-          required: ['command']
+          required: ['command', 'cwd']
         }
       }
     }
