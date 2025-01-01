@@ -1,5 +1,11 @@
 import { spawn } from 'child_process'
-import { CommandConfig, CommandExecutionResult, CommandPattern, DetachedProcessInfo, ProcessInfo } from './types'
+import {
+  CommandConfig,
+  CommandExecutionResult,
+  CommandPattern,
+  DetachedProcessInfo,
+  ProcessInfo
+} from './types'
 
 export class CommandService {
   private config: CommandConfig
@@ -55,7 +61,7 @@ export class CommandService {
       }
 
       const [cmd, ...args] = command.split(' ')
-      
+
       const process = spawn(cmd, args, {
         cwd,
         detached: true,
@@ -79,6 +85,7 @@ export class CommandService {
       let stderr = ''
       let errorOccurred = false
       let isCompleted = false
+      // eslint-disable-next-line
       let startupTimeout: NodeJS.Timeout
 
       const cleanup = () => {
@@ -162,7 +169,9 @@ export class CommandService {
       })
 
       process.on('error', (error) => {
-        completeWithError(`Command execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        completeWithError(
+          `Command execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        )
       })
 
       process.on('exit', (code) => {
