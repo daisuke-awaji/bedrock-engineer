@@ -74,6 +74,11 @@ const compareTools = (savedTools: ToolState[], windowTools: typeof window.tools)
   return false
 }
 
+interface CommandConfig {
+  pattern: string;
+  description: string;
+}
+
 interface SettingsContextType {
   // Advanced Settings
   sendMsgKey: SendMsgKey
@@ -120,8 +125,8 @@ interface SettingsContextType {
   setTools: (tools: ToolState[]) => void
   enabledTools: ToolState[]
 
-  allowedCommands: string[]
-  setAllowedCommands: (commands: string[]) => void
+  allowedCommands: CommandConfig[]
+  setAllowedCommands: (commands: CommandConfig[]) => void
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined)
@@ -162,7 +167,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [tools, setStateTools] = useState<ToolState[]>([])
 
   // Command Settings
-  const [allowedCommands, setStateAllowedCommands] = useState<string[]>(['npm run *'])
+  const [allowedCommands, setStateAllowedCommands] = useState<CommandConfig[]>([
+    {
+      pattern: 'ls *',
+      description: 'List directory contents'
+    }
+  ])
 
   // Initialize all settings
   useEffect(() => {
@@ -242,6 +252,14 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const commandSettings = window.store.get('command')
     if (commandSettings?.allowedCommands) {
       setStateAllowedCommands(commandSettings.allowedCommands)
+    } else {
+      // 初期値を設定
+      const initialCommands = [{
+        pattern: 'ls *',
+        description: 'List directory contents'
+      }]
+      setStateAllowedCommands(initialCommands)
+      window.store.set('command', { allowedCommands: initialCommands })
     }
   }, [])
 
@@ -359,7 +377,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return true
     })
 
-  const setAllowedCommands = (commands: string[]) => {
+  const setAllowedCommands = (commands: CommandConfig[]) => {
     setStateAllowedCommands(commands)
     window.store.set('command', { allowedCommands: commands })
   }

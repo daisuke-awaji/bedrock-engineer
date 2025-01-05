@@ -7,7 +7,8 @@ import {
   CommandStdinInput,
   DetachedProcessInfo,
   InputDetectionPattern,
-  ProcessState
+  ProcessState,
+  CommandPatternConfig
 } from './types'
 
 export class CommandService {
@@ -79,7 +80,7 @@ export class CommandService {
     const executeParts = this.parseCommandPattern(commandToExecute)
 
     return this.config.allowedCommands.some((allowedCmd) => {
-      const allowedParts = this.parseCommandPattern(allowedCmd)
+      const allowedParts = this.parseCommandPattern(allowedCmd.pattern)
 
       if (allowedParts.command !== executeParts.command) {
         return false
@@ -163,15 +164,15 @@ export class CommandService {
         return
       }
 
-      const [cmd, ...args] = input.command.split(' ')
-
-      const process = spawn(cmd, args, {
+      // TODO: シェルを選べるようにする
+      const process = spawn('/bin/bash', ['-ic', input.command], {
         cwd: input.cwd,
         detached: true,
         stdio: ['pipe', 'pipe', 'pipe']
       })
 
       if (typeof process.pid === 'undefined') {
+        console.log(process)
         reject(new Error('Failed to start process: PID is undefined'))
         return
       }
@@ -500,7 +501,7 @@ export class CommandService {
     return Array.from(this.runningProcesses.values())
   }
 
-  getAllowedCommands(): string[] {
+  getAllowedCommands(): CommandPatternConfig[] {
     return [...this.config.allowedCommands]
   }
 

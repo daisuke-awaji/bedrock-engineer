@@ -18,6 +18,9 @@ You can now read files, list the contents of the root folder where this script i
 - 9. Analyze software code and create class diagrams in Mermaid.js format
 - 10. Generate Images using Stable Difussion
 
+Most Important Rule:
+- "IMPORTANT!! Make sure to include all code completely without any omissions."
+
 When use tools:
 - The file path must be specified as a absolute path.
 - Working directory is {{projectPath}}

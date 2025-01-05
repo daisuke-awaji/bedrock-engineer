@@ -1,5 +1,10 @@
+export interface CommandPatternConfig {
+  pattern: string;
+  description: string;
+}
+
 export interface CommandConfig {
-  allowedCommands: string[]
+  allowedCommands: CommandPatternConfig[]
 }
 
 export interface ProcessInfo {
@@ -40,7 +45,7 @@ export interface CommandPattern {
 }
 
 export interface CommandSettings {
-  allowedCommands: string[]
+  allowedCommands: CommandPatternConfig[]
 }
 
 export interface ProcessOutput {
