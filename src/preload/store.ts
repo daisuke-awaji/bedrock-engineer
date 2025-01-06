@@ -5,6 +5,11 @@ import { CustomAgent } from '../types/agent-chat'
 import { CommandSettings } from '../main/api/command/types'
 
 const DEFAULT_SHELL = '/bin/bash'
+const DEFAULT_INFERENCE_PARAMS: InferenceParameters = {
+  maxTokens: 4096,
+  temperature: 0.5,
+  topP: 0.9
+}
 
 type StoreScheme = {
   projectPath?: string
@@ -74,11 +79,7 @@ const init = () => {
   // Initialize inference parameters if not present
   const inferenceParams = electronStore.get('inferenceParams')
   if (!inferenceParams) {
-    electronStore.set('inferenceParams', {
-      maxTokens: 8192,
-      temperature: 0.5,
-      topP: 0.9
-    })
+    electronStore.set('inferenceParams', DEFAULT_INFERENCE_PARAMS)
   }
 
   // Initialize custom agents if not present
