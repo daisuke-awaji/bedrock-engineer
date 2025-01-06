@@ -20,6 +20,13 @@ interface CommandConfig {
   description: string;
 }
 
+// 利用可能なシェルのリスト
+const AVAILABLE_SHELLS = [
+  { value: '/bin/bash', label: 'Bash' },
+  { value: '/bin/zsh', label: 'Zsh' },
+  { value: '/bin/sh', label: 'Shell' }
+]
+
 // ツール名とアイコンのマッピング
 const toolIcons: { [key: string]: React.ReactElement } = {
   createFolder: <FaFolderPlus className="text-blue-500 size-6" />,
@@ -48,14 +55,18 @@ const toolDescriptions: { [key: string]: string } = {
   executeCommand: 'Execute allowed commands with support for wildcards'
 }
 
-// コマンド入力フォームコンポーネント
+// コマンド設定フォームコンポーネント
 const CommandForm = memo(
   ({
     allowedCommands,
-    setAllowedCommands
+    setAllowedCommands,
+    shell,
+    setShell
   }: {
     allowedCommands: CommandConfig[]
     setAllowedCommands: (commands: CommandConfig[]) => void
+    shell: string
+    setShell: (shell: string) => void
   }) => {
     const [newCommand, setNewCommand] = useState('')
     const [newDescription, setNewDescription] = useState('')
@@ -79,8 +90,27 @@ const CommandForm = memo(
     }
 
     return (
-      <div className="mt-4">
-        <div className="flex flex-col gap-2 mb-4">
+      <div className="mt-4 space-y-4">
+        {/* シェル選択 */}
+        <div className="space-y-2">
+          <label className="block text-xs text-gray-600 dark:text-gray-400">
+            Command Shell
+          </label>
+          <select
+            value={shell}
+            onChange={(e) => setShell(e.target.value)}
+            className="w-full p-2 text-sm border rounded dark:bg-gray-800 dark:border-gray-700"
+          >
+            {AVAILABLE_SHELLS.map((shellOption) => (
+              <option key={shellOption.value} value={shellOption.value}>
+                {shellOption.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* コマンド追加フォーム */}
+        <div className="flex flex-col gap-2">
           <div className="flex gap-2">
             <div className="flex-grow">
               <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
@@ -115,6 +145,8 @@ const CommandForm = memo(
             Add Command
           </button>
         </div>
+
+        {/* 登録済みコマンドリスト */}
         <div className="space-y-2">
           {allowedCommands.map((command) => (
             <div
@@ -144,7 +176,7 @@ const CommandForm = memo(
 CommandForm.displayName = 'CommandForm'
 
 const useToolSettingModal = () => {
-  const { tools, setTools, enabledTools, currentLLM, allowedCommands, setAllowedCommands } =
+  const { tools, setTools, enabledTools, currentLLM, allowedCommands, setAllowedCommands, shell, setShell } =
     useSettings()
 
   const handleClickEnableTool = (toolName: string) => {
@@ -227,6 +259,8 @@ const useToolSettingModal = () => {
                   <CommandForm
                     allowedCommands={allowedCommands}
                     setAllowedCommands={setAllowedCommands}
+                    shell={shell}
+                    setShell={setShell}
                   />
                 )}
               </div>

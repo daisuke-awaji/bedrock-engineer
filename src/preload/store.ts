@@ -4,6 +4,8 @@ import { AgentChatConfig, SendMsgKey, ToolState } from '../types/agent-chat'
 import { CustomAgent } from '../types/agent-chat'
 import { CommandSettings } from '../main/api/command/types'
 
+const DEFAULT_SHELL = '/bin/bash'
+
 type StoreScheme = {
   projectPath?: string
   llm?: LLM
@@ -95,7 +97,20 @@ const init = () => {
   const commandSettings = electronStore.get('command')
   if (!commandSettings) {
     electronStore.set('command', {
-      allowedCommands: ['echo HELLO']
+      allowedCommands: [
+        {
+          pattern: 'ls *',
+          description: 'List directory contents'
+        }
+      ],
+      shell: DEFAULT_SHELL
+    })
+  }
+  // シェル設定が存在しない場合は追加
+  else if (!commandSettings.shell) {
+    electronStore.set('command', {
+      ...commandSettings,
+      shell: DEFAULT_SHELL
     })
   }
 }

@@ -5,6 +5,7 @@ export interface CommandPatternConfig {
 
 export interface CommandConfig {
   allowedCommands: CommandPatternConfig[]
+  shell: string
 }
 
 export interface ProcessInfo {
@@ -46,6 +47,7 @@ export interface CommandPattern {
 
 export interface CommandSettings {
   allowedCommands: CommandPatternConfig[]
+  shell: string
 }
 
 export interface ProcessOutput {

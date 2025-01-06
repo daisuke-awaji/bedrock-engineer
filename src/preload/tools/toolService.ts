@@ -12,15 +12,24 @@ import {
 import { CommandConfig, CommandInput, CommandStdinInput } from '../../main/api/command/types'
 import { CommandService } from '../../main/api/command/commandService'
 
-// コマンドサービスのインスタンスをシングルトンとして保持
-let commandServiceInstance: CommandService | null = null
+// コマンドサービスのインスタンスとその設定を保持
+interface CommandServiceState {
+  service: CommandService
+  config: CommandConfig
+}
+
+let commandServiceState: CommandServiceState | null = null
 
 export class ToolService {
   private getCommandService(config: CommandConfig): CommandService {
-    if (!commandServiceInstance) {
-      commandServiceInstance = new CommandService(config)
+    // 設定が変更された場合は新しいインスタンスを作成
+    if (!commandServiceState || JSON.stringify(commandServiceState.config) !== JSON.stringify(config)) {
+      commandServiceState = {
+        service: new CommandService(config),
+        config
+      }
     }
-    return commandServiceInstance
+    return commandServiceState.service
   }
 
   async createFolder(folderPath: string): Promise<string> {

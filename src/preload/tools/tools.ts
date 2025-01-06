@@ -39,7 +39,13 @@ export const executeTool = async (toolName: string | undefined, toolInput: any) 
         output_format: toolInput['output_format']
       })
     }
-    case 'executeCommand':
+    case 'executeCommand': {
+      const commandSettings = store.get('command')
+      const commandConfig = {
+        allowedCommands: commandSettings.allowedCommands,
+        shell: commandSettings.shell
+      }
+
       if (toolInput['pid'] && toolInput['stdin']) {
         // 標準入力を送信
         return toolService.executeCommand(
@@ -47,9 +53,7 @@ export const executeTool = async (toolName: string | undefined, toolInput: any) 
             pid: toolInput['pid'],
             stdin: toolInput['stdin']
           },
-          {
-            allowedCommands: store.get('command').allowedCommands
-          }
+          commandConfig
         )
       } else if (toolInput['command'] && toolInput['cwd']) {
         // 新しいコマンドを実行
@@ -58,15 +62,14 @@ export const executeTool = async (toolName: string | undefined, toolInput: any) 
             command: toolInput['command'],
             cwd: toolInput['cwd']
           },
-          {
-            allowedCommands: store.get('command').allowedCommands
-          }
+          commandConfig
         )
       } else {
         throw new Error(
           'Invalid input format for executeCommand: requires either (command, cwd) or (pid, stdin)'
         )
       }
+    }
     default:
       throw new Error(`Unknown tool: ${toolName}`)
   }

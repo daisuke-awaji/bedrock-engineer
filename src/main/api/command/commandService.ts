@@ -164,8 +164,8 @@ export class CommandService {
         return
       }
 
-      // TODO: シェルを選べるようにする
-      const process = spawn('/bin/bash', ['-ic', input.command], {
+      // 設定されたシェルを使用
+      const process = spawn(this.config.shell, ['-ic', input.command], {
         cwd: input.cwd,
         detached: true,
         stdio: ['pipe', 'pipe', 'pipe']
@@ -329,6 +329,7 @@ export class CommandService {
         }
       })
 
+      const TIMEOUT = 60000 * 5 // 5分
       // タイムアウト処理
       setTimeout(() => {
         if (!isCompleted) {
@@ -349,7 +350,7 @@ export class CommandService {
             }
           }
         }
-      }, 30000)
+      }, TIMEOUT) // Multi-Agent 的な処理を見据えて長めに設定する
     })
   }
 

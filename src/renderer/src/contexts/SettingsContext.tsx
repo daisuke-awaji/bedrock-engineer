@@ -11,6 +11,9 @@ const DEFAULT_INFERENCE_PARAMS: InferenceParameters = {
   topP: 0.9
 }
 
+// デフォルトのシェル設定
+const DEFAULT_SHELL = '/bin/bash'
+
 // TODO: リージョンに応じて動的にツールの enum を設定したい
 // "us-east-1",  "us-west-2", "ap-northeast-1" 以外は generateImage ツールを無効化する
 const isGenerateImageTool = (name: string) => name === 'generateImage'
@@ -127,6 +130,10 @@ interface SettingsContextType {
 
   allowedCommands: CommandConfig[]
   setAllowedCommands: (commands: CommandConfig[]) => void
+
+  // Shell Settings
+  shell: string
+  setShell: (shell: string) => void
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined)
@@ -173,6 +180,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       description: 'List directory contents'
     }
   ])
+
+  // Shell Settings
+  const [shell, setStateShell] = useState<string>(DEFAULT_SHELL)
 
   // Initialize all settings
   useEffect(() => {
@@ -252,6 +262,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const commandSettings = window.store.get('command')
     if (commandSettings?.allowedCommands) {
       setStateAllowedCommands(commandSettings.allowedCommands)
+      // Load Shell Setting
+      if (commandSettings.shell) {
+        setStateShell(commandSettings.shell)
+      }
     } else {
       // 初期値を設定
       const initialCommands = [{
@@ -259,7 +273,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         description: 'List directory contents'
       }]
       setStateAllowedCommands(initialCommands)
-      window.store.set('command', { allowedCommands: initialCommands })
+      window.store.set('command', { 
+        allowedCommands: initialCommands,
+        shell: DEFAULT_SHELL
+      })
     }
   }, [])
 
@@ -379,7 +396,18 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const setAllowedCommands = (commands: CommandConfig[]) => {
     setStateAllowedCommands(commands)
-    window.store.set('command', { allowedCommands: commands })
+    window.store.set('command', { 
+      allowedCommands: commands,
+      shell: shell
+    })
+  }
+
+  const setShell = (newShell: string) => {
+    setStateShell(newShell)
+    window.store.set('command', {
+      allowedCommands: allowedCommands,
+      shell: newShell
+    })
   }
 
   const value = {
@@ -432,7 +460,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     enabledTools,
 
     allowedCommands,
-    setAllowedCommands
+    setAllowedCommands,
+
+    // Shell Settings
+    shell,
+    setShell
   }
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>
