@@ -2,6 +2,9 @@ import Store from 'electron-store'
 import { LLM, InferenceParameters } from '../types/llm'
 import { AgentChatConfig, SendMsgKey, ToolState } from '../types/agent-chat'
 import { CustomAgent } from '../types/agent-chat'
+import { CommandSettings } from '../main/api/command/types'
+
+const DEFAULT_SHELL = '/bin/bash'
 
 type StoreScheme = {
   projectPath?: string
@@ -31,6 +34,7 @@ type StoreScheme = {
   }
   customAgents: CustomAgent[]
   selectedAgentId: string
+  command: CommandSettings
 }
 
 const electronStore = new Store<StoreScheme>()
@@ -87,6 +91,27 @@ const init = () => {
   const selectedAgentId = electronStore.get('selectedAgentId')
   if (!selectedAgentId) {
     electronStore.set('selectedAgentId', 'softwareAgent')
+  }
+
+  // Initialize command settings if not present
+  const commandSettings = electronStore.get('command')
+  if (!commandSettings) {
+    electronStore.set('command', {
+      allowedCommands: [
+        {
+          pattern: 'ls *',
+          description: 'List directory contents'
+        }
+      ],
+      shell: DEFAULT_SHELL
+    })
+  }
+  // シェル設定が存在しない場合は追加
+  else if (!commandSettings.shell) {
+    electronStore.set('command', {
+      ...commandSettings,
+      shell: DEFAULT_SHELL
+    })
   }
 }
 

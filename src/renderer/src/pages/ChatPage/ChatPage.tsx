@@ -141,11 +141,11 @@ export default function ChatPage() {
               />
             </div>
 
-            {/* 履歴トグルバー */}
+            {/* チャット履歴トグルバー */}
             <div className="flex items-center">
               <div
                 onClick={() => setIsHistoryOpen(!isHistoryOpen)}
-                className="w-4 h-16 dark:bg-gray-800 hover:dark:bg-gray-700 bg-gray-100 hover:bg-gray-200 cursor-pointer flex items-center justify-center transition-colors duration-200 rounded-lg"
+                className="w-4 h-16 dark:bg-gray-900 hover:dark:bg-gray-700 bg-gray-100 hover:bg-gray-200 cursor-pointer flex items-center justify-center transition-colors duration-200 rounded-lg m-2"
                 title={t('Toggle chat history')}
               >
                 <FiChevronRight

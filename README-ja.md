@@ -6,7 +6,7 @@ Bedrock Enginner は、[Amazon Bedrock](https://aws.amazon.com/bedrock/) を活�
 
 ## 💻 デモ
 
-https://github.com/user-attachments/assets/83f46abe-0b69-4748-a4a0-e0155c7d80ae
+https://github.com/user-attachments/assets/788583b6-148b-4e9d-9015-c24ad4be6162
 
 ## 🍎 はじめに
 
@@ -44,50 +44,84 @@ npm run build:linux
 
 ### エージェントチャット
 
-- 💬 人間のような Amazon Nova, Claude 3.5 モデルとの対話型チャットインターフェース。
+開発ができる自律的な AI エージェントが、あなたの開発を支援します。これは [Cline](https://github.com/cline/cline) のような AI アシスタントに似た機能を提供していますが、VS Code のようなエディタに依存しない独自の UI を備えています。これにより、Bedrock Engineer のエージェントチャット機能では、よりリッチな図解と対話型の体験が可能になります。また、エージェントのカスタマイズ機能により、開発以外のユースケースにおいても、エージェントを活用することができます。
+
+- 💬 人間のような Amazon Nova, Claude 3.5, Meta llama モデルとの対話型チャットインターフェース。
 - 📁 ファイルシステム操作（フォルダ作成、ファイル作成、ファイル読み/書き）
 - 🔍 Tavily APIを使用したWeb検索機能
 - 🏗️ プロジェクト構造の作成と管理
 - 🧐 コード分析と改善提案
-- 🚀 自動モードによる自動タスク完了
-- 🔄 自動モードでの反復トラッキング
+- 📝 コードの生成と実行
+- 📊 データ分析と可視化
+- 💡 エージェントのカスタマイズと管理
+- 🛠️ ツールのカスタマイズと管理
+- 🔄 チャット履歴の管理
+- 🌐 多言語対応
 
-https://github.com/user-attachments/assets/838fc854-f310-40dc-8237-f82ffd623ef3
+| ![agent-chat-diagram](./assets/agent-chat-diagram.png) | ![agent-chat-search](./assets/agent-chat-search.png) |
+| :----------------------------------------------------: | :--------------------------------------------------: |
+|                    コード分析と図解                    |            Tavily API を使用した Web 検索            |
 
-### ウェブサイトジェネレーター
+## エージェントを選択する
 
-以下のソースコードを生成し、リアルタイムにプレビューします。
+左上のメニューからエージェントを選択します。デフォルトでは汎用的なソフトウェア開発に特化した Software Developer, プログラミング学習を支援する Programming Mentor, サービスやプロダクトの構想段階を支援する Product Designer を搭載しています。
+
+![select-agents](./assets/select-agents.png)
+
+## エージェントをカスタマイズする
+
+右上の ⚙️ アイコンをクリックして、エージェントの設定をカスタマイズします。エージェントの名前と説明を入力し、システムプロンプトを入力します。システムプロンプトはエージェントの振る舞いを決定する重要な要素です。エージェントの目的や規制事項、役割、使用できるツールと使うタイミングを明確にしておくことで、より適切な回答を得ることができます。
+
+![custom-agents](./assets/custom-agents.png)
+
+## ツールを選択する
+
+左下の Tools アイコンをクリックして、エージェントが使用できるツールを選択します。各ツールの役割は[こちら](./src/preload/tools/tools.ts)を参照してください。
+
+![select-tools](./assets/select-tools.png)
+
+## ツールをカスタマイズする
+
+executeCommand ツールでは CLI で実行可能なコマンドを登録することができます。登録されていないコマンドは実行できません。データベースに接続するコマンド、APIを実行するコマンド、別の AI エージェントを呼び出すコマンドなどを登録することで、エージェントの能力を拡張することができます。
+
+![custom-tools](./assets/custom-tools.png)
+
+### Website Generator
+
+ウェブサイトを描画するソースコードを生成し、リアルタイムにプレビューします。現在は以下のライブラリに対応しています。また、追加で指示を与えることで対話的にコードを生成することができます。
 
 - React.js（w/ Typescript）
 - Vue.js（w/ Typescript）
 - Svelte.js
 - Vanilla.js
 
-https://github.com/user-attachments/assets/d28c2ab1-70f4-4ce0-9537-cf89a2c31ad4
+以下は Website Generator によって生成された画面の例です。
 
-## デザインシステムのデータソースに接続する
+| ![website-gen](./assets/website-generator.png) | ![website-gen-data](./assets/website-generator-data-visualization.png) | ![website-gen-healthcare](./assets/website-generator-healthcare.png) |
+| :--------------------------------------------: | :--------------------------------------------------------------------: | :------------------------------------------------------------------: |
+|               観葉植物のECサイト               |                           データの可視化API                            |                          ヘルスケアのブログ                          |
 
-Amazon Bedrockのナレッジベースに接続することで、任意のデザインシステム、プロジェクトソースコード、Webサイトのスタイルなどを参照してウェブサイトを生成できます。
-
-事前にナレッジベースにソースコードとクロールしたWebページを保存する必要があります。ナレッジベースにソースコードを登録する際は、[gpt-repositoy-loader](https://github.com/mpoon/gpt-repository-loader) などの方法を使用してLLMが簡単に理解できる形式に変換することをお勧めします。
-
-![knowledgebase-connect](./assets//knowledgebase-connect.gif)
-
-画面下部の「Connect」ボタンをクリックし、ナレッジベースIDを入力してください。
-
-https://github.com/user-attachments/assets/23181de3-0ae1-43f3-8fe3-149f1f0108be
-
-以下のスタイルもプリセットとしてサポートされています。
+また、以下のスタイルがプリセットとしてサポートされています。
 
 - インラインスタイリング
 - Tailwind.css
 - Material UI（Reactモードのみ）
 
-### Step Functions ジェネレーター
+#### デザインシステムのデータソースに接続する
+
+Amazon Bedrock の Knowledge Base に接続することで、任意のデザインシステム、プロジェクトソースコード、Webサイトのスタイルなどを参照してウェブサイトを生成できます。
+
+事前に Knowledge Base にソースコードとクロールしたWebページを保存する必要があります。Knowledge Base にソースコードを登録する際は、[gpt-repositoy-loader](https://github.com/mpoon/gpt-repository-loader) などの方法を使用してLLMが簡単に理解できる形式に変換することをお勧めします。Figma のデザインファイルは HTML, CSS の形式にエクスポートしたものを Knowledge Base に登録することで参照可能になります。
+
+画面下部の「Connect」ボタンをクリックし、ナレッジベースIDを入力してください。
+
+![knowledgebase-connect](./assets//knowledgebase-connect.gif)
+
+### Step Functions Generator
 
 AWS Step Functions の ASL 定義を生成し、リアルタイムにプレビューします。
 
-https://github.com/user-attachments/assets/17756811-6314-438f-a13d-61af10c1963e
+![step-functions-generator](./assets/step-functions-generator.png)
 
 ## Star History
 
@@ -97,4 +131,4 @@ https://github.com/user-attachments/assets/17756811-6314-438f-a13d-61af10c1963e
 
 MIT License
 
-このソフトウェアは[Lottie Files](https://lottiefiles.com/free-animation/robot-futuristic-ai-animated-xyiArJ2DEF)を使用しています。
+このソフトウェアは [Lottie Files](https://lottiefiles.com/free-animation/robot-futuristic-ai-animated-xyiArJ2DEF) を使用しています。

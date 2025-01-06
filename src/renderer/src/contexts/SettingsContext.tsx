@@ -11,6 +11,9 @@ const DEFAULT_INFERENCE_PARAMS: InferenceParameters = {
   topP: 0.9
 }
 
+// デフォルトのシェル設定
+const DEFAULT_SHELL = '/bin/bash'
+
 // TODO: リージョンに応じて動的にツールの enum を設定したい
 // "us-east-1",  "us-west-2", "ap-northeast-1" 以外は generateImage ツールを無効化する
 const isGenerateImageTool = (name: string) => name === 'generateImage'
@@ -74,6 +77,11 @@ const compareTools = (savedTools: ToolState[], windowTools: typeof window.tools)
   return false
 }
 
+interface CommandConfig {
+  pattern: string;
+  description: string;
+}
+
 interface SettingsContextType {
   // Advanced Settings
   sendMsgKey: SendMsgKey
@@ -119,6 +127,13 @@ interface SettingsContextType {
   tools: ToolState[]
   setTools: (tools: ToolState[]) => void
   enabledTools: ToolState[]
+
+  allowedCommands: CommandConfig[]
+  setAllowedCommands: (commands: CommandConfig[]) => void
+
+  // Shell Settings
+  shell: string
+  setShell: (shell: string) => void
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined)
@@ -157,6 +172,17 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Tools Settings
   const [tools, setStateTools] = useState<ToolState[]>([])
+
+  // Command Settings
+  const [allowedCommands, setStateAllowedCommands] = useState<CommandConfig[]>([
+    {
+      pattern: 'ls *',
+      description: 'List directory contents'
+    }
+  ])
+
+  // Shell Settings
+  const [shell, setStateShell] = useState<string>(DEFAULT_SHELL)
 
   // Initialize all settings
   useEffect(() => {
@@ -230,6 +256,27 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       } else if (savedTools) {
         setStateTools(savedTools)
       }
+    }
+
+    // Load Command Settings
+    const commandSettings = window.store.get('command')
+    if (commandSettings?.allowedCommands) {
+      setStateAllowedCommands(commandSettings.allowedCommands)
+      // Load Shell Setting
+      if (commandSettings.shell) {
+        setStateShell(commandSettings.shell)
+      }
+    } else {
+      // 初期値を設定
+      const initialCommands = [{
+        pattern: 'ls *',
+        description: 'List directory contents'
+      }]
+      setStateAllowedCommands(initialCommands)
+      window.store.set('command', { 
+        allowedCommands: initialCommands,
+        shell: DEFAULT_SHELL
+      })
     }
   }, [])
 
@@ -347,6 +394,22 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return true
     })
 
+  const setAllowedCommands = (commands: CommandConfig[]) => {
+    setStateAllowedCommands(commands)
+    window.store.set('command', { 
+      allowedCommands: commands,
+      shell: shell
+    })
+  }
+
+  const setShell = (newShell: string) => {
+    setStateShell(newShell)
+    window.store.set('command', {
+      allowedCommands: allowedCommands,
+      shell: newShell
+    })
+  }
+
   const value = {
     // Advanced Settings
     sendMsgKey,
@@ -394,7 +457,14 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Tools Settings
     tools,
     setTools,
-    enabledTools
+    enabledTools,
+
+    allowedCommands,
+    setAllowedCommands,
+
+    // Shell Settings
+    shell,
+    setShell
   }
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>
