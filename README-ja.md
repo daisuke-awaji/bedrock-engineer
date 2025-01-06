@@ -58,16 +58,9 @@ npm run build:linux
 - 🔄 チャット履歴の管理
 - 🌐 多言語対応
 
-<div style="display: flex; justify-content: space-between;">
-  <div style="width: 45%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-    <img src="./assets/agent-chat-diagram.png" alt="agent-chat-diagram">
-    <span>コード分析と図解</span>
-  </div>
-  <div style="width: 45%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-    <img src="./assets/agent-chat-search.png" alt="agent-chat-search">
-    <span>Tavily API を使用した Web 検索機能</span>
-  </div>
-</div>
+| ![agent-chat-diagram](./assets/agent-chat-diagram.png) | ![agent-chat-search](./assets/agent-chat-search.png) |
+| :----------------------------------------------------: | :--------------------------------------------------: |
+|                    コード分析と図解                    |            Tavily API を使用した Web 検索            |
 
 ## エージェントを選択する
 
@@ -104,20 +97,9 @@ executeCommand ツールでは CLI で実行可能なコマンドを登録する
 
 以下は Website Generator によって生成された画面の例です。
 
-<div style="display: flex; justify-content: space-between;">
-  <div style="width: 45%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-    <img src="./assets/website-generator.png" alt="website-generator">
-    <span>観葉植物のECサイト</span>
-  </div>
-  <div style="width: 45%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-    <img src="./assets/website-generator-data-visualization.png" alt="website-generator">
-    <span>データの可視化</span>
-  </div>
-  <div style="width: 45%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-    <img src="./assets/website-generator-healthcare.png" alt="website-generator">
-    <span>ヘルスケアのブログ</span>
-  </div>
-</div>
+| ![website-gen](./assets/website-generator.png) | ![website-gen-data](./assets/website-generator-data-visualization.png) | ![website-gen-healthcare](./assets/website-generator-healthcare.png) |
+| :--------------------------------------------: | :--------------------------------------------------------------------: | :------------------------------------------------------------------: |
+|               観葉植物のECサイト               |                           データの可視化API                            |                          ヘルスケアのブログ                          |
 
 また、以下のスタイルがプリセットとしてサポートされています。
 
