@@ -23,7 +23,10 @@ let commandServiceState: CommandServiceState | null = null
 export class ToolService {
   private getCommandService(config: CommandConfig): CommandService {
     // 設定が変更された場合は新しいインスタンスを作成
-    if (!commandServiceState || JSON.stringify(commandServiceState.config) !== JSON.stringify(config)) {
+    if (
+      !commandServiceState ||
+      JSON.stringify(commandServiceState.config) !== JSON.stringify(config)
+    ) {
       commandServiceState = {
         service: new CommandService(config),
         config
@@ -41,8 +44,73 @@ export class ToolService {
     }
   }
 
-  async writeToFile(filePath: string, content: string): Promise<string> {
+  async writeToFile(
+    filePath: string,
+    content: string,
+    start_line?: number,
+    end_line?: number
+  ): Promise<string> {
     try {
+      // 部分更新の場合
+      if (typeof start_line === 'number') {
+        // ファイルが存在しない場合は新規作成
+        if (!(await this.fileExists(filePath))) {
+          if (start_line > 1) {
+            throw new Error('Cannot specify start_line > 1 for non-existent file')
+          }
+          await fs.writeFile(filePath, content)
+          return `New file created with content: ${filePath}\n\n${content}`
+        }
+
+        // 既存ファイルの内容を読み込む
+        const fileContent = await fs.readFile(filePath, 'utf-8')
+        const lines = fileContent.split('\n')
+
+        // 行番号を0ベースのインデックスに変換
+        const startIndex = start_line - 1
+        const endIndex = typeof end_line === 'number' ? end_line - 1 : startIndex
+
+        // 範囲チェック
+        if (startIndex < 0) {
+          throw new Error('start_line must be greater than 0')
+        }
+
+        // 新しい内容を行配列に分割
+        const newLines = content.split('\n')
+
+        // 必要に応じて配列を拡張
+        if (startIndex > lines.length) {
+          lines.push(...Array(startIndex - lines.length).fill(''))
+        }
+
+        // 指定範囲の行を置換
+        if (typeof end_line === 'number') {
+          // 範囲指定の場合
+          lines.splice(startIndex, endIndex - startIndex + 1, ...newLines)
+        } else {
+          // 単一行の場合
+          lines.splice(startIndex, 1, ...newLines)
+        }
+
+        // 変更を保存
+        await fs.writeFile(filePath, lines.join('\n'))
+
+        return JSON.stringify(
+          {
+            success: true,
+            message: `Updated ${
+              typeof end_line === 'number'
+                ? `lines ${start_line}-${end_line}`
+                : `line ${start_line}`
+            } in ${filePath}`,
+            updatedContent: content
+          },
+          null,
+          2
+        )
+      }
+
+      // 通常の全体書き込み
       await fs.writeFile(filePath, content)
       return `Content written to file: ${filePath}\n\n${content}`
     } catch (e: any) {
@@ -302,6 +370,16 @@ export class ToolService {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error occurred'
       })
+    }
+  }
+
+  // ファイルの存在確認用ヘルパーメソッド
+  private async fileExists(filePath: string): Promise<boolean> {
+    try {
+      await fs.access(filePath)
+      return true
+    } catch {
+      return false
     }
   }
 }
