@@ -35,7 +35,7 @@ export class ConverseService {
       const runtimeClient = createRuntimeClient(this.context.store.get('aws'))
       return runtimeClient.send(command)
     } catch (error: any) {
-      if (error.name === 'ThrottlingException') {
+      if (error.name === 'ThrottlingException' || error.name === 'ServiceUnavailableException') {
         console.log({ retry: retries, error, errorName: error.name })
         if (retries >= ConverseService.MAX_RETRIES) {
           throw error
@@ -72,7 +72,7 @@ export class ConverseService {
 
       return await runtimeClient.send(command)
     } catch (error: any) {
-      if (error.name === 'ThrottlingException') {
+      if (error.name === 'ThrottlingException' || error.name === 'ServiceUnavailableException') {
         console.log({ retry: retries, error, errorName: error.name })
         if (retries >= ConverseService.MAX_RETRIES) {
           throw error
