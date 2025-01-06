@@ -78,8 +78,8 @@ const compareTools = (savedTools: ToolState[], windowTools: typeof window.tools)
 }
 
 interface CommandConfig {
-  pattern: string;
-  description: string;
+  pattern: string
+  description: string
 }
 
 interface SettingsContextType {
@@ -268,12 +268,14 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     } else {
       // 初期値を設定
-      const initialCommands = [{
-        pattern: 'ls *',
-        description: 'List directory contents'
-      }]
+      const initialCommands = [
+        {
+          pattern: 'ls *',
+          description: 'List directory contents'
+        }
+      ]
       setStateAllowedCommands(initialCommands)
-      window.store.set('command', { 
+      window.store.set('command', {
         allowedCommands: initialCommands,
         shell: DEFAULT_SHELL
       })
@@ -396,7 +398,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const setAllowedCommands = (commands: CommandConfig[]) => {
     setStateAllowedCommands(commands)
-    window.store.set('command', { 
+    window.store.set('command', {
       allowedCommands: commands,
       shell: shell
     })

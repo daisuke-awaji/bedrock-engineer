@@ -16,8 +16,8 @@ import toast from 'react-hot-toast'
 import { memo, useState } from 'react'
 
 interface CommandConfig {
-  pattern: string;
-  description: string;
+  pattern: string
+  description: string
 }
 
 // 利用可能なシェルのリスト
@@ -93,9 +93,7 @@ const CommandForm = memo(
       <div className="mt-4 space-y-4">
         {/* シェル選択 */}
         <div className="space-y-2">
-          <label className="block text-xs text-gray-600 dark:text-gray-400">
-            Command Shell
-          </label>
+          <label className="block text-xs text-gray-600 dark:text-gray-400">Command Shell</label>
           <select
             value={shell}
             onChange={(e) => setShell(e.target.value)}
@@ -162,9 +160,7 @@ const CommandForm = memo(
                   Remove
                 </button>
               </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                {command.description}
-              </p>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{command.description}</p>
             </div>
           ))}
         </div>
@@ -176,8 +172,16 @@ const CommandForm = memo(
 CommandForm.displayName = 'CommandForm'
 
 const useToolSettingModal = () => {
-  const { tools, setTools, enabledTools, currentLLM, allowedCommands, setAllowedCommands, shell, setShell } =
-    useSettings()
+  const {
+    tools,
+    setTools,
+    enabledTools,
+    currentLLM,
+    allowedCommands,
+    setAllowedCommands,
+    shell,
+    setShell
+  } = useSettings()
 
   const handleClickEnableTool = (toolName: string) => {
     if (!tools) return

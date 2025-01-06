@@ -1,4 +1,4 @@
-import { FiHome, FiFeather, FiSettings } from 'react-icons/fi'
+import { FiHome, FiFeather, FiSettings, FiBook } from 'react-icons/fi'
 import { LuCombine } from 'react-icons/lu'
 import { HiOutlineChatAlt2 } from 'react-icons/hi'
 import HomePage from './pages/HomePage/HomePage'
@@ -6,6 +6,7 @@ import SettingPage from './pages/SettingPage/SettingPage'
 import StepFunctionsGeneratorPage from './pages/StepFunctionsGeneratorPage/StepFunctionsGeneratorPage'
 import WebsiteGeneratorPage from './pages/WebsiteGeneratorPage/WebsiteGeneratorPage'
 import ChatPage from './pages/ChatPage/ChatPage'
+import AgentDirectoryPage from './pages/AgentDirectoryPage/AgentDirectoryPage'
 
 export const routes = [
   {
@@ -22,12 +23,13 @@ export const routes = [
     position: 'top',
     element: <ChatPage />
   },
-  // {
-  //   name: 'History',
-  //   href: '/history',
-  //   icon: FiBook,
-  //   position: 'top'
-  // },
+  {
+    name: 'Agent Directory',
+    href: '/agent-directory',
+    icon: FiBook,
+    position: 'top',
+    element: <AgentDirectoryPage />
+  },
   {
     name: 'Website Generator',
     href: '/generative-ui',

@@ -23,7 +23,10 @@ let commandServiceState: CommandServiceState | null = null
 export class ToolService {
   private getCommandService(config: CommandConfig): CommandService {
     // 設定が変更された場合は新しいインスタンスを作成
-    if (!commandServiceState || JSON.stringify(commandServiceState.config) !== JSON.stringify(config)) {
+    if (
+      !commandServiceState ||
+      JSON.stringify(commandServiceState.config) !== JSON.stringify(config)
+    ) {
       commandServiceState = {
         service: new CommandService(config),
         config
