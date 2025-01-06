@@ -39,6 +39,37 @@ export const executeTool = async (toolName: string | undefined, toolInput: any) 
         output_format: toolInput['output_format']
       })
     }
+    case 'executeCommand': {
+      const commandSettings = store.get('command')
+      const commandConfig = {
+        allowedCommands: commandSettings.allowedCommands,
+        shell: commandSettings.shell
+      }
+
+      if (toolInput['pid'] && toolInput['stdin']) {
+        // 標準入力を送信
+        return toolService.executeCommand(
+          {
+            pid: toolInput['pid'],
+            stdin: toolInput['stdin']
+          },
+          commandConfig
+        )
+      } else if (toolInput['command'] && toolInput['cwd']) {
+        // 新しいコマンドを実行
+        return toolService.executeCommand(
+          {
+            command: toolInput['command'],
+            cwd: toolInput['cwd']
+          },
+          commandConfig
+        )
+      } else {
+        throw new Error(
+          'Invalid input format for executeCommand: requires either (command, cwd) or (pid, stdin)'
+        )
+      }
+    }
     default:
       throw new Error(`Unknown tool: ${toolName}`)
   }
@@ -314,6 +345,37 @@ First call without a chunkIndex(Must be 1 or greater) to get an overview and tot
             }
           },
           required: ['prompt', 'outputPath', 'modelId']
+        }
+      }
+    }
+  },
+  {
+    toolSpec: {
+      name: 'executeCommand',
+      description:
+        'Execute a command or send input to a running process. First execute the command to get a PID, then use that PID to send input if needed. Usage: 1) First call with command and cwd to start process, 2) If input is required, call again with pid and stdin.',
+      inputSchema: {
+        json: {
+          type: 'object',
+          properties: {
+            command: {
+              type: 'string',
+              description: 'The command to execute (used when starting a new process)'
+            },
+            cwd: {
+              type: 'string',
+              description: 'The working directory for the command execution (used with command)'
+            },
+            pid: {
+              type: 'number',
+              description:
+                'Process ID to send input to (used when sending input to existing process)'
+            },
+            stdin: {
+              type: 'string',
+              description: 'Standard input to send to the process (used with pid)'
+            }
+          }
         }
       }
     }

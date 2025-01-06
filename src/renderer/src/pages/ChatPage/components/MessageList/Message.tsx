@@ -110,8 +110,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
               </div>
             )
           } else {
-            console.log(c)
-            throw new Error('Invalid message content')
+            console.error(c)
+            console.error('Invalid message content')
+            return <CodeRenderer key={index} text={JSON.stringify(c)} />
           }
         })}
       </div>

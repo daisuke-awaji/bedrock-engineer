@@ -15,6 +15,7 @@ export const agent = {
       'Define how the agent should behave and respond. Describe in detail what role it should play and how it should respond.',
     placeholders: 'Available Placeholders:',
     projectPathPlaceholder: 'Current project directory path',
+    allowedCommandsPlaceholder: 'Allowed commands',
     scenariosDescription:
       'Register commonly used interaction patterns as scenarios. Enter the title and specific content of the scenario.',
     scenarioTitle: 'Scenario title',
@@ -64,6 +65,7 @@ export const agent = {
       'エージェントの振る舞いを定義するシステムプロンプトを入力してください。どのような役割を果たし、どのように応答するべきかを詳細に記述します。',
     placeholders: '利用可能なプレースホルダー:',
     projectPathPlaceholder: '現在のプロジェクトディレクトリのパス',
+    allowedCommandsPlaceholder: '許可されたコマンド',
     scenariosDescription:
       'よく使用するやり取りのパターンをシナリオとして登録できます。シナリオのタイトルと具体的な内容を入力してください。',
     scenarioTitle: 'シナリオのタイトル',
