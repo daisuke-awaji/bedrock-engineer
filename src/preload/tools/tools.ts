@@ -12,12 +12,7 @@ export const executeTool = async (toolName: string | undefined, toolInput: any) 
     case 'readFiles':
       return toolService.readFiles(toolInput['paths'])
     case 'writeToFile':
-      return toolService.writeToFile(
-        toolInput['path'],
-        toolInput['content'],
-        toolInput['start_line'],
-        toolInput['end_line']
-      )
+      return toolService.writeToFile(toolInput['path'], toolInput['content'])
     case 'listFiles': {
       const ignoreFiles = store.get('agentChatConfig').ignoreFiles
       console.log(ignoreFiles)
@@ -104,7 +99,7 @@ export const tools: Tool[] = [
     toolSpec: {
       name: 'writeToFile',
       description:
-        'Write content to a file at the specified path. Can update entire file or specific lines. When updating specific lines, the start_line must be specified.',
+        'Write content to an existing file at the specified path. Use this when you need to add or update content in an existing file.',
       inputSchema: {
         json: {
           type: 'object',
@@ -116,16 +111,6 @@ export const tools: Tool[] = [
             content: {
               type: 'string',
               description: 'The content to write to the file'
-            },
-            start_line: {
-              type: 'number',
-              description:
-                'Optional: Starting line number for partial update (1-based). If specified, updates only the specified range.'
-            },
-            end_line: {
-              type: 'number',
-              description:
-                'Optional: Ending line number for partial update (inclusive). If not specified, updates only the start line.'
             }
           },
           required: ['path', 'content']

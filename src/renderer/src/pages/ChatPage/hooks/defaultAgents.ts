@@ -31,7 +31,6 @@ When asked to make edits or improvements:
 - Analyze the code and suggest improvements or make necessary edits.
 - Use the writeToFile tool to implement changes.
 - IMPORTANT!! Do not omit any output text or code.
-- IMPORTANT!! Aggressively perform incremental updates by specifying the number of rows to reduce output tokens.
 
 When you use search:
 - Make sure you use the best query to get the most accurate and up-to-date information
