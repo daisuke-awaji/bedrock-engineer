@@ -1,17 +1,28 @@
 import {
+  BedrockAgentRuntimeClient,
   RetrieveAndGenerateCommand,
-  RetrieveAndGenerateCommandInput
+  RetrieveAndGenerateCommandInput,
+  RetrieveCommand,
+  RetrieveCommandInput
 } from '@aws-sdk/client-bedrock-agent-runtime'
 import { createAgentRuntimeClient } from '../client'
 import type { ServiceContext } from '../types'
 
 export class AgentService {
-  constructor(private context: ServiceContext) {}
+  private agentClient: BedrockAgentRuntimeClient
+  constructor(private context: ServiceContext) {
+    this.agentClient = createAgentRuntimeClient(this.context.store.get('aws'))
+  }
 
   async retrieveAndGenerate(props: RetrieveAndGenerateCommandInput) {
-    const agentClient = createAgentRuntimeClient(this.context.store.get('aws'))
     const command = new RetrieveAndGenerateCommand(props)
-    const res = await agentClient.send(command)
+    const res = await this.agentClient.send(command)
+    return res
+  }
+
+  async retrieve(props: RetrieveCommandInput) {
+    const command = new RetrieveCommand(props)
+    const res = await this.agentClient.send(command)
     return res
   }
 }

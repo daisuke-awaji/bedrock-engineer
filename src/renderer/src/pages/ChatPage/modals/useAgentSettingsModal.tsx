@@ -7,13 +7,14 @@ import useSetting from '@renderer/hooks/useSetting'
 import { useTranslation } from 'react-i18next'
 import { useAgentGenerator } from '../hooks/useAgentGenerator'
 import toast from 'react-hot-toast'
+import { replacePlaceholders } from '../utils/placeholder'
 
 const AgentForm: React.FC<{
   agent?: CustomAgent
   onSave: (agent: CustomAgent) => void
   onCancel: () => void
 }> = ({ agent, onSave, onCancel }) => {
-  const { projectPath, allowedCommands } = useSetting()
+  const { projectPath, allowedCommands, knowledgeBases } = useSetting()
   const { t } = useTranslation()
   const { generateAgentSystemPrompt, generatedAgentSystemPrompt, isGenerating } =
     useAgentGenerator()
@@ -54,10 +55,11 @@ const AgentForm: React.FC<{
   const getPreviewText = (text: string): string => {
     if (!text) return text
     const path = projectPath || t('noProjectPath')
-    return text
-      .replace(/{{projectPath}}/g, path)
-      .replace(/{{date}}/g, new Date().toISOString().slice(0, 10))
-      .replace(/{{allowedCommands}}/g, JSON.stringify(allowedCommands))
+    return replacePlaceholders(text, {
+      projectPath: path,
+      allowedCommands: allowedCommands,
+      knowledgeBases: knowledgeBases
+    })
   }
 
   const handleAutoGenerate = async () => {
@@ -181,6 +183,23 @@ const AgentForm: React.FC<{
                 type="button"
                 onClick={() => {
                   navigator.clipboard.writeText('{{allowedCommands}}')
+                }}
+                className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+              >
+                {t('copy')}
+              </button>
+            </div>
+            <div className="mt-1 flex items-center space-x-2">
+              <code className="text-xs bg-white dark:bg-gray-700 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 dark:text-gray-300">
+                {`{{knowledgeBases}}`}
+              </code>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t('knowledgeBasesPlaceholder')}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText('{{knowledgeBases}}')
                 }}
                 className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
               >

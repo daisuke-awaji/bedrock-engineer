@@ -1,5 +1,5 @@
 import useModal from '@renderer/hooks/useModal'
-import { useSettings } from '@renderer/contexts/SettingsContext'
+import { SettingsContextType, useSettings } from '@renderer/contexts/SettingsContext'
 import {
   FaFolderPlus,
   FaFileSignature,
@@ -10,14 +10,15 @@ import {
   FaSearch,
   FaGlobe,
   FaImage,
-  FaTerminal
+  FaTerminal,
+  FaDatabase
 } from 'react-icons/fa'
 import toast from 'react-hot-toast'
 import { memo, useState } from 'react'
 
 interface CommandConfig {
-  pattern: string;
-  description: string;
+  pattern: string
+  description: string
 }
 
 // 利用可能なシェルのリスト
@@ -38,6 +39,7 @@ const toolIcons: { [key: string]: React.ReactElement } = {
   tavilySearch: <FaSearch className="text-red-500 size-6" />,
   fetchWebsite: <FaGlobe className="text-teal-500 size-6" />,
   generateImage: <FaImage className="text-pink-500 size-6" />,
+  retrieve: <FaDatabase className="text-pink-500 size-6" />,
   executeCommand: <FaTerminal className="text-gray-500 size-6" />
 }
 
@@ -52,6 +54,7 @@ const toolDescriptions: { [key: string]: string } = {
   tavilySearch: 'Search the web for information',
   fetchWebsite: 'Fetch and analyze content from websites',
   generateImage: 'Generate images using Amazon Bedrock Stable Diffusion models',
+  retrieve: 'RAG',
   executeCommand: 'Execute allowed commands with support for wildcards'
 }
 
@@ -93,9 +96,7 @@ const CommandForm = memo(
       <div className="mt-4 space-y-4">
         {/* シェル選択 */}
         <div className="space-y-2">
-          <label className="block text-xs text-gray-600 dark:text-gray-400">
-            Command Shell
-          </label>
+          <label className="block text-xs text-gray-600 dark:text-gray-400">Command Shell</label>
           <select
             value={shell}
             onChange={(e) => setShell(e.target.value)}
@@ -162,9 +163,7 @@ const CommandForm = memo(
                   Remove
                 </button>
               </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                {command.description}
-              </p>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{command.description}</p>
             </div>
           ))}
         </div>
@@ -175,9 +174,110 @@ const CommandForm = memo(
 
 CommandForm.displayName = 'CommandForm'
 
+const KnowledgeBaseSettingForm = ({
+  knowledgeBases,
+  setKnowledgeBases
+}: {
+  knowledgeBases: SettingsContextType['knowledgeBases']
+  setKnowledgeBases: (knowledgeBase: SettingsContextType['knowledgeBases']) => void
+}) => {
+  const [newKnowledgeBaseId, setKnoledgeBaseId] = useState('')
+  const [newDescription, setNewDescription] = useState('')
+
+  const handleAddKB = () => {
+    if (newKnowledgeBaseId.trim() && newDescription.trim()) {
+      setKnowledgeBases([
+        ...knowledgeBases,
+        {
+          knowledgeBaseId: newKnowledgeBaseId.trim(),
+          description: newDescription.trim()
+        }
+      ])
+      setKnoledgeBaseId('')
+      setNewDescription('')
+    }
+  }
+
+  const handleRemoveKB = (knowledgeBaseId: string) => {
+    setKnowledgeBases(knowledgeBases.filter((cmd) => cmd.knowledgeBaseId !== knowledgeBaseId))
+  }
+
+  return (
+    <div className="mt-4 space-y-4">
+      {/* KnowledgeBase 追加フォーム */}
+      <div className="flex flex-col gap-2">
+        <div className="flex gap-2">
+          <div className="flex-grow">
+            <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+              Knowledge Base Id
+            </label>
+            <input
+              type="text"
+              value={newKnowledgeBaseId}
+              onChange={(e) => setKnoledgeBaseId(e.target.value)}
+              placeholder="e.g., BM7GYFCKIA"
+              className="w-full p-2 text-sm border rounded dark:bg-gray-800 dark:border-gray-700"
+            />
+          </div>
+          <div className="flex-grow">
+            <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+              Description
+            </label>
+            <input
+              type="text"
+              value={newDescription}
+              onChange={(e) => setNewDescription(e.target.value)}
+              placeholder="e.g., Stores in-house manuals and past inquiry history"
+              className="w-full p-2 text-sm border rounded dark:bg-gray-800 dark:border-gray-700"
+            />
+          </div>
+        </div>
+        <button
+          onClick={handleAddKB}
+          disabled={!newKnowledgeBaseId.trim() || !newDescription.trim()}
+          className="px-4 py-2 text-sm text-white bg-blue-500 rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+        >
+          Add
+        </button>
+      </div>
+
+      {/* 登録済み KnowledgeBase リスト */}
+      <div className="space-y-2">
+        {knowledgeBases.map((kb) => (
+          <div
+            key={kb.knowledgeBaseId}
+            className="flex flex-col p-3 text-sm bg-gray-100 dark:bg-gray-900 dark:text-gray-300 rounded"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-mono">{kb.knowledgeBaseId}</span>
+              <button
+                onClick={() => handleRemoveKB(kb.knowledgeBaseId)}
+                className="text-red-500 hover:text-red-600"
+              >
+                Remove
+              </button>
+            </div>
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{kb.description}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 const useToolSettingModal = () => {
-  const { tools, setTools, enabledTools, currentLLM, allowedCommands, setAllowedCommands, shell, setShell } =
-    useSettings()
+  const {
+    tools,
+    setTools,
+    enabledTools,
+    currentLLM,
+    knowledgeBases,
+    setKnowledgeBases,
+    allowedCommands,
+    setAllowedCommands,
+    shell,
+    setShell
+  } = useSettings()
 
   const handleClickEnableTool = (toolName: string) => {
     if (!tools) return
@@ -205,12 +305,13 @@ const useToolSettingModal = () => {
             if (!toolName) return null
 
             const isCommandTool = toolName === 'executeCommand'
+            const isRetrieveTool = toolName === 'retrieve'
 
             return (
               <div
                 key={toolName}
                 className={`
-                  ${isCommandTool ? 'col-span-full' : ''}
+                  ${isCommandTool || isRetrieveTool ? 'col-span-full' : ''}
                   p-4 rounded-lg
                   border-2 transition-all duration-200
                   ${
@@ -254,6 +355,13 @@ const useToolSettingModal = () => {
                     </div>
                   </div>
                 </div>
+
+                {isRetrieveTool && tool.enabled && (
+                  <KnowledgeBaseSettingForm
+                    knowledgeBases={knowledgeBases}
+                    setKnowledgeBases={setKnowledgeBases}
+                  />
+                )}
 
                 {isCommandTool && tool.enabled && (
                   <CommandForm

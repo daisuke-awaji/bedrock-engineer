@@ -34,6 +34,10 @@ export class BedrockService {
     return this.agentService.retrieveAndGenerate(props)
   }
 
+  async retrieve(props: Parameters<AgentService['retrieve']>[0]) {
+    return this.agentService.retrieve(props)
+  }
+
   async generateImage(request: GenerateImageRequest): Promise<GeneratedImage> {
     return this.imageService.generateImage(request)
   }

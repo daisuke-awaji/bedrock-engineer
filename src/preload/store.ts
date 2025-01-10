@@ -1,6 +1,6 @@
 import Store from 'electron-store'
 import { LLM, InferenceParameters } from '../types/llm'
-import { AgentChatConfig, SendMsgKey, ToolState } from '../types/agent-chat'
+import { AgentChatConfig, KnowledgeBase, SendMsgKey, ToolState } from '../types/agent-chat'
 import { CustomAgent } from '../types/agent-chat'
 import { CommandSettings } from '../main/api/command/types'
 
@@ -39,6 +39,7 @@ type StoreScheme = {
   }
   customAgents: CustomAgent[]
   selectedAgentId: string
+  knowledgeBases: KnowledgeBase[]
   command: CommandSettings
 }
 
@@ -92,6 +93,12 @@ const init = () => {
   const selectedAgentId = electronStore.get('selectedAgentId')
   if (!selectedAgentId) {
     electronStore.set('selectedAgentId', 'softwareAgent')
+  }
+
+  // Initialize knowledge bases
+  const knowledgeBases = electronStore.get('knowledgeBases')
+  if (!knowledgeBases) {
+    electronStore.set('knowledgeBases', [])
   }
 
   // Initialize command settings if not present

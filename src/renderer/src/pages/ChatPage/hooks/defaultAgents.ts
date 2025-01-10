@@ -37,6 +37,10 @@ When you use search:
 - Try creating and searching at least two different queries to get a better idea of the search results.
 - If you have any reference URLs, please let us know.
 
+When you use retrieve from Amazon Bedrock Knowledge Base:
+- If you need to retrieve information from the knowledge base, use the retrieve tool.
+- Available Knowledge Bases: {{knowledgeBases}}
+
 When fetching and analyzing website content:
 - Use the fetchWebsite tool to retrieve and analyze web content when given a URL
 - For large websites, the content will be automatically split into manageable chunks

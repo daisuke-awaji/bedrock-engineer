@@ -278,6 +278,39 @@ export class ToolService {
     }
   }
 
+  async retrieve(
+    bedrock: BedrockService,
+    toolInput: {
+      knowledgeBaseId: string
+      query: string
+    }
+  ): Promise<string> {
+    const { knowledgeBaseId, query } = toolInput
+
+    try {
+      const result = await bedrock.retrieve({
+        knowledgeBaseId,
+        retrievalQuery: {
+          text: query
+        }
+      })
+
+      return JSON.stringify({
+        success: true,
+        name: 'retrieve',
+        message: `Retrieved information from knowledge base ${knowledgeBaseId}`,
+        result
+      })
+    } catch (error: any) {
+      throw `Error retrieve: ${JSON.stringify({
+        success: false,
+        name: 'retrieve',
+        error: 'Failed to retrieve information from knowledge base',
+        message: error.message
+      })}`
+    }
+  }
+
   async executeCommand(
     input: CommandInput | CommandStdinInput,
     config: CommandConfig

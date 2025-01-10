@@ -39,6 +39,12 @@ export const executeTool = async (toolName: string | undefined, toolInput: any) 
         output_format: toolInput['output_format']
       })
     }
+    case 'retrieve': {
+      return toolService.retrieve(bedrock, {
+        knowledgeBaseId: toolInput['knowledgeBaseId'],
+        query: toolInput['query']
+      })
+    }
     case 'executeCommand': {
       const commandSettings = store.get('command')
       const commandConfig = {
@@ -345,6 +351,29 @@ First call without a chunkIndex(Must be 1 or greater) to get an overview and tot
             }
           },
           required: ['prompt', 'outputPath', 'modelId']
+        }
+      }
+    }
+  },
+  {
+    toolSpec: {
+      name: 'retrieve',
+      description:
+        'Retrieve information from a knowledge base using Amazon Bedrock Knowledge Base. Use this when you need to get information from a knowledge base.',
+      inputSchema: {
+        json: {
+          type: 'object',
+          properties: {
+            knowledgeBaseId: {
+              type: 'string',
+              description: 'The ID of the knowledge base to retrieve from'
+            },
+            query: {
+              type: 'string',
+              description: 'The query to search for in the knowledge base'
+            }
+          },
+          required: ['knowledgeBaseId', 'query']
         }
       }
     }

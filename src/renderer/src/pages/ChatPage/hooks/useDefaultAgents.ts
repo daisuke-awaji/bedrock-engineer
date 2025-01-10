@@ -7,6 +7,7 @@ import {
   CODE_BUDDY_SYSTEM_PROMPT,
   PRODUCT_DESIGNER_SYSTEM_PROMPT
 } from './defaultAgents'
+import { replacePlaceholders as replacePlaceholdersUtil } from '../utils/placeholder'
 
 // ソフトウェア開発者のシナリオ定義
 const getSoftwareAgentScenarios = (): Scenario[] => [
@@ -46,21 +47,19 @@ const getProductDesignerScenarios = (): Scenario[] => [
 
 export const useDefaultAgents = () => {
   const { t, i18n } = useTranslation()
-  const { projectPath, allowedCommands } = useSetting()
+  const { projectPath, allowedCommands, knowledgeBases } = useSetting()
 
   // プレースホルダーを置換する関数
   const replacePlaceholders = useCallback(
     (text: string): string => {
       if (!text) return text
-      const path = projectPath || t('no project path')
-      const yyyyMMdd = new Date().toISOString().slice(0, 10)
-      // 1 week ago
-      return text
-        .replace(/{{projectPath}}/g, path)
-        .replace(/{{date}}/g, yyyyMMdd)
-        .replace(/{{allowedCommands}}/g, JSON.stringify(allowedCommands))
+      return replacePlaceholdersUtil(text, {
+        projectPath: projectPath || t('no project path'),
+        allowedCommands: allowedCommands,
+        knowledgeBases: knowledgeBases
+      })
     },
-    [projectPath, t, allowedCommands]
+    [projectPath, t, allowedCommands, knowledgeBases]
   )
 
   // シナリオをローカライズする関数

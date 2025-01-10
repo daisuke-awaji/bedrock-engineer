@@ -1,6 +1,6 @@
 export interface CommandPatternConfig {
-  pattern: string;
-  description: string;
+  pattern: string
+  description: string
 }
 
 export interface CommandConfig {

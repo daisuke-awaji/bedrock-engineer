@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { SendMsgKey, ToolState } from 'src/types/agent-chat'
+import { KnowledgeBase, SendMsgKey, ToolState } from 'src/types/agent-chat'
 import { InferenceParameters, LLM } from 'src/types/llm'
 import { listModels } from '@renderer/lib/api'
 import { CustomAgent } from '@/types/agent-chat'
@@ -82,7 +82,7 @@ interface CommandConfig {
   description: string
 }
 
-interface SettingsContextType {
+export interface SettingsContextType {
   // Advanced Settings
   sendMsgKey: SendMsgKey
   updateSendMsgKey: (key: SendMsgKey) => void
@@ -131,6 +131,9 @@ interface SettingsContextType {
   allowedCommands: CommandConfig[]
   setAllowedCommands: (commands: CommandConfig[]) => void
 
+  knowledgeBases: KnowledgeBase[]
+  setKnowledgeBases: (knowledgeBases: KnowledgeBase[]) => void
+
   // Shell Settings
   shell: string
   setShell: (shell: string) => void
@@ -172,6 +175,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Tools Settings
   const [tools, setStateTools] = useState<ToolState[]>([])
+
+  // Knowledge Base Settings
+  const [knowledgeBases, setStateKnowledgeBases] = useState<KnowledgeBase[]>([])
 
   // Command Settings
   const [allowedCommands, setStateAllowedCommands] = useState<CommandConfig[]>([
@@ -256,6 +262,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       } else if (savedTools) {
         setStateTools(savedTools)
       }
+    }
+
+    // Load Knowledge Base Settings
+    const savedKnowledgeBases = window.store.get('knowledgeBases')
+    if (savedKnowledgeBases) {
+      setStateKnowledgeBases(savedKnowledgeBases)
     }
 
     // Load Command Settings
@@ -396,6 +408,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return true
     })
 
+  const setKnowledgeBases = (knowledgeBases: KnowledgeBase[]) => {
+    setStateKnowledgeBases(knowledgeBases)
+    window.store.set('knowledgeBases', knowledgeBases)
+  }
+
   const setAllowedCommands = (commands: CommandConfig[]) => {
     setStateAllowedCommands(commands)
     window.store.set('command', {
@@ -460,6 +477,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     tools,
     setTools,
     enabledTools,
+
+    knowledgeBases,
+    setKnowledgeBases,
 
     allowedCommands,
     setAllowedCommands,
