@@ -18,6 +18,18 @@ import {
   OutputFormat
 } from '../../main/api/bedrock'
 
+interface GenerateImageResult extends ToolResult {
+  name: 'generateImage'
+  result: {
+    imagePath: string
+    modelUsed: string
+    seed?: number
+    prompt: string
+    negativePrompt?: string
+    aspect_ratio: string
+  }
+}
+
 interface RetrieveResult extends ToolResult {
   name: 'retrieve'
 }
@@ -245,7 +257,7 @@ export class ToolService {
       seed?: number
       output_format?: OutputFormat
     }
-  ): Promise<string> {
+  ): Promise<GenerateImageResult> {
     const {
       prompt,
       outputPath,
@@ -274,12 +286,19 @@ export class ToolService {
       const binaryData = Buffer.from(imageData, 'base64')
       await fs.writeFile(outputPath, new Uint8Array(binaryData))
 
-      return JSON.stringify({
+      return {
         success: true,
+        name: 'generateImage',
         message: `Image generated successfully and saved to ${outputPath}`,
-        modelUsed: modelId,
-        seed: result.seeds?.[0]
-      })
+        result: {
+          imagePath: outputPath,
+          prompt,
+          negativePrompt,
+          aspect_ratio: aspect_ratio ?? '1:1',
+          modelUsed: modelId,
+          seed: result.seeds?.[0]
+        }
+      }
     } catch (error: any) {
       if (error.name === 'ThrottlingException') {
         const alternativeModels = [
@@ -288,7 +307,7 @@ export class ToolService {
           'stability.stable-image-ultra-v1:1'
         ].filter((m) => m !== modelId)
 
-        throw `Error generateImage: ${JSON.stringify({
+        throw `${JSON.stringify({
           success: false,
           error: 'Rate limit exceeded. Please try again with a different model.',
           suggestedModels: alternativeModels,
@@ -296,7 +315,7 @@ export class ToolService {
         })}`
       }
 
-      throw `Error generateImage: ${JSON.stringify({
+      throw `${JSON.stringify({
         success: false,
         error: 'Failed to generate image',
         message: error.message

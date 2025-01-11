@@ -2,6 +2,8 @@ import { KnowledgeBaseRetrievalResult } from '@aws-sdk/client-bedrock-agent-runt
 import React from 'react'
 import { RetrievalResult } from './RetrievalResult'
 import { TavilySearchResult } from './TavilySearch/TavilySearchResult'
+import { ExecuteCommandResult } from './ExecuteCommand/ExecuteCommandResult'
+import { GenerateImageResult } from './GenerateImage/GenerateImageResult'
 
 interface RetrieveResponse {
   success: boolean
@@ -36,6 +38,18 @@ export const JSONCodeBlock: React.FC<{ json: any }> = ({ json }) => {
         ))}
       </div>
     )
+  }
+
+  if (json.name === 'executeCommand') {
+    return (
+      <div className="max-h-[50vh] overflow-y-auto">
+        <ExecuteCommandResult response={json} />
+      </div>
+    )
+  }
+
+  if (json.name === 'generateImage') {
+    return <GenerateImageResult response={json} />
   }
 
   const jsonStr = JSON.stringify(json, null, 2)
