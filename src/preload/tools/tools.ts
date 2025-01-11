@@ -2,8 +2,12 @@ import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { ToolService } from './toolService'
 import { store } from '../store'
 import { BedrockService } from '../../main/api/bedrock'
+import { ToolName, ToolResult } from '../../types/tools'
 
-export const executeTool = async (toolName: string | undefined, toolInput: any) => {
+export const executeTool = async (
+  toolName: ToolName | undefined,
+  toolInput: any
+): Promise<string | ToolResult> => {
   const toolService = new ToolService()
   const bedrock = new BedrockService({ store })
   switch (toolName) {

@@ -42,6 +42,7 @@ export const useAgentChat = (
         // 既存の通信があれば中断
         abortCurrentRequest()
         setMessages(session.messages as Message[])
+
         setCurrentSessionId(sessionId)
       }
     } else {
@@ -67,6 +68,7 @@ export const useAgentChat = (
       if (session) {
         console.log({ sessionをHistoryから復元: session })
         setMessages(session.messages as Message[])
+
         window.chatHistory.setActiveSession(currentSessionId)
       }
     }
@@ -211,13 +213,23 @@ export const useAgentChat = (
         if (toolUse?.name) {
           try {
             const toolResult = await window.api.bedrock.executeTool(toolUse.name, toolUse.input)
-            toolResults.push({
-              toolResult: {
-                toolUseId: toolUse.toolUseId,
-                content: [{ text: toolResult }],
-                status: 'success'
-              }
-            })
+            if (Object.prototype.hasOwnProperty.call(toolResult, 'name')) {
+              toolResults.push({
+                toolResult: {
+                  toolUseId: toolUse.toolUseId,
+                  content: [{ json: toolResult }],
+                  status: 'success'
+                }
+              })
+            } else {
+              toolResults.push({
+                toolResult: {
+                  toolUseId: toolUse.toolUseId,
+                  content: [{ text: toolResult }],
+                  status: 'success'
+                }
+              })
+            }
           } catch (e: any) {
             console.error(e)
             toolResults.push({

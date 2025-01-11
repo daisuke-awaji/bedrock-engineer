@@ -1,20 +1,9 @@
 import useModal from '@renderer/hooks/useModal'
 import { SettingsContextType, useSettings } from '@renderer/contexts/SettingsContext'
-import {
-  FaFolderPlus,
-  FaFileSignature,
-  FaFileAlt,
-  FaList,
-  FaArrowRight,
-  FaCopy,
-  FaSearch,
-  FaGlobe,
-  FaImage,
-  FaTerminal,
-  FaDatabase
-} from 'react-icons/fa'
 import toast from 'react-hot-toast'
 import { memo, useState } from 'react'
+import { ToolName } from '@/types/tools'
+import { toolIcons } from '../components/Tool/ToolIcons'
 
 interface CommandConfig {
   pattern: string
@@ -28,23 +17,8 @@ const AVAILABLE_SHELLS = [
   { value: '/bin/sh', label: 'Shell' }
 ]
 
-// ツール名とアイコンのマッピング
-const toolIcons: { [key: string]: React.ReactElement } = {
-  createFolder: <FaFolderPlus className="text-blue-500 size-6" />,
-  writeToFile: <FaFileSignature className="text-green-500 size-6" />,
-  readFiles: <FaFileAlt className="text-yellow-500 size-6" />,
-  listFiles: <FaList className="text-purple-500 size-6" />,
-  moveFile: <FaArrowRight className="text-orange-500 size-6" />,
-  copyFile: <FaCopy className="text-indigo-500 size-6" />,
-  tavilySearch: <FaSearch className="text-red-500 size-6" />,
-  fetchWebsite: <FaGlobe className="text-teal-500 size-6" />,
-  generateImage: <FaImage className="text-pink-500 size-6" />,
-  retrieve: <FaDatabase className="text-pink-500 size-6" />,
-  executeCommand: <FaTerminal className="text-gray-500 size-6" />
-}
-
 // ツールの説明文
-const toolDescriptions: { [key: string]: string } = {
+const toolDescriptions: { [key in ToolName]: string } = {
   createFolder: 'Create new directories in your project',
   writeToFile: 'Write or update file contents',
   readFiles: 'Read contents from multiple files',
@@ -54,7 +28,8 @@ const toolDescriptions: { [key: string]: string } = {
   tavilySearch: 'Search the web for information',
   fetchWebsite: 'Fetch and analyze content from websites',
   generateImage: 'Generate images using Amazon Bedrock Stable Diffusion models',
-  retrieve: 'RAG',
+  retrieve:
+    'Query the Amazon Bedrock Knowledge Base to find relevant information using Retrieval-Augmented Generation (RAG).',
   executeCommand: 'Execute allowed commands with support for wildcards'
 }
 
@@ -237,7 +212,7 @@ const KnowledgeBaseSettingForm = ({
           disabled={!newKnowledgeBaseId.trim() || !newDescription.trim()}
           className="px-4 py-2 text-sm text-white bg-blue-500 rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          Add
+          Add Knowledge Base
         </button>
       </div>
 

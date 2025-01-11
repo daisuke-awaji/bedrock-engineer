@@ -3,14 +3,34 @@ import * as path from 'path'
 import GitignoreLikeMatcher from '../lib/gitignore-like-matcher'
 import { ipcRenderer } from 'electron'
 import { ContentChunker, ContentChunk } from '../lib/contentChunker'
-import {
-  AspectRatio,
-  BedrockService,
-  OutputFormat,
-  ImageGeneratorModel
-} from '../../main/api/bedrock'
-import { CommandConfig, CommandInput, CommandStdinInput } from '../../main/api/command/types'
+import { ToolResult } from '../../types/tools'
 import { CommandService } from '../../main/api/command/commandService'
+import {
+  CommandConfig,
+  CommandInput,
+  CommandStdinInput,
+  ProcessInfo
+} from '../../main/api/command/types'
+import {
+  BedrockService,
+  ImageGeneratorModel,
+  AspectRatio,
+  OutputFormat
+} from '../../main/api/bedrock'
+
+interface RetrieveResult extends ToolResult {
+  name: 'retrieve'
+}
+
+interface ExecuteCommandResult extends ToolResult {
+  name: 'executeCommand'
+  stdout: string
+  stderr: string
+  exitCode: number
+  processInfo?: ProcessInfo
+  requiresInput?: boolean
+  prompt?: string
+}
 
 // コマンドサービスのインスタンスとその設定を保持
 interface CommandServiceState {
@@ -124,7 +144,7 @@ export class ToolService {
     }
   }
 
-  async tavilySearch(query: string, apiKey: string): Promise<string> {
+  async tavilySearch(query: string, apiKey: string): Promise<any> {
     try {
       const response = await fetch('https://api.tavily.com/search', {
         method: 'POST',
@@ -138,14 +158,20 @@ export class ToolService {
           include_answer: true,
           include_images: true,
           include_raw_content: true,
-          max_results: 3,
+          max_results: 5,
           include_domains: [],
           exclude_domains: []
         })
       })
 
       const body = await response.json()
-      return JSON.stringify(body, null, 2)
+      return {
+        success: true,
+        name: 'tavilySearch',
+        message: `Searched using Tavily. Query: ${query}`,
+        result: body
+      }
+      // return JSON.stringify(body, null, 2)
     } catch (e: any) {
       throw `Error searching: ${e.message}`
     }
@@ -284,7 +310,7 @@ export class ToolService {
       knowledgeBaseId: string
       query: string
     }
-  ): Promise<string> {
+  ): Promise<RetrieveResult> {
     const { knowledgeBaseId, query } = toolInput
 
     try {
@@ -295,12 +321,12 @@ export class ToolService {
         }
       })
 
-      return JSON.stringify({
+      return {
         success: true,
         name: 'retrieve',
         message: `Retrieved information from knowledge base ${knowledgeBaseId}`,
         result
-      })
+      }
     } catch (error: any) {
       throw `Error retrieve: ${JSON.stringify({
         success: false,
@@ -314,7 +340,7 @@ export class ToolService {
   async executeCommand(
     input: CommandInput | CommandStdinInput,
     config: CommandConfig
-  ): Promise<string> {
+  ): Promise<ExecuteCommandResult> {
     try {
       const commandService = this.getCommandService(config)
       let result
@@ -329,10 +355,12 @@ export class ToolService {
         throw new Error('Invalid input format')
       }
 
-      return JSON.stringify({
+      return {
         success: true,
+        name: 'executeCommand',
+        message: `Command executed: ${JSON.stringify(input)}`,
         ...result
-      })
+      }
     } catch (error) {
       throw JSON.stringify({
         success: false,

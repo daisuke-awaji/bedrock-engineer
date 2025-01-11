@@ -1,5 +1,6 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 import { ChatMessage, ChatSession } from '../types/chat/history'
+import { API } from '@preload/api'
 
 interface ChatHistoryAPI {
   createSession(agentId: string, modelId: string, systemPrompt?: string): string
