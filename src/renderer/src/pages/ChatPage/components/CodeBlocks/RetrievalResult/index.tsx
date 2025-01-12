@@ -9,7 +9,7 @@ export const RetrievalResult: React.FC<Props> = ({ result }) => {
   const { content, location, score, metadata } = result
 
   const handleUrlClick = (url: string) => {
-    window.electron.ipcRenderer.send('open-external-url', url)
+    open(url)
   }
 
   const formatContent = () => {
@@ -45,6 +45,8 @@ export const RetrievalResult: React.FC<Props> = ({ result }) => {
               </span>
               <span className="text-gray-600 dark:text-gray-400">{location.type}</span>
             </div>
+
+            {/* S3 Location */}
             {location.s3Location && (
               <div className="flex items-start">
                 <span className="font-medium mr-2 text-gray-700 dark:text-gray-300 w-16 shrink-0">
@@ -55,6 +57,8 @@ export const RetrievalResult: React.FC<Props> = ({ result }) => {
                 </span>
               </div>
             )}
+
+            {/* Web Location */}
             {location.webLocation && (
               <div className="flex items-start">
                 <span className="font-medium mr-2 text-gray-700 dark:text-gray-300 w-16 shrink-0">
@@ -65,6 +69,51 @@ export const RetrievalResult: React.FC<Props> = ({ result }) => {
                   onClick={() => handleUrlClick(location.webLocation?.url || '')}
                 >
                   {location.webLocation.url}
+                </span>
+              </div>
+            )}
+
+            {/* Confluence Location */}
+            {location.confluenceLocation?.url && (
+              <div className="flex items-start">
+                <span className="font-medium mr-2 text-gray-700 dark:text-gray-300 w-16 shrink-0">
+                  URL:
+                </span>
+                <span
+                  className="break-all text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                  onClick={() => handleUrlClick(location.confluenceLocation?.url || '')}
+                >
+                  {location.confluenceLocation.url}
+                </span>
+              </div>
+            )}
+
+            {/* Salesforce Location */}
+            {location.salesforceLocation?.url && (
+              <div className="flex items-start">
+                <span className="font-medium mr-2 text-gray-700 dark:text-gray-300 w-16 shrink-0">
+                  URL:
+                </span>
+                <span
+                  className="break-all text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                  onClick={() => handleUrlClick(location.salesforceLocation?.url || '')}
+                >
+                  {location.salesforceLocation.url}
+                </span>
+              </div>
+            )}
+
+            {/* SharePoint Location */}
+            {location.sharePointLocation?.url && (
+              <div className="flex items-start">
+                <span className="font-medium mr-2 text-gray-700 dark:text-gray-300 w-16 shrink-0">
+                  URL:
+                </span>
+                <span
+                  className="break-all text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                  onClick={() => handleUrlClick(location.sharePointLocation?.url || '')}
+                >
+                  {location.sharePointLocation.url}
                 </span>
               </div>
             )}
