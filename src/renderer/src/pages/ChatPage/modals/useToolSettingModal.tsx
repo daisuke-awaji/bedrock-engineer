@@ -27,7 +27,7 @@ const toolDescriptions: { [key in ToolName]: string } = {
   copyFile: 'Create file duplicates',
   tavilySearch: 'Search the web for information',
   fetchWebsite: 'Fetch and analyze content from websites',
-  generateImage: 'Generate images using Amazon Bedrock Stable Diffusion models',
+  generateImage: 'Generate images using LLMs',
   retrieve:
     'Query the Amazon Bedrock Knowledge Base to find relevant information using Retrieval-Augmented Generation (RAG).',
   executeCommand: 'Execute allowed commands with support for wildcards'
@@ -270,11 +270,11 @@ const useToolSettingModal = () => {
 
   const ToolSettingModal = () => {
     return (
-      <Modal header="Available Tools" size="4xl">
+      <Modal header="Available Tools" size="6xl">
         <p className="text-gray-700 text-sm pb-4 dark:text-white">
           Choose the tools you want to enable for the AI assistant
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {tools?.map((tool) => {
             const toolName = tool.toolSpec?.name
             if (!toolName) return null

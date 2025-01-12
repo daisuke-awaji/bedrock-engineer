@@ -74,17 +74,13 @@ npm run build:linux
 
 ![custom-agents](./assets/custom-agents.png)
 
-## ツールを選択する
+## ツールを選択する／カスタマイズする
 
 左下の Tools アイコンをクリックして、エージェントが使用できるツールを選択します。各ツールの役割は[こちら](./src/preload/tools/tools.ts)を参照してください。
 
-![select-tools](./assets/select-tools.png)
-
-## ツールをカスタマイズする
-
 executeCommand ツールでは CLI で実行可能なコマンドを登録することができます。登録されていないコマンドは実行できません。データベースに接続するコマンド、APIを実行するコマンド、別の AI エージェントを呼び出すコマンドなどを登録することで、エージェントの能力を拡張することができます。
 
-![custom-tools](./assets/custom-tools.png)
+![select-tools](./assets/select-tools.png)
 
 ### Website Generator
 
