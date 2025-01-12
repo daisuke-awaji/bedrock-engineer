@@ -4,6 +4,7 @@ import { RetrievalResult } from './RetrievalResult'
 import { TavilySearchResult } from './TavilySearch/TavilySearchResult'
 import { ExecuteCommandResult } from './ExecuteCommand/ExecuteCommandResult'
 import { GenerateImageResult } from './GenerateImage/GenerateImageResult'
+import { BedrockAgentResult } from './BedrockAgent/BedrockAgentResult'
 
 interface RetrieveResponse {
   success: boolean
@@ -50,6 +51,14 @@ export const JSONCodeBlock: React.FC<{ json: any }> = ({ json }) => {
 
   if (json.name === 'generateImage') {
     return <GenerateImageResult response={json} />
+  }
+
+  if (json.name === 'invokeBedrockAgent') {
+    return (
+      <div className="max-h-[50vh] overflow-y-auto">
+        <BedrockAgentResult response={json} />
+      </div>
+    )
   }
 
   const jsonStr = JSON.stringify(json, null, 2)

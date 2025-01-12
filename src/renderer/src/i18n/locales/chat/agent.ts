@@ -18,6 +18,8 @@ export const agent = {
     allowedCommandsPlaceholder: 'Allowed commands',
     knowledgeBasesPlaceholder:
       'A list of Knowledge Base IDs and descriptions to use for the search',
+    bedrockAgentsPlaceholder:
+      'A list of Bedrock Agents identifier (agentId and aliasId) and description',
     scenariosDescription:
       'Register commonly used interaction patterns as scenarios. Enter the title and specific content of the scenario.',
     scenarioTitle: 'Scenario title',
@@ -69,6 +71,7 @@ export const agent = {
     projectPathPlaceholder: '現在のプロジェクトディレクトリのパス',
     allowedCommandsPlaceholder: '許可されたコマンド',
     knowledgeBasesPlaceholder: '検索に使用する Knowledge Base の ID と説明のリスト',
+    bedrockAgentsPlaceholder: 'Bedrock Agent ID、Alias ID、説明のリスト',
     scenariosDescription:
       'よく使用するやり取りのパターンをシナリオとして登録できます。シナリオのタイトルと具体的な内容を入力してください。',
     scenarioTitle: 'シナリオのタイトル',

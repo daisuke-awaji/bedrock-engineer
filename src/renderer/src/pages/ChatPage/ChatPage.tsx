@@ -29,7 +29,8 @@ export default function ChatPage() {
     selectedAgentId,
     setSelectedAgentId,
     allowedCommands,
-    knowledgeBases
+    knowledgeBases,
+    bedrockAgents
   } = useSetting()
 
   const {
@@ -49,7 +50,8 @@ export default function ChatPage() {
     ? replacePlaceholders(currentAgent?.system, {
         projectPath,
         allowedCommands: allowedCommands,
-        knowledgeBases: knowledgeBases
+        knowledgeBases: knowledgeBases,
+        bedrockAgents: bedrockAgents
       })
     : ''
   const currentScenarios = currentAgent?.scenarios || []

@@ -17,6 +17,7 @@ import {
   AspectRatio,
   OutputFormat
 } from '../../main/api/bedrock'
+import { InvokeAgentResult } from '../../main/api/bedrock/services/agentService'
 
 interface GenerateImageResult extends ToolResult {
   name: 'generateImage'
@@ -32,6 +33,10 @@ interface GenerateImageResult extends ToolResult {
 
 interface RetrieveResult extends ToolResult {
   name: 'retrieve'
+}
+
+interface InvokeBedrockAgentResult extends ToolResult<InvokeAgentResult> {
+  name: 'invokeBedrockAgent'
 }
 
 interface ExecuteCommandResult extends ToolResult {
@@ -351,6 +356,41 @@ export class ToolService {
         success: false,
         name: 'retrieve',
         error: 'Failed to retrieve information from knowledge base',
+        message: error.message
+      })}`
+    }
+  }
+
+  async invokeBedrockAgent(
+    bedrock: BedrockService,
+    toolInput: {
+      agentId: string
+      agentAliasId: string
+      sessionId?: string
+      inputText: string
+    }
+  ): Promise<InvokeBedrockAgentResult> {
+    const { agentId, agentAliasId, sessionId, inputText } = toolInput
+
+    try {
+      const result = await bedrock.invokeAgent({
+        agentId,
+        agentAliasId,
+        sessionId,
+        inputText
+      })
+
+      return {
+        success: true,
+        name: 'invokeBedrockAgent',
+        message: `Invoked agent ${agentId} with alias ${agentAliasId}`,
+        result
+      }
+    } catch (error: any) {
+      throw `Error invoking agent: ${JSON.stringify({
+        success: false,
+        name: 'invokeBedrockAgent',
+        error: 'Failed to invoke agent',
         message: error.message
       })}`
     }

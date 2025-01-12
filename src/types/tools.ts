@@ -9,12 +9,13 @@ export type ToolName =
   | 'fetchWebsite'
   | 'generateImage'
   | 'retrieve'
+  | 'invokeBedrockAgent'
   | 'executeCommand'
 
-export interface ToolResult {
+export interface ToolResult<T = any> {
   name: ToolName
   success: boolean
   message?: string
   error?: string
-  result: any
+  result: T
 }

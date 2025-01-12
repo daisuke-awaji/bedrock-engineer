@@ -49,6 +49,14 @@ export const executeTool = async (
         query: toolInput['query']
       })
     }
+    case 'invokeBedrockAgent': {
+      return toolService.invokeBedrockAgent(bedrock, {
+        agentId: toolInput['agentId'],
+        agentAliasId: toolInput['agentAliasId'],
+        sessionId: toolInput['sessionId'],
+        inputText: toolInput['inputText']
+      })
+    }
     case 'executeCommand': {
       const commandSettings = store.get('command')
       const commandConfig = {
@@ -378,6 +386,38 @@ First call without a chunkIndex(Must be 1 or greater) to get an overview and tot
             }
           },
           required: ['knowledgeBaseId', 'query']
+        }
+      }
+    }
+  },
+  {
+    toolSpec: {
+      name: 'invokeBedrockAgent',
+      description:
+        'Invoke an Amazon Bedrock Agent using the specified agent ID and alias ID. Use this when you need to interact with an agent.',
+      inputSchema: {
+        json: {
+          type: 'object',
+          properties: {
+            agentId: {
+              type: 'string',
+              description: 'The ID of the agent to invoke'
+            },
+            agentAliasId: {
+              type: 'string',
+              description: 'The alias ID of the agent to invoke'
+            },
+            sessionId: {
+              type: 'string',
+              description:
+                'Optional. The session ID to use for the agent invocation. The session ID is issued when you execute invokeBedrockAgent for the first time and is included in the response. Specify it if you want to continue the conversation from the second time onwards.'
+            },
+            inputText: {
+              type: 'string',
+              description: 'The input text to send to the agent'
+            }
+          },
+          required: ['agentId', 'agentAliasId', 'inputText']
         }
       }
     }

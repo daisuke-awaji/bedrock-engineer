@@ -41,6 +41,11 @@ When you use retrieve from Amazon Bedrock Knowledge Base:
 - If you need to retrieve information from the knowledge base, use the retrieve tool.
 - Available Knowledge Bases: {{knowledgeBases}}
 
+When you use invokeBedrockAgent:
+- If you need to invoke an agent, use the invokeBedrockAgent tool.
+- When using the Bedrock Agent, you cannot input local files directly. If you have input data, enter it as text.
+- Available Agents: {{bedrockAgents}}
+
 When fetching and analyzing website content:
 - Use the fetchWebsite tool to retrieve and analyze web content when given a URL
 - For large websites, the content will be automatically split into manageable chunks

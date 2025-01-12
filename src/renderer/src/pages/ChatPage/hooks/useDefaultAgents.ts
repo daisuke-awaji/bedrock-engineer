@@ -47,7 +47,7 @@ const getProductDesignerScenarios = (): Scenario[] => [
 
 export const useDefaultAgents = () => {
   const { t, i18n } = useTranslation()
-  const { projectPath, allowedCommands, knowledgeBases } = useSetting()
+  const { projectPath, allowedCommands, knowledgeBases, bedrockAgents } = useSetting()
 
   // プレースホルダーを置換する関数
   const replacePlaceholders = useCallback(
@@ -56,10 +56,11 @@ export const useDefaultAgents = () => {
       return replacePlaceholdersUtil(text, {
         projectPath: projectPath || t('no project path'),
         allowedCommands: allowedCommands,
-        knowledgeBases: knowledgeBases
+        knowledgeBases: knowledgeBases,
+        bedrockAgents: bedrockAgents
       })
     },
-    [projectPath, t, allowedCommands, knowledgeBases]
+    [projectPath, t, allowedCommands, knowledgeBases, bedrockAgents]
   )
 
   // シナリオをローカライズする関数

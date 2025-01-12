@@ -14,7 +14,7 @@ const AgentForm: React.FC<{
   onSave: (agent: CustomAgent) => void
   onCancel: () => void
 }> = ({ agent, onSave, onCancel }) => {
-  const { projectPath, allowedCommands, knowledgeBases } = useSetting()
+  const { projectPath, allowedCommands, knowledgeBases, bedrockAgents } = useSetting()
   const { t } = useTranslation()
   const { generateAgentSystemPrompt, generatedAgentSystemPrompt, isGenerating } =
     useAgentGenerator()
@@ -58,7 +58,8 @@ const AgentForm: React.FC<{
     return replacePlaceholders(text, {
       projectPath: path,
       allowedCommands: allowedCommands,
-      knowledgeBases: knowledgeBases
+      knowledgeBases: knowledgeBases,
+      bedrockAgents: bedrockAgents
     })
   }
 
@@ -200,6 +201,23 @@ const AgentForm: React.FC<{
                 type="button"
                 onClick={() => {
                   navigator.clipboard.writeText('{{knowledgeBases}}')
+                }}
+                className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+              >
+                {t('copy')}
+              </button>
+            </div>
+            <div className="mt-1 flex items-center space-x-2">
+              <code className="text-xs bg-white dark:bg-gray-700 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 dark:text-gray-300">
+                {`{{bedrockAgents}}`}
+              </code>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t('bedrockAgentsPlaceholder')}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText('{{bedrockAgents}}')
                 }}
                 className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
               >
