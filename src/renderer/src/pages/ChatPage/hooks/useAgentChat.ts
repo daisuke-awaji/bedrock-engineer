@@ -93,6 +93,7 @@ export const useAgentChat = (
     },
     [currentSessionId, modelId, enabledTools]
   )
+
   function removeTraces(messages) {
     return messages.map((message) => {
       if (message.content && Array.isArray(message.content)) {
@@ -103,6 +104,7 @@ export const useAgentChat = (
               item.toolResult.content.map((c) => {
                 if (c?.json?.result) {
                   const { traces, ...restToolResult } = c.json.result
+                  console.debug(traces)
                   return { ...c, json: { result: restToolResult } }
                 }
               })
