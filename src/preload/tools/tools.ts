@@ -50,7 +50,8 @@ export const executeTool = async (
       })
     }
     case 'invokeBedrockAgent': {
-      return toolService.invokeBedrockAgent(bedrock, {
+      const projectPath = store.get('projectPath')!
+      return toolService.invokeBedrockAgent(bedrock, projectPath, {
         agentId: toolInput['agentId'],
         agentAliasId: toolInput['agentAliasId'],
         sessionId: toolInput['sessionId'],

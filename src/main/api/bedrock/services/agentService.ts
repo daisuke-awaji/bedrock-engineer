@@ -7,7 +7,8 @@ import {
   InvokeAgentCommand,
   InvokeAgentCommandInput,
   InvokeAgentCommandOutput,
-  ResponseStream
+  ResponseStream,
+  TracePart
 } from '@aws-sdk/client-bedrock-agent-runtime'
 import { createAgentRuntimeClient } from '../client'
 import type { ServiceContext } from '../types'
@@ -27,7 +28,7 @@ type OptionalAgentParams = Partial<{
 type Completion = {
   message: string
   files: { name: string; content: Uint8Array }[]
-  // traces: TracePart[]
+  traces: TracePart[]
 }
 
 export type InvokeAgentResult = {
@@ -104,17 +105,17 @@ export class AgentService {
   private async readStreamResponse(stream: AsyncIterable<ResponseStream>) {
     const response: Completion = {
       message: '',
-      files: []
-      // traces: []
+      files: [],
+      traces: []
     }
 
     try {
       const existingFiles = new Set<string>()
 
       for await (const streamChunk of stream) {
-        // if (streamChunk.trace?.trace) {
-        //   response.traces.push(streamChunk.trace)
-        // }
+        if (streamChunk.trace?.trace) {
+          response.traces.push(streamChunk.trace)
+        }
 
         if (streamChunk.chunk?.bytes) {
           const text = new TextDecoder().decode(streamChunk.chunk.bytes)

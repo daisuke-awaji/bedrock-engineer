@@ -17,7 +17,7 @@ import {
   AspectRatio,
   OutputFormat
 } from '../../main/api/bedrock'
-import { InvokeAgentResult } from '../../main/api/bedrock/services/agentService'
+import { InvokeAgentCommandOutput } from '@aws-sdk/client-bedrock-agent-runtime'
 
 interface GenerateImageResult extends ToolResult {
   name: 'generateImage'
@@ -35,7 +35,20 @@ interface RetrieveResult extends ToolResult {
   name: 'retrieve'
 }
 
-interface InvokeBedrockAgentResult extends ToolResult<InvokeAgentResult> {
+type Completion = {
+  message?: string
+  files?: string[]
+  // traces: TracePart[]
+}
+
+type InvokeAgentResultOmitFile = {
+  $metadata: InvokeAgentCommandOutput['$metadata']
+  contentType: InvokeAgentCommandOutput['contentType']
+  sessionId: InvokeAgentCommandOutput['sessionId']
+  completion?: Completion
+}
+
+interface InvokeBedrockAgentResult extends ToolResult<InvokeAgentResultOmitFile> {
   name: 'invokeBedrockAgent'
 }
 
@@ -363,6 +376,7 @@ export class ToolService {
 
   async invokeBedrockAgent(
     bedrock: BedrockService,
+    projectPath: string,
     toolInput: {
       agentId: string
       agentAliasId: string
@@ -377,14 +391,27 @@ export class ToolService {
         agentId,
         agentAliasId,
         sessionId,
-        inputText
+        inputText,
+        enableTrace: true
+      })
+
+      const filePaths = result.completion?.files.map((file) => {
+        const filePath = path.join(projectPath, file.name)
+        fs.writeFile(filePath, file.content)
+        return filePath
       })
 
       return {
         success: true,
         name: 'invokeBedrockAgent',
         message: `Invoked agent ${agentId} with alias ${agentAliasId}`,
-        result
+        result: {
+          ...result,
+          completion: {
+            ...result.completion,
+            files: filePaths
+          }
+        }
       }
     } catch (error: any) {
       throw `Error invoking agent: ${JSON.stringify({
