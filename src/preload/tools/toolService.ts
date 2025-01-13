@@ -17,7 +17,8 @@ import {
   AspectRatio,
   OutputFormat
 } from '../../main/api/bedrock'
-import { InvokeAgentCommandOutput } from '@aws-sdk/client-bedrock-agent-runtime'
+import { FileUseCase, InvokeAgentCommandOutput } from '@aws-sdk/client-bedrock-agent-runtime'
+import { InvokeAgentInput } from '../../main/api/bedrock/services/agentService'
 
 interface GenerateImageResult extends ToolResult {
   name: 'generateImage'
@@ -382,19 +383,50 @@ export class ToolService {
       agentAliasId: string
       sessionId?: string
       inputText: string
+      file?: {
+        filePath?: string
+        useCase?: FileUseCase
+      }
     }
   ): Promise<InvokeBedrockAgentResult> {
-    const { agentId, agentAliasId, sessionId, inputText } = toolInput
+    const { agentId, agentAliasId, sessionId, inputText, file } = toolInput
 
     try {
-      const result = await bedrock.invokeAgent({
+      // ファイル処理の修正
+      let fileData: any = undefined
+      if (file && file.filePath) {
+        const fileContent = await fs.readFile(file.filePath)
+        const filename = path.basename(file.filePath)
+        const mimeType = getMimeType(file.filePath)
+
+        fileData = {
+          files: [
+            {
+              name: filename,
+              source: {
+                sourceType: 'BYTE_CONTENT',
+                byteContent: {
+                  // CSVファイルの場合は text/csv を使用
+                  mediaType: filename.endsWith('.csv') ? 'text/csv' : mimeType,
+                  data: fileContent
+                }
+              },
+              useCase: file.useCase
+            }
+          ]
+        }
+      }
+
+      const command: InvokeAgentInput = {
         agentId,
         agentAliasId,
         sessionId,
         inputText,
-        enableTrace: true
-      })
+        enableTrace: true,
+        sessionState: fileData
+      }
 
+      const result = await bedrock.invokeAgent(command)
       const filePaths = result.completion?.files.map((file) => {
         const filePath = path.join(projectPath, file.name)
         fs.writeFile(filePath, file.content)
@@ -414,6 +446,7 @@ export class ToolService {
         }
       }
     } catch (error: any) {
+      console.error('Error details:', error)
       throw `Error invoking agent: ${JSON.stringify({
         success: false,
         name: 'invokeBedrockAgent',
@@ -454,4 +487,27 @@ export class ToolService {
       })
     }
   }
+}
+
+function getMimeType(filePath) {
+  const ext = path.extname(filePath).toLowerCase()
+  const mimeTypes = {
+    '.html': 'text/html',
+    '.js': 'text/javascript',
+    '.css': 'text/css',
+    '.json': 'application/json',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.gif': 'image/gif',
+    '.svg': 'image/svg+xml',
+    '.wav': 'audio/wav',
+    '.mp4': 'video/mp4',
+    '.woff': 'application/font-woff',
+    '.ttf': 'application/font-ttf',
+    '.eot': 'application/vnd.ms-fontobject',
+    '.otf': 'application/font-otf',
+    '.wasm': 'application/wasm'
+  }
+
+  return mimeTypes[ext] || 'application/octet-stream'
 }

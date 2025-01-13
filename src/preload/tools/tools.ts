@@ -55,7 +55,8 @@ export const executeTool = async (
         agentId: toolInput['agentId'],
         agentAliasId: toolInput['agentAliasId'],
         sessionId: toolInput['sessionId'],
-        inputText: toolInput['inputText']
+        inputText: toolInput['inputText'],
+        file: toolInput['file']
       })
     }
     case 'executeCommand': {
@@ -416,6 +417,23 @@ First call without a chunkIndex(Must be 1 or greater) to get an overview and tot
             inputText: {
               type: 'string',
               description: 'The input text to send to the agent'
+            },
+            file: {
+              type: 'object',
+              description:
+                'Optional. The file to send to the agent. Be sure to specify if you need to analyze files.',
+              properties: {
+                filePath: {
+                  type: 'string',
+                  description: 'The path of the file to send to the agent'
+                },
+                useCase: {
+                  type: 'string',
+                  description:
+                    'The use case of the file. Specify "CODE_INTERPRETER" if Python code analysis is required. Otherwise, specify "CHAT".',
+                  enum: ['CODE_INTERPRETER', 'CHAT']
+                }
+              }
             }
           },
           required: ['agentId', 'agentAliasId', 'inputText']

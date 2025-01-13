@@ -497,9 +497,9 @@ export const BedrockAgentResult: React.FC<{ response: BedrockAgentResponse }> = 
         <div className="space-y-2">
           <h3 className="text-sm font-bold text-gray-200">Generated Files</h3>
           <div className="bg-gray-900 dark:bg-gray-800 p-4 rounded-lg">
-            <ul className="space-y-4">
+            <ul className="grid lg:grid-cols-2 md:grid-cols-1 gap-2">
               {completion.files.map((filePath, index) => (
-                <li key={index} className="space-y-2">
+                <li key={index} className="h-full">
                   <div className="flex items-center space-x-2 p-2">
                     <span className="text-blue-400">📄</span>
                     <span className="text-gray-300">{filePath}</span>

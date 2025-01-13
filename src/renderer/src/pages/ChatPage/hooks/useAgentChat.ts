@@ -93,6 +93,27 @@ export const useAgentChat = (
     },
     [currentSessionId, modelId, enabledTools]
   )
+  function removeTraces(messages) {
+    return messages.map((message) => {
+      if (message.content && Array.isArray(message.content)) {
+        return {
+          ...message,
+          content: message.content.map((item) => {
+            if (item.toolResult) {
+              item.toolResult.content.map((c) => {
+                if (c?.json?.result) {
+                  const { traces, ...restToolResult } = c.json.result
+                  return { ...c, json: { result: restToolResult } }
+                }
+              })
+            }
+            return item
+          })
+        }
+      }
+      return message
+    })
+  }
 
   const streamChat = async (props: StreamChatCompletionProps, currentMessages: Message[]) => {
     // 既存の通信があれば中断
@@ -102,6 +123,8 @@ export const useAgentChat = (
 
     // 新しい AbortController を作成
     abortController.current = new AbortController()
+
+    props.messages = removeTraces(props.messages)
 
     const generator = streamChatCompletion(props, abortController.current.signal)
 
