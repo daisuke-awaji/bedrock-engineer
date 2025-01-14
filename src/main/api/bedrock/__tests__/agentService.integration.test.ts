@@ -1,8 +1,8 @@
 import { describe, test, beforeAll, expect } from '@jest/globals'
 import { BedrockService } from '../index'
 import type { Store } from '../types'
-import fs from 'fs/promises'
-import path from 'path'
+import { writeFile } from 'fs/promises'
+import { join } from 'path'
 
 // Skip these tests if not in integration test environment
 const INTEGRATION_TEST = process.env.INTEGRATION_TEST === 'true'
@@ -161,8 +161,8 @@ C001,P003,2023-04-10,120.00
         for (const file of response.completion.files) {
           // const buffer = Buffer.from(file.content, 'base64')
           // save current test directory
-          const fileDir = path.join(__dirname, `./${file.name}`)
-          await fs.writeFile(fileDir, file.content)
+          const fileDir = join(__dirname, `./${file.name}`)
+          await writeFile(fileDir, file.content)
         }
       }
 

@@ -70,6 +70,7 @@ export class AgentService {
    * @returns Agent からのレスポンス
    */
   async invokeAgent(params: InvokeAgentInput): Promise<InvokeAgentResult> {
+    console.log(params)
     const { agentId, agentAliasId, sessionId, inputText, enableTrace = false, ...rest } = params
 
     // セッションIDが指定されていない場合は新規生成

@@ -3,5 +3,10 @@ module.exports = {
   testEnvironment: 'node',
   transform: {
     '^.+.tsx?$': ['ts-jest', {}]
-  }
+  },
+  testMatch: ['**/*.test.ts'],
+  testPathIgnorePatterns: [
+    '<rootDir>/node_modules/',
+    '\\.integration\\.test\\.ts$' // .integration.test.ts で終わるファイルを除外
+  ]
 }
