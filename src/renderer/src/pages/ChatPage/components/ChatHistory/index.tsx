@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { ChatSession } from '@/types/chat/history'
 import { useTranslation } from 'react-i18next'
 import { FiMoreHorizontal, FiEdit2, FiTrash2, FiZap } from 'react-icons/fi'
 import { RiArchiveStackLine } from 'react-icons/ri'
@@ -7,6 +6,7 @@ import useSettings from '../../../../hooks/useSetting'
 import { Message } from '@aws-sdk/client-bedrock-runtime'
 import { converse } from '../../../../lib/api'
 import toast from 'react-hot-toast'
+import { SessionMetadata } from '@/types/chat/history'
 
 interface ChatHistoryProps {
   onSessionSelect: (sessionId: string) => void
@@ -14,7 +14,7 @@ interface ChatHistoryProps {
 }
 
 export const ChatHistory: React.FC<ChatHistoryProps> = ({ onSessionSelect, currentSessionId }) => {
-  const [recentSessions, setRecentSessions] = useState<ChatSession[]>([])
+  const [sessions, setSessions] = useState<SessionMetadata[]>([])
   const [editingSessionId, setEditingSessionId] = useState<string>()
   const [editTitle, setEditTitle] = useState('')
   const [menuOpenSessionId, setMenuOpenSessionId] = useState<string>()
@@ -25,8 +25,8 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({ onSessionSelect, curre
   const { t } = useTranslation()
 
   useEffect(() => {
-    const sessions = window.chatHistory.getAllSessions()
-    setRecentSessions(sessions)
+    const sessionMetadata = window.chatHistory.getAllSessionMetadata()
+    setSessions(sessionMetadata)
   }, [])
 
   useEffect(() => {
@@ -46,14 +46,14 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({ onSessionSelect, curre
     }
   }, [editingSessionId])
 
-  const handleSessionClick = (sessionId: string) => {
+  const handleSessionClick = async (sessionId: string) => {
     onSessionSelect(sessionId)
   }
 
   const handleDeleteSession = async (sessionId: string, e: React.MouseEvent) => {
     e.stopPropagation()
     window.chatHistory.deleteSession(sessionId)
-    setRecentSessions(window.chatHistory.getAllSessions())
+    setSessions(window.chatHistory.getAllSessionMetadata())
     setMenuOpenSessionId(undefined)
   }
 
@@ -61,18 +61,16 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({ onSessionSelect, curre
     e.stopPropagation()
     const confirmed = window.confirm(t('Are you sure you want to delete all chat sessions?'))
     if (confirmed) {
-      recentSessions.forEach((session) => {
-        window.chatHistory.deleteSession(session.id)
-      })
-      setRecentSessions([])
+      window.chatHistory.deleteAllSessions()
+      setSessions([])
       setIsGlobalMenuOpen(false)
     }
   }
 
-  const startEditing = (session: ChatSession, e: React.MouseEvent) => {
+  const startEditing = (sessionId: string, title: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    setEditingSessionId(session.id)
-    setEditTitle(session.title)
+    setEditingSessionId(sessionId)
+    setEditTitle(title)
     setMenuOpenSessionId(undefined)
   }
 
@@ -80,18 +78,24 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({ onSessionSelect, curre
     e.stopPropagation()
     if (editTitle.trim()) {
       window.chatHistory.updateSessionTitle(sessionId, editTitle.trim())
-      setRecentSessions(window.chatHistory.getAllSessions())
+      setSessions(window.chatHistory.getAllSessionMetadata())
     }
     setEditingSessionId(undefined)
   }
 
-  const generateAITitle = async (session: ChatSession, e: React.MouseEvent) => {
+  const generateAITitle = async (session: SessionMetadata, e: React.MouseEvent) => {
     e.stopPropagation()
     setIsGenerating(true)
 
     try {
+      // セッションの詳細を取得
+      const sessionDetails = window.chatHistory.getSession(session.id)
+      if (!sessionDetails) {
+        throw new Error('Session not found')
+      }
+
       // チャット履歴から最新の会話内容を取得（直近5つのメッセージ）
-      const recentMessages = session.messages || []
+      const recentMessages = sessionDetails.messages || []
       const messages: Message[] = recentMessages.map((m) => ({
         role: m.role,
         content: m.content
@@ -136,7 +140,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({ onSessionSelect, curre
 
       // タイトルを更新
       window.chatHistory.updateSessionTitle(session.id, newTitle)
-      setRecentSessions(window.chatHistory.getAllSessions())
+      setSessions(window.chatHistory.getAllSessionMetadata())
       setMenuOpenSessionId(undefined)
     } catch (error) {
       console.error('Failed to generate AI title:', error)
@@ -150,7 +154,6 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({ onSessionSelect, curre
   const generateAITitleForAllSession = async (e: React.MouseEvent) => {
     try {
       setIsGenerating(true)
-      const sessions = window.chatHistory.getAllSessions()
       for (const session of sessions) {
         // タイトルが 'Chat' で始まるセッションのみ対象とする
         if (session.title.startsWith('Chat')) {
@@ -191,7 +194,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({ onSessionSelect, curre
     }
   }
 
-  if (recentSessions.length === 0) {
+  if (sessions.length === 0) {
     return (
       <div className="p-4 text-center text-gray-500 dark:text-gray-400">{t('No chat history')}</div>
     )
@@ -199,6 +202,10 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({ onSessionSelect, curre
 
   const menuButtonClasses =
     'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-400 p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 h-8 w-8 flex items-center justify-center'
+
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp).toLocaleString()
+  }
 
   return (
     <div className="chat-history p-3">
@@ -242,7 +249,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({ onSessionSelect, curre
         </div>
       </h2>
       <div className="session-list space-y-2">
-        {recentSessions.map((session) => (
+        {sessions.map((session) => (
           <div
             key={session.id}
             onClick={() => handleSessionClick(session.id)}
@@ -275,6 +282,9 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({ onSessionSelect, curre
                     >
                       {session.title}
                     </h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                      {formatDate(session.updatedAt)} · {session.messageCount} messages
+                    </p>
                   </div>
                   <div className="relative flex-shrink-0">
                     <button
@@ -290,7 +300,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({ onSessionSelect, curre
                       >
                         <div className="py-1">
                           <button
-                            onClick={(e) => startEditing(session, e)}
+                            onClick={(e) => startEditing(session.id, session.title, e)}
                             className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
                           >
                             <FiEdit2 className="w-4 h-4" />
