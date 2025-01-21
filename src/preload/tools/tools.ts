@@ -19,7 +19,7 @@ export const executeTool = async (input: ToolInput): Promise<string | ToolResult
       return toolService.writeToFile(input.path, input.content)
 
     case 'listFiles': {
-      const ignoreFiles = store.get('agentChatConfig').ignoreFiles
+      const ignoreFiles = store.get('agentChatConfig')?.ignoreFiles
       return toolService.listFiles(input.path, '', ignoreFiles)
     }
 
