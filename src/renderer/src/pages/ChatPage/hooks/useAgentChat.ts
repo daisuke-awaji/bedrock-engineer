@@ -237,7 +237,11 @@ export const useAgentChat = (
         const toolUse = contentBlock.toolUse
         if (toolUse?.name) {
           try {
-            const toolResult = await window.api.bedrock.executeTool(toolUse.name, toolUse.input)
+            const toolInput = {
+              type: toolUse.name,
+              ...(toolUse.input as any)
+            }
+            const toolResult = await window.api.bedrock.executeTool(toolInput)
             if (Object.prototype.hasOwnProperty.call(toolResult, 'name')) {
               toolResults.push({
                 toolResult: {

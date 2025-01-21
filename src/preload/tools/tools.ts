@@ -2,63 +2,69 @@ import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { ToolService } from './toolService'
 import { store } from '../store'
 import { BedrockService } from '../../main/api/bedrock'
-import { ToolName, ToolResult } from '../../types/tools'
+import { ToolInput, ToolResult } from '../../types/tools'
 
-export const executeTool = async (
-  toolName: ToolName | undefined,
-  toolInput: any
-): Promise<string | ToolResult> => {
+export const executeTool = async (input: ToolInput): Promise<string | ToolResult> => {
   const toolService = new ToolService()
   const bedrock = new BedrockService({ store })
-  switch (toolName) {
+
+  switch (input.type) {
     case 'createFolder':
-      return toolService.createFolder(toolInput['path'])
+      return toolService.createFolder(input.path)
+
     case 'readFiles':
-      return toolService.readFiles(toolInput['paths'])
+      return toolService.readFiles(input.paths)
+
     case 'writeToFile':
-      return toolService.writeToFile(toolInput['path'], toolInput['content'])
+      return toolService.writeToFile(input.path, input.content)
+
     case 'listFiles': {
       const ignoreFiles = store.get('agentChatConfig').ignoreFiles
-      console.log(ignoreFiles)
-      return toolService.listFiles(toolInput['path'], '', ignoreFiles)
+      return toolService.listFiles(input.path, '', ignoreFiles)
     }
+
     case 'moveFile':
-      return toolService.moveFile(toolInput['source'], toolInput['destination'])
+      return toolService.moveFile(input.source, input.destination)
+
     case 'copyFile':
-      return toolService.copyFile(toolInput['source'], toolInput['destination'])
+      return toolService.copyFile(input.source, input.destination)
+
     case 'tavilySearch': {
       const apiKey = store.get('tavilySearch').apikey
-      return toolService.tavilySearch(toolInput['query'], apiKey)
+      return toolService.tavilySearch(input.query, apiKey)
     }
+
     case 'fetchWebsite':
-      return toolService.fetchWebsite(toolInput['url'], toolInput['options'])
-    case 'generateImage': {
+      return toolService.fetchWebsite(input.url, input.options)
+
+    case 'generateImage':
       return toolService.generateImage(bedrock, {
-        prompt: toolInput['prompt'],
-        outputPath: toolInput['outputPath'],
-        modelId: toolInput['modelId'],
-        negativePrompt: toolInput['negativePrompt'],
-        aspect_ratio: toolInput['aspect_ratio'],
-        seed: toolInput['seed'],
-        output_format: toolInput['output_format']
+        prompt: input.prompt,
+        outputPath: input.outputPath,
+        modelId: input.modelId,
+        negativePrompt: input.negativePrompt,
+        aspect_ratio: input.aspect_ratio,
+        seed: input.seed,
+        output_format: input.output_format
       })
-    }
-    case 'retrieve': {
+
+    case 'retrieve':
       return toolService.retrieve(bedrock, {
-        knowledgeBaseId: toolInput['knowledgeBaseId'],
-        query: toolInput['query']
+        knowledgeBaseId: input.knowledgeBaseId,
+        query: input.query
       })
-    }
+
     case 'invokeBedrockAgent': {
       const projectPath = store.get('projectPath')!
       return toolService.invokeBedrockAgent(bedrock, projectPath, {
-        agentId: toolInput['agentId'],
-        agentAliasId: toolInput['agentAliasId'],
-        sessionId: toolInput['sessionId'],
-        inputText: toolInput['inputText'],
-        file: toolInput['file']
+        agentId: input.agentId,
+        agentAliasId: input.agentAliasId,
+        sessionId: input.sessionId,
+        inputText: input.inputText,
+        file: input.file
       })
     }
+
     case 'executeCommand': {
       const commandSettings = store.get('command')
       const commandConfig = {
@@ -66,35 +72,32 @@ export const executeTool = async (
         shell: commandSettings.shell
       }
 
-      if (toolInput['pid'] && toolInput['stdin']) {
-        // 標準入力を送信
+      if ('pid' in input && 'stdin' in input && input?.pid && input?.stdin) {
         return toolService.executeCommand(
           {
-            pid: toolInput['pid'],
-            stdin: toolInput['stdin']
+            pid: input.pid,
+            stdin: input.stdin
           },
           commandConfig
         )
-      } else if (toolInput['command'] && toolInput['cwd']) {
-        // 新しいコマンドを実行
+      } else if ('command' in input && 'cwd' in input && input?.command && input?.cwd) {
         return toolService.executeCommand(
           {
-            command: toolInput['command'],
-            cwd: toolInput['cwd']
+            command: input.command,
+            cwd: input.cwd
           },
           commandConfig
-        )
-      } else {
-        throw new Error(
-          'Invalid input format for executeCommand: requires either (command, cwd) or (pid, stdin)'
         )
       }
+
+      throw new Error(
+        'Invalid input format for executeCommand: requires either (command, cwd) or (pid, stdin)'
+      )
     }
-    default:
-      throw new Error(`Unknown tool: ${toolName}`)
   }
 }
 
+// ツール定義（JSON Schema）
 export const tools: Tool[] = [
   {
     toolSpec: {
