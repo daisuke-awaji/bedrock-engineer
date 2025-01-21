@@ -1,5 +1,6 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 import { ChatMessage, ChatSession } from '../types/chat/history'
+import { API } from '@preload/api'
 
 interface ChatHistoryAPI {
   createSession(agentId: string, modelId: string, systemPrompt?: string): string
@@ -7,8 +8,9 @@ interface ChatHistoryAPI {
   getSession(sessionId: string): ChatSession | null
   updateSessionTitle(sessionId: string, title: string): void
   deleteSession(sessionId: string): void
+  deleteAllSessions(): void
   getRecentSessions(): ChatSession[]
-  getAllSessions(): ChatSession[]
+  getAllSessionMetadata(): SessionMetadata[]
   setActiveSession(sessionId: string | undefined): void
   getActiveSessionId(): string | undefined
 }

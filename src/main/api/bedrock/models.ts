@@ -42,21 +42,6 @@ export const models: LLM[] = [
     toolUse: true
   },
   {
-    modelId: 'amazon.nova-pro-v1:0',
-    modelName: 'Amazon Nova Pro',
-    toolUse: true
-  },
-  {
-    modelId: 'amazon.nova-lite-v1:0',
-    modelName: 'Amazon Nova Lite',
-    toolUse: true
-  },
-  {
-    modelId: 'amazon.nova-micro-v1:0',
-    modelName: 'Amazon Nova Micro',
-    toolUse: true
-  },
-  {
     modelId: 'us.amazon.nova-pro-v1:0',
     modelName: 'Amazon Nova Pro (cross region inference)',
     toolUse: true

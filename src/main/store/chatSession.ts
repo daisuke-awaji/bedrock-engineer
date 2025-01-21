@@ -1,16 +1,102 @@
+import path from 'path'
+import fs from 'fs'
 import Store from 'electron-store'
-import { ChatHistoryStore, ChatSession, ChatMessage } from '../../types/chat/history'
+import { ChatSession, ChatMessage, SessionMetadata } from '../../types/chat/history'
+import { store } from '../../preload/store'
 
 export class ChatSessionManager {
-  private store: Store<ChatHistoryStore>
+  private readonly sessionsDir: string
+  private metadataStore: Store<{
+    activeSessionId?: string
+    recentSessions: string[]
+    metadata: { [key: string]: SessionMetadata }
+  }>
 
   constructor() {
-    this.store = new Store<ChatHistoryStore>({
-      name: 'chat-sessions',
+    const userDataPath = store.get('userDataPath')
+    if (!userDataPath) {
+      throw new Error('userDataPath is not set in store')
+    }
+
+    // セッションファイルを保存するディレクトリを作成
+    this.sessionsDir = path.join(userDataPath, 'chat-sessions')
+    fs.mkdirSync(this.sessionsDir, { recursive: true })
+
+    // メタデータ用のストアを初期化
+    this.metadataStore = new Store({
+      name: 'chat-sessions-meta',
       defaults: {
-        sessions: {},
-        recentSessions: []
+        recentSessions: [] as string[],
+        metadata: {} as { [key: string]: SessionMetadata }
       }
+    })
+
+    // 初回起動時またはメタデータが空の場合、既存のセッションからメタデータを生成
+    this.initializeMetadata()
+  }
+
+  private initializeMetadata(): void {
+    const metadata = this.metadataStore.get('metadata')
+    if (Object.keys(metadata).length === 0) {
+      try {
+        const files = fs.readdirSync(this.sessionsDir)
+        const sessionFiles = files.filter((file) => file.endsWith('.json'))
+
+        for (const file of sessionFiles) {
+          const sessionId = file.replace('.json', '')
+          const session = this.readSessionFile(sessionId)
+          if (session) {
+            this.updateMetadata(sessionId, session)
+          }
+        }
+
+        console.log('Metadata initialized successfully')
+      } catch (error) {
+        console.error('Error initializing metadata:', error)
+      }
+    }
+  }
+
+  private getSessionFilePath(sessionId: string): string {
+    return path.join(this.sessionsDir, `${sessionId}.json`)
+  }
+
+  private readSessionFile(sessionId: string): ChatSession | null {
+    const filePath = this.getSessionFilePath(sessionId)
+    try {
+      const data = fs.readFileSync(filePath, 'utf-8')
+      return JSON.parse(data) as ChatSession
+    } catch (error) {
+      console.error(`Error reading session file ${sessionId}:`, error)
+      return null
+    }
+  }
+
+  private writeSessionFile(sessionId: string, session: ChatSession): void {
+    const filePath = this.getSessionFilePath(sessionId)
+    try {
+      fs.writeFileSync(filePath, JSON.stringify(session, null, 2))
+    } catch (error) {
+      console.error(`Error writing session file ${sessionId}:`, error)
+    }
+  }
+
+  private updateMetadata(sessionId: string, session: ChatSession): void {
+    const metadata: SessionMetadata = {
+      id: session.id,
+      title: session.title,
+      createdAt: session.createdAt,
+      updatedAt: session.updatedAt,
+      messageCount: session.messages.length,
+      agentId: session.agentId,
+      modelId: session.modelId,
+      systemPrompt: session.systemPrompt
+    }
+
+    const current = this.metadataStore.get('metadata')
+    this.metadataStore.set('metadata', {
+      ...current,
+      [sessionId]: metadata
     })
   }
 
@@ -27,89 +113,118 @@ export class ChatSessionManager {
       systemPrompt
     }
 
-    const sessions = this.store.get('sessions')
-    this.store.set('sessions', {
-      ...sessions,
-      [id]: session
-    })
-
+    this.writeSessionFile(id, session)
+    this.updateMetadata(id, session)
     this.updateRecentSessions(id)
     return id
   }
 
   addMessage(sessionId: string, message: ChatMessage): void {
-    const sessions = this.store.get('sessions')
-    const session = sessions[sessionId]
+    const session = this.readSessionFile(sessionId)
     if (!session) return
 
     session.messages.push(message)
     session.updatedAt = Date.now()
 
-    this.store.set('sessions', {
-      ...sessions,
-      [sessionId]: session
-    })
-
+    this.writeSessionFile(sessionId, session)
+    this.updateMetadata(sessionId, session)
     this.updateRecentSessions(sessionId)
   }
 
   getSession(sessionId: string): ChatSession | null {
-    const sessions = this.store.get('sessions')
-    return sessions[sessionId] || null
+    return this.readSessionFile(sessionId)
   }
 
   updateSessionTitle(sessionId: string, title: string): void {
-    const sessions = this.store.get('sessions')
-    const session = sessions[sessionId]
+    const session = this.readSessionFile(sessionId)
     if (!session) return
 
     session.title = title
     session.updatedAt = Date.now()
 
-    this.store.set('sessions', {
-      ...sessions,
-      [sessionId]: session
-    })
+    this.writeSessionFile(sessionId, session)
+    this.updateMetadata(sessionId, session)
   }
 
   deleteSession(sessionId: string): void {
-    const sessions = this.store.get('sessions')
-    const { [sessionId]: deletedSession, ...remainingSessions } = sessions
-    console.log({ deletedSession })
-    this.store.set('sessions', remainingSessions)
+    const filePath = this.getSessionFilePath(sessionId)
+    try {
+      fs.unlinkSync(filePath)
 
-    const recentSessions = this.store.get('recentSessions')
-    this.store.set(
+      // メタデータからも削除
+      const metadata = this.metadataStore.get('metadata')
+      delete metadata[sessionId]
+      this.metadataStore.set('metadata', metadata)
+    } catch (error) {
+      console.error(`Error deleting session file ${sessionId}:`, error)
+    }
+
+    const recentSessions = this.metadataStore.get('recentSessions')
+    this.metadataStore.set(
       'recentSessions',
       recentSessions.filter((id) => id !== sessionId)
     )
   }
 
+  deleteAllSessions(): void {
+    try {
+      // セッションディレクトリ内のすべてのJSONファイルを削除
+      const files = fs.readdirSync(this.sessionsDir)
+      for (const file of files) {
+        if (file.endsWith('.json')) {
+          const filePath = path.join(this.sessionsDir, file)
+          fs.unlinkSync(filePath)
+        }
+      }
+
+      // メタデータをリセット
+      this.metadataStore.set('metadata', {})
+      this.metadataStore.set('recentSessions', [])
+      this.metadataStore.delete('activeSessionId')
+
+      console.log('All sessions have been deleted successfully')
+    } catch (error) {
+      console.error('Error deleting all sessions:', error)
+    }
+  }
+
   private updateRecentSessions(sessionId: string): void {
-    const recentSessions = this.store.get('recentSessions')
+    const recentSessions = this.metadataStore.get('recentSessions')
     const updated = [sessionId, ...recentSessions.filter((id) => id !== sessionId)].slice(0, 10)
-    this.store.set('recentSessions', updated)
+    this.metadataStore.set('recentSessions', updated)
   }
 
-  getRecentSessions(): ChatSession[] {
-    const recentIds = this.store.get('recentSessions')
-    const sessions = this.store.get('sessions')
+  getRecentSessions(): SessionMetadata[] {
+    const recentIds = this.metadataStore.get('recentSessions')
+    const metadata = this.metadataStore.get('metadata')
     return recentIds
-      .map((id) => sessions[id])
-      .filter((id) => id.messages.length > 0)
-      .filter(Boolean)
+      .map((id) => metadata[id])
+      .filter((meta): meta is SessionMetadata => {
+        if (!meta) return false
+        // セッションファイルが実際に存在することを確認
+        const filePath = this.getSessionFilePath(meta.id)
+        return fs.existsSync(filePath)
+      })
+      .filter((meta) => meta.messageCount > 0)
   }
 
-  getAllSessions(): ChatSession[] {
-    const sessions = this.store.get('sessions')
-    return Object.values(sessions).filter((i) => i.messages.length > 0)
+  getAllSessionMetadata(): SessionMetadata[] {
+    const metadata = this.metadataStore.get('metadata')
+    return Object.values(metadata)
+      .filter((meta) => {
+        // メタデータが存在し、対応するファイルも存在することを確認
+        const filePath = this.getSessionFilePath(meta.id)
+        return fs.existsSync(filePath)
+      })
+      .filter((meta) => meta.messageCount > 0)
+      .sort((a, b) => b.updatedAt - a.updatedAt)
   }
 
   setActiveSession(sessionId: string | undefined): void {
-    this.store.set('activeSessionId', sessionId)
+    this.metadataStore.set('activeSessionId', sessionId)
   }
 
   getActiveSessionId(): string | undefined {
-    return this.store.get('activeSessionId')
+    return this.metadataStore.get('activeSessionId')
   }
 }

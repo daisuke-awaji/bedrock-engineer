@@ -16,6 +16,7 @@ import SystemPromptModal from './components/SystemPromptModal'
 import { AttachedImage } from './components/InputForm/TextArea'
 import { useDefaultAgents } from './hooks/useDefaultAgents'
 import { ChatHistory } from './components/ChatHistory'
+import { replacePlaceholders } from './utils/placeholder'
 
 export default function ChatPage() {
   const [userInput, setUserInput] = useState('')
@@ -26,7 +27,10 @@ export default function ChatPage() {
     selectDirectory,
     sendMsgKey,
     selectedAgentId,
-    setSelectedAgentId
+    setSelectedAgentId,
+    allowedCommands,
+    knowledgeBases,
+    bedrockAgents
   } = useSetting()
 
   const {
@@ -41,11 +45,15 @@ export default function ChatPage() {
     return [...baseAgents, ...customAgents]
   }, [baseAgents, customAgents])
 
-  const yyyyMMdd = new Date().toISOString().slice(0, 10)
   const currentAgent = allAgents.find((a) => a.id === selectedAgentId)
-  const systemPrompt =
-    currentAgent?.system.replace(/{{projectPath}}/g, projectPath).replace(/{{date}}/g, yyyyMMdd) ||
-    ''
+  const systemPrompt = currentAgent?.system
+    ? replacePlaceholders(currentAgent?.system, {
+        projectPath,
+        allowedCommands: allowedCommands,
+        knowledgeBases: knowledgeBases,
+        bedrockAgents: bedrockAgents
+      })
+    : ''
   const currentScenarios = currentAgent?.scenarios || []
 
   const { enabledTools, ToolSettingModal, openModal: openToolSettingModal } = useToolSettingModal()

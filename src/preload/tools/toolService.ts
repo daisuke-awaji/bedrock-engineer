@@ -3,14 +3,65 @@ import * as path from 'path'
 import GitignoreLikeMatcher from '../lib/gitignore-like-matcher'
 import { ipcRenderer } from 'electron'
 import { ContentChunker, ContentChunk } from '../lib/contentChunker'
-import {
-  AspectRatio,
-  BedrockService,
-  OutputFormat,
-  ImageGeneratorModel
-} from '../../main/api/bedrock'
-import { CommandConfig, CommandInput, CommandStdinInput } from '../../main/api/command/types'
+import { ToolResult } from '../../types/tools'
 import { CommandService } from '../../main/api/command/commandService'
+import {
+  CommandConfig,
+  CommandInput,
+  CommandStdinInput,
+  ProcessInfo
+} from '../../main/api/command/types'
+import {
+  BedrockService,
+  ImageGeneratorModel,
+  AspectRatio,
+  OutputFormat
+} from '../../main/api/bedrock'
+import { FileUseCase, InvokeAgentCommandOutput } from '@aws-sdk/client-bedrock-agent-runtime'
+import { InvokeAgentInput } from '../../main/api/bedrock/services/agentService'
+
+interface GenerateImageResult extends ToolResult {
+  name: 'generateImage'
+  result: {
+    imagePath: string
+    modelUsed: string
+    seed?: number
+    prompt: string
+    negativePrompt?: string
+    aspect_ratio: string
+  }
+}
+
+interface RetrieveResult extends ToolResult {
+  name: 'retrieve'
+}
+
+type Completion = {
+  message?: string
+  files?: string[]
+  // traces: TracePart[]
+}
+
+type InvokeAgentResultOmitFile = {
+  $metadata: InvokeAgentCommandOutput['$metadata']
+  contentType: InvokeAgentCommandOutput['contentType']
+  sessionId: InvokeAgentCommandOutput['sessionId']
+  completion?: Completion
+}
+
+interface InvokeBedrockAgentResult extends ToolResult<InvokeAgentResultOmitFile> {
+  name: 'invokeBedrockAgent'
+}
+
+interface ExecuteCommandResult extends ToolResult {
+  name: 'executeCommand'
+  stdout: string
+  stderr: string
+  exitCode: number
+  processInfo?: ProcessInfo
+  requiresInput?: boolean
+  prompt?: string
+}
 
 // コマンドサービスのインスタンスとその設定を保持
 interface CommandServiceState {
@@ -124,7 +175,7 @@ export class ToolService {
     }
   }
 
-  async tavilySearch(query: string, apiKey: string): Promise<string> {
+  async tavilySearch(query: string, apiKey: string): Promise<any> {
     try {
       const response = await fetch('https://api.tavily.com/search', {
         method: 'POST',
@@ -138,14 +189,20 @@ export class ToolService {
           include_answer: true,
           include_images: true,
           include_raw_content: true,
-          max_results: 3,
+          max_results: 5,
           include_domains: [],
           exclude_domains: []
         })
       })
 
       const body = await response.json()
-      return JSON.stringify(body, null, 2)
+      return {
+        success: true,
+        name: 'tavilySearch',
+        message: `Searched using Tavily. Query: ${query}`,
+        result: body
+      }
+      // return JSON.stringify(body, null, 2)
     } catch (e: any) {
       throw `Error searching: ${e.message}`
     }
@@ -219,7 +276,7 @@ export class ToolService {
       seed?: number
       output_format?: OutputFormat
     }
-  ): Promise<string> {
+  ): Promise<GenerateImageResult> {
     const {
       prompt,
       outputPath,
@@ -248,12 +305,19 @@ export class ToolService {
       const binaryData = Buffer.from(imageData, 'base64')
       await fs.writeFile(outputPath, new Uint8Array(binaryData))
 
-      return JSON.stringify({
+      return {
         success: true,
+        name: 'generateImage',
         message: `Image generated successfully and saved to ${outputPath}`,
-        modelUsed: modelId,
-        seed: result.seeds?.[0]
-      })
+        result: {
+          imagePath: outputPath,
+          prompt,
+          negativePrompt,
+          aspect_ratio: aspect_ratio ?? '1:1',
+          modelUsed: modelId,
+          seed: result.seeds?.[0]
+        }
+      }
     } catch (error: any) {
       if (error.name === 'ThrottlingException') {
         const alternativeModels = [
@@ -262,7 +326,7 @@ export class ToolService {
           'stability.stable-image-ultra-v1:1'
         ].filter((m) => m !== modelId)
 
-        throw `Error generateImage: ${JSON.stringify({
+        throw `${JSON.stringify({
           success: false,
           error: 'Rate limit exceeded. Please try again with a different model.',
           suggestedModels: alternativeModels,
@@ -270,9 +334,123 @@ export class ToolService {
         })}`
       }
 
-      throw `Error generateImage: ${JSON.stringify({
+      throw `${JSON.stringify({
         success: false,
         error: 'Failed to generate image',
+        message: error.message
+      })}`
+    }
+  }
+
+  async retrieve(
+    bedrock: BedrockService,
+    toolInput: {
+      knowledgeBaseId: string
+      query: string
+    }
+  ): Promise<RetrieveResult> {
+    const { knowledgeBaseId, query } = toolInput
+
+    try {
+      const result = await bedrock.retrieve({
+        knowledgeBaseId,
+        retrievalQuery: {
+          text: query
+        }
+      })
+
+      return {
+        success: true,
+        name: 'retrieve',
+        message: `Retrieved information from knowledge base ${knowledgeBaseId}`,
+        result
+      }
+    } catch (error: any) {
+      throw `Error retrieve: ${JSON.stringify({
+        success: false,
+        name: 'retrieve',
+        error: 'Failed to retrieve information from knowledge base',
+        message: error.message
+      })}`
+    }
+  }
+
+  async invokeBedrockAgent(
+    bedrock: BedrockService,
+    projectPath: string,
+    toolInput: {
+      agentId: string
+      agentAliasId: string
+      sessionId?: string
+      inputText: string
+      file?: {
+        filePath?: string
+        useCase?: FileUseCase
+      }
+    }
+  ): Promise<InvokeBedrockAgentResult> {
+    const { agentId, agentAliasId, sessionId, inputText, file } = toolInput
+
+    try {
+      // ファイル処理の修正
+      let fileData: any = undefined
+      if (file && file.filePath) {
+        const fileContent = await fs.readFile(file.filePath)
+        const filename = path.basename(file.filePath)
+        const mimeType = getMimeType(file.filePath)
+
+        fileData = {
+          files: [
+            {
+              name: filename,
+              source: {
+                sourceType: 'BYTE_CONTENT',
+                byteContent: {
+                  // CSVファイルの場合は text/csv を使用
+                  mediaType: filename.endsWith('.csv') ? 'text/csv' : mimeType,
+                  data: fileContent
+                }
+              },
+              useCase: file.useCase
+            }
+          ]
+        }
+      }
+
+      const command: InvokeAgentInput = {
+        agentId,
+        agentAliasId,
+        sessionId,
+        inputText,
+        enableTrace: true,
+        sessionState: fileData
+      }
+
+      const result = await bedrock.invokeAgent(command)
+      const filePaths = result.completion?.files.map((file) => {
+        const filePath = path.join(projectPath, file.name)
+        fs.writeFile(filePath, file.content)
+        return filePath
+      })
+
+      return {
+        success: true,
+        name: 'invokeBedrockAgent',
+        message: `Invoked agent ${agentId} with alias ${agentAliasId}`,
+        result: {
+          ...result,
+          completion: {
+            ...result.completion,
+            files: filePaths
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error('Error details:', error)
+      throw `Error invoking agent: ${JSON.stringify({
+        success: false,
+        name: 'invokeBedrockAgent',
+        error: 'Failed to invoke agent',
         message: error.message
       })}`
     }
@@ -281,7 +459,7 @@ export class ToolService {
   async executeCommand(
     input: CommandInput | CommandStdinInput,
     config: CommandConfig
-  ): Promise<string> {
+  ): Promise<ExecuteCommandResult> {
     try {
       const commandService = this.getCommandService(config)
       let result
@@ -296,10 +474,12 @@ export class ToolService {
         throw new Error('Invalid input format')
       }
 
-      return JSON.stringify({
+      return {
         success: true,
+        name: 'executeCommand',
+        message: `Command executed: ${JSON.stringify(input)}`,
         ...result
-      })
+      }
     } catch (error) {
       throw JSON.stringify({
         success: false,
@@ -307,4 +487,27 @@ export class ToolService {
       })
     }
   }
+}
+
+function getMimeType(filePath) {
+  const ext = path.extname(filePath).toLowerCase()
+  const mimeTypes = {
+    '.html': 'text/html',
+    '.js': 'text/javascript',
+    '.css': 'text/css',
+    '.json': 'application/json',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.gif': 'image/gif',
+    '.svg': 'image/svg+xml',
+    '.wav': 'audio/wav',
+    '.mp4': 'video/mp4',
+    '.woff': 'application/font-woff',
+    '.ttf': 'application/font-ttf',
+    '.eot': 'application/vnd.ms-fontobject',
+    '.otf': 'application/font-otf',
+    '.wasm': 'application/wasm'
+  }
+
+  return mimeTypes[ext] || 'application/octet-stream'
 }

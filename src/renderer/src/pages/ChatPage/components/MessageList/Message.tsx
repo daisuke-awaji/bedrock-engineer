@@ -5,6 +5,9 @@ import { Accordion } from 'flowbite-react'
 import { JSONCodeBlock } from '../CodeBlocks/JSONCodeBlock'
 import { TextCodeBlock } from '../CodeBlocks/TextCodeBlock'
 import CodeRenderer from '../Code/CodeRenderer'
+import { toolIcons } from '../Tool/ToolIcons'
+import { FaCheck } from 'react-icons/fa'
+import { MdErrorOutline } from 'react-icons/md'
 
 type ChatMessageProps = {
   message: Message
@@ -58,11 +61,16 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                 <Accordion className="w-full" collapseAll>
                   <Accordion.Panel>
                     <Accordion.Title>
-                      <span>Tool Use</span>
-                      <span className="ml-2 border rounded-md bg-gray-200 px-2">
-                        {c.toolUse?.name}
-                      </span>
-                      <span className="ml-2">{c.toolUse?.toolUseId}</span>
+                      <div className="flex gap-6 items-center">
+                        <span>{toolIcons[c.toolUse?.name || 'unknown']}</span>
+                        <div className="flex gap-2">
+                          <span>ToolUse:</span>
+                          <span className="border rounded-md bg-gray-200 px-2 dark:text-gray-800">
+                            {c.toolUse?.name}
+                          </span>
+                          <span>{c.toolUse?.toolUseId}</span>
+                        </div>
+                      </div>
                     </Accordion.Title>
                     <Accordion.Content>
                       <JSONCodeBlock json={c.toolUse?.input} />
@@ -77,20 +85,33 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                 <Accordion className="w-full" collapseAll>
                   <Accordion.Panel>
                     <Accordion.Title>
-                      <span>Tool Result</span>
-                      <span
-                        className={`ml-2 rounded-md px-2 ${c.toolResult?.status === 'success' ? 'bg-[#28a745] text-white' : 'bg-[#be1f1f] text-white'}`}
-                      >
-                        {c.toolResult?.status}
-                      </span>
-                      <span className="ml-2">{c.toolResult?.toolUseId}</span>
+                      <div className="flex gap-6 items-center">
+                        <span className={`rounded-md`}>
+                          {c.toolResult?.status === 'success' ? (
+                            <FaCheck className="size-6 text-green-500" />
+                          ) : (
+                            <MdErrorOutline className="size-6 text-red-700" />
+                          )}
+                        </span>
+                        <div className="flex gap-2">
+                          <span>ToolResult:</span>
+                          <span
+                            className={`rounded-md px-2 ${c.toolResult?.status === 'success' ? 'bg-green-500 text-white' : 'bg-red-700 text-white'}`}
+                          >
+                            {c.toolResult?.status}
+                          </span>
+                        </div>
+                        <span>{c.toolResult?.toolUseId}</span>
+                      </div>
                     </Accordion.Title>
                     <Accordion.Content className="w-full">
                       {c.toolResult?.content?.map((content, index) => {
                         if ('text' in content) {
                           return <TextCodeBlock key={index} text={content.text ?? ''} />
+                        } else if ('json' in content) {
+                          return <JSONCodeBlock key={index} json={content.json} />
                         } else {
-                          return <JSONCodeBlock key={index} json={content} />
+                          throw new Error('Invalid tool result content')
                         }
                       })}
                     </Accordion.Content>

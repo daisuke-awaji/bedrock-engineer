@@ -6,8 +6,8 @@
     "src/renderer/src/**/*.tsx",
     "src/preload/*.d.ts",
     "src/types/*.d.ts",
-    "src/types/types.ts"
-  ],
+    "src/types/**/*.ts"
+ ],
   "compilerOptions": {
     "composite": true,
     "jsx": "react-jsx",
