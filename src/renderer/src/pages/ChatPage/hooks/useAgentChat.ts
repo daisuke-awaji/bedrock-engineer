@@ -13,6 +13,30 @@ import { ToolState } from '@/types/agent-chat'
 import { AttachedImage } from '../components/InputForm/TextArea'
 import { ChatMessage } from '@/types/chat/history'
 
+// メッセージの送信時に、Trace を全て載せると InputToken が逼迫するので取り除く
+function removeTraces(messages) {
+  return messages.map((message) => {
+    if (message.content && Array.isArray(message.content)) {
+      return {
+        ...message,
+        content: message.content.map((item) => {
+          if (item.toolResult) {
+            item.toolResult.content.map((c) => {
+              if (c?.json?.result) {
+                const { traces, ...restToolResult } = c.json.result
+                console.debug(traces)
+                return { ...c, json: { result: restToolResult } }
+              }
+            })
+          }
+          return item
+        })
+      }
+    }
+    return message
+  })
+}
+
 export const useAgentChat = (
   modelId: string,
   systemPrompt?: string,
@@ -42,10 +66,10 @@ export const useAgentChat = (
         // 既存の通信があれば中断
         abortCurrentRequest()
         setMessages(session.messages as Message[])
-
         setCurrentSessionId(sessionId)
       }
     } else {
+      // TODO: agentId によって履歴を復元できる機能は後日実装する
       const newSessionId = window.chatHistory.createSession('defaultAgent', modelId, systemPrompt)
       setCurrentSessionId(newSessionId)
     }
@@ -63,12 +87,9 @@ export const useAgentChat = (
     if (currentSessionId) {
       // セッション切り替え時に進行中の通信を中断
       abortCurrentRequest()
-
       const session = window.chatHistory.getSession(currentSessionId)
       if (session) {
-        console.log({ sessionをHistoryから復元: session })
         setMessages(session.messages as Message[])
-
         window.chatHistory.setActiveSession(currentSessionId)
       }
     }
@@ -93,29 +114,6 @@ export const useAgentChat = (
     },
     [currentSessionId, modelId, enabledTools]
   )
-
-  function removeTraces(messages) {
-    return messages.map((message) => {
-      if (message.content && Array.isArray(message.content)) {
-        return {
-          ...message,
-          content: message.content.map((item) => {
-            if (item.toolResult) {
-              item.toolResult.content.map((c) => {
-                if (c?.json?.result) {
-                  const { traces, ...restToolResult } = c.json.result
-                  console.debug(traces)
-                  return { ...c, json: { result: restToolResult } }
-                }
-              })
-            }
-            return item
-          })
-        }
-      }
-      return message
-    })
-  }
 
   const streamChat = async (props: StreamChatCompletionProps, currentMessages: Message[]) => {
     // 既存の通信があれば中断

@@ -24,6 +24,10 @@ export const chatHistory = {
     return chatSessionManager.deleteSession(sessionId)
   },
 
+  deleteAllSessions() {
+    return chatSessionManager.deleteAllSessions()
+  },
+
   getRecentSessions() {
     return chatSessionManager.getRecentSessions()
   },

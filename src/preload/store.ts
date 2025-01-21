@@ -12,6 +12,7 @@ const DEFAULT_INFERENCE_PARAMS: InferenceParameters = {
 }
 
 type StoreScheme = {
+  userDataPath?: string // Add userDataPath to store
   projectPath?: string
   llm?: LLM
   inferenceParams: InferenceParameters
@@ -47,6 +48,13 @@ const electronStore = new Store<StoreScheme>()
 console.log('store path', electronStore.path)
 
 const init = () => {
+  // Initialize userDataPath if not present
+  const userDataPath = electronStore.get('userDataPath')
+  if (!userDataPath) {
+    // This will be set from main process
+    electronStore.set('userDataPath', '')
+  }
+
   const pjPath = electronStore.get('projectPath')
   if (!pjPath) {
     const defaultProjectPath = process.env[process.platform == 'win32' ? 'USERPROFILE' : 'HOME']

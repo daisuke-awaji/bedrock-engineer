@@ -8,6 +8,7 @@ interface ChatHistoryAPI {
   getSession(sessionId: string): ChatSession | null
   updateSessionTitle(sessionId: string, title: string): void
   deleteSession(sessionId: string): void
+  deleteAllSessions(): void
   getRecentSessions(): ChatSession[]
   getAllSessions(): ChatSession[]
   setActiveSession(sessionId: string | undefined): void
