@@ -31,3 +31,8 @@ export type CustomAgent = Agent & {
 export type AgentSettings = {
   customAgents: CustomAgent[]
 }
+
+export type KnowledgeBase = {
+  knowledgeBaseId: string
+  description: string
+}

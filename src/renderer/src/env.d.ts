@@ -1,6 +1,5 @@
 /// <reference types="vite/client" />
 
-import { ElectronAPI } from '@electron-toolkit/preload'
 import { ChatMessage, ChatSession } from '../../types/chat/history'
 
 interface ChatHistoryAPI {
@@ -15,12 +14,5 @@ interface ChatHistoryAPI {
 }
 
 declare global {
-  interface Window {
-    electron: ElectronAPI
-    api: API
-    store: any
-    file: any
-    tools: any
-    chatHistory: ChatHistoryAPI
-  }
+  interface Window extends PreloadAPIs {}
 }

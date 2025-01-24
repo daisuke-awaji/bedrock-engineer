@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { SendMsgKey, ToolState } from 'src/types/agent-chat'
+import { KnowledgeBase, SendMsgKey, ToolState } from 'src/types/agent-chat'
 import { InferenceParameters, LLM } from 'src/types/llm'
 import { listModels } from '@renderer/lib/api'
 import { CustomAgent } from '@/types/agent-chat'
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
+import { BedrockAgent } from '../pages/ChatPage/modals/useToolSettingModal/BedrockAgentSettingForm'
 
 const DEFAULT_INFERENCE_PARAMS: InferenceParameters = {
   maxTokens: 4096,
@@ -82,7 +83,7 @@ interface CommandConfig {
   description: string
 }
 
-interface SettingsContextType {
+export interface SettingsContextType {
   // Advanced Settings
   sendMsgKey: SendMsgKey
   updateSendMsgKey: (key: SendMsgKey) => void
@@ -131,6 +132,13 @@ interface SettingsContextType {
   allowedCommands: CommandConfig[]
   setAllowedCommands: (commands: CommandConfig[]) => void
 
+  knowledgeBases: KnowledgeBase[]
+  setKnowledgeBases: (knowledgeBases: KnowledgeBase[]) => void
+
+  // Bedrock Agent Settings
+  bedrockAgents: BedrockAgent[]
+  setBedrockAgents: (agents: BedrockAgent[]) => void
+
   // Shell Settings
   shell: string
   setShell: (shell: string) => void
@@ -172,6 +180,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Tools Settings
   const [tools, setStateTools] = useState<ToolState[]>([])
+
+  // Knowledge Base Settings
+  const [knowledgeBases, setStateKnowledgeBases] = useState<KnowledgeBase[]>([])
+
+  // Bedrock Agent Settings
+  const [bedrockAgents, setStateBedrockAgents] = useState<BedrockAgent[]>([])
 
   // Command Settings
   const [allowedCommands, setStateAllowedCommands] = useState<CommandConfig[]>([
@@ -256,6 +270,18 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       } else if (savedTools) {
         setStateTools(savedTools)
       }
+    }
+
+    // Load Knowledge Base Settings
+    const savedKnowledgeBases = window.store.get('knowledgeBases')
+    if (savedKnowledgeBases) {
+      setStateKnowledgeBases(savedKnowledgeBases)
+    }
+
+    // Load Bedrock Agent Settings
+    const savedBedrockAgents = window.store.get('bedrockAgents')
+    if (savedBedrockAgents) {
+      setStateBedrockAgents(savedBedrockAgents)
     }
 
     // Load Command Settings
@@ -396,6 +422,16 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return true
     })
 
+  const setKnowledgeBases = (knowledgeBases: KnowledgeBase[]) => {
+    setStateKnowledgeBases(knowledgeBases)
+    window.store.set('knowledgeBases', knowledgeBases)
+  }
+
+  const setBedrockAgents = (agents: BedrockAgent[]) => {
+    setStateBedrockAgents(agents)
+    window.store.set('bedrockAgents', agents)
+  }
+
   const setAllowedCommands = (commands: CommandConfig[]) => {
     setStateAllowedCommands(commands)
     window.store.set('command', {
@@ -460,6 +496,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     tools,
     setTools,
     enabledTools,
+
+    knowledgeBases,
+    setKnowledgeBases,
+
+    bedrockAgents,
+    setBedrockAgents,
 
     allowedCommands,
     setAllowedCommands,

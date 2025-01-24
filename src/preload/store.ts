@@ -1,6 +1,6 @@
 import Store from 'electron-store'
 import { LLM, InferenceParameters } from '../types/llm'
-import { AgentChatConfig, SendMsgKey, ToolState } from '../types/agent-chat'
+import { AgentChatConfig, KnowledgeBase, SendMsgKey, ToolState } from '../types/agent-chat'
 import { CustomAgent } from '../types/agent-chat'
 import { CommandSettings } from '../main/api/command/types'
 
@@ -12,6 +12,7 @@ const DEFAULT_INFERENCE_PARAMS: InferenceParameters = {
 }
 
 type StoreScheme = {
+  userDataPath?: string // Add userDataPath to store
   projectPath?: string
   llm?: LLM
   inferenceParams: InferenceParameters
@@ -39,6 +40,7 @@ type StoreScheme = {
   }
   customAgents: CustomAgent[]
   selectedAgentId: string
+  knowledgeBases: KnowledgeBase[]
   command: CommandSettings
 }
 
@@ -46,6 +48,13 @@ const electronStore = new Store<StoreScheme>()
 console.log('store path', electronStore.path)
 
 const init = () => {
+  // Initialize userDataPath if not present
+  const userDataPath = electronStore.get('userDataPath')
+  if (!userDataPath) {
+    // This will be set from main process
+    electronStore.set('userDataPath', '')
+  }
+
   const pjPath = electronStore.get('projectPath')
   if (!pjPath) {
     const defaultProjectPath = process.env[process.platform == 'win32' ? 'USERPROFILE' : 'HOME']
@@ -92,6 +101,12 @@ const init = () => {
   const selectedAgentId = electronStore.get('selectedAgentId')
   if (!selectedAgentId) {
     electronStore.set('selectedAgentId', 'softwareAgent')
+  }
+
+  // Initialize knowledge bases
+  const knowledgeBases = electronStore.get('knowledgeBases')
+  if (!knowledgeBases) {
+    electronStore.set('knowledgeBases', [])
   }
 
   // Initialize command settings if not present

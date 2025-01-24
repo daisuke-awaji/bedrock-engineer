@@ -60,7 +60,7 @@ The autonomous AI agent capable of development assists your development process.
 
 | ![agent-chat-diagram](./assets/agent-chat-diagram.png) | ![agent-chat-search](./assets/agent-chat-search.png) |
 | :----------------------------------------------------: | :--------------------------------------------------: |
-|               Code analysis and diagramming              |        Web search capabilities using Tavily API       |
+|             Code analysis and diagramming              |       Web search capabilities using Tavily API       |
 
 ## Select an Agent
 
@@ -74,17 +74,45 @@ Click the ⚙️ icon in the top right to customize agent settings. Enter the ag
 
 ![custom-agents](./assets/custom-agents.png)
 
-## Select Tools
+## Select Tools / Customize Tools
 
-Click the Tools icon in the bottom left to select the tools available to the agent. Refer to [this page](./src/preload/tools/tools.ts) for each tool's role.
+Click the Tools icon in the bottom left to select the tools available to the agent.
 
 ![select-tools](./assets/select-tools.png)
 
-## Customize Tools
+The supported tools are:
 
-The executeCommand tool allows you to register commands that can be executed in the CLI. Unregistered commands cannot be executed. You can extend the agent's capabilities by registering commands that connect to databases, execute APIs, or call other AI agents.
+### 📂 File System Operations
 
-![custom-tools](./assets/custom-tools.png)
+| Tool Name      | Description                                                                                                                                                                   |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `createFolder` | Creates a new directory within the project structure. Creates a new folder at the specified path.                                                                             |
+| `writeToFile`  | Writes content to a file. Creates a new file if it doesn't exist or updates content if the file exists.                                                                       |
+| `readFiles`    | Reads contents from multiple files simultaneously. Supports text files and Excel files (.xlsx, .xls), automatically converting Excel files to CSV format.                     |
+| `listFiles`    | Displays directory structure in a hierarchical format. Provides comprehensive project structure including all subdirectories and files, following configured ignore patterns. |
+| `moveFile`     | Moves a file to a different location. Used for organizing files within the project structure.                                                                                 |
+| `copyFile`     | Duplicates a file to a different location. Used when file duplication is needed within the project structure.                                                                 |
+
+### 🌐 Web & Search Operations
+
+| Tool Name      | Description                                                                                                                                                                                                                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tavilySearch` | Performs web searches using the Tavily API. Used when current information or additional context is needed. Requires an API key.                                                                                                                                                                 |
+| `fetchWebsite` | Retrieves content from specified URLs. Large content is automatically split into manageable chunks. Initial call provides chunk overview, with specific chunks retrievable as needed. Supports GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS methods with custom headers and body configuration. |
+
+### 🤖 Amazon Bedrock Integration
+
+| Tool Name            | Description                                                                                                                                                                                                                                                                                                                                       |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `generateImage`      | Generates images using Amazon Bedrock LLMs. Uses stability.sd3-5-large-v1:0 by default and supports both Stability.ai and Amazon models. Supports specific aspect ratios and sizes for Titan models, with PNG, JPEG, and WebP output formats. Allows seed specification for deterministic generation and negative prompts for exclusion elements. |
+| `retrieve`           | Searches information using Amazon Bedrock Knowledge Base. Retrieves relevant information from specified knowledge bases.                                                                                                                                                                                                                          |
+| `invokeBedrockAgent` | Interacts with specified Amazon Bedrock Agents. Initiates dialogue using agent ID and alias ID, with session ID for conversation continuity. Provides file analysis capabilities for various use cases including Python code analysis and chat functionality.                                                                                     |
+
+### 💻 System Command Execution
+
+| Tool Name        | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `executeCommand` | Manages command execution and process input handling. Features two operational modes: 1) initiating new processes with command and working directory specification, 2) sending standard input to existing processes using process ID. For security reasons, only allowed commands can be executed, using the configured shell. Unregistered commands cannot be executed. The agent's capabilities can be extended by registering commands that connect to databases, execute APIs, or invoke other AI agents. |
 
 ### Website Generator
 
@@ -99,7 +127,7 @@ Here are examples of screens generated by the Website Generator:
 
 | ![website-gen](./assets/website-generator.png) | ![website-gen-data](./assets/website-generator-data-visualization.png) | ![website-gen-healthcare](./assets/website-generator-healthcare.png) |
 | :--------------------------------------------: | :--------------------------------------------------------------------: | :------------------------------------------------------------------: |
-|           House Plant E-commerce Site           |                          Data Visualization                           |                           Healthcare Blog                           |
+|          House Plant E-commerce Site           |                           Data Visualization                           |                           Healthcare Blog                            |
 
 The following styles are also supported as presets:
 

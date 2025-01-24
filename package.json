@@ -5,6 +5,9 @@
   "main": "./out/main/index.js",
   "author": "gee.awa@gmail.com",
   "homepage": "https://electron-vite.org",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",

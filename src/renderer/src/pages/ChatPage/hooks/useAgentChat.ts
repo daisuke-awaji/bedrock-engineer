@@ -13,6 +13,30 @@ import { ToolState } from '@/types/agent-chat'
 import { AttachedImage } from '../components/InputForm/TextArea'
 import { ChatMessage } from '@/types/chat/history'
 
+// メッセージの送信時に、Trace を全て載せると InputToken が逼迫するので取り除く
+function removeTraces(messages) {
+  return messages.map((message) => {
+    if (message.content && Array.isArray(message.content)) {
+      return {
+        ...message,
+        content: message.content.map((item) => {
+          if (item.toolResult) {
+            item.toolResult.content.map((c) => {
+              if (c?.json?.result) {
+                const { traces, ...restToolResult } = c.json.result
+                console.debug(traces)
+                return { ...c, json: { result: restToolResult } }
+              }
+            })
+          }
+          return item
+        })
+      }
+    }
+    return message
+  })
+}
+
 export const useAgentChat = (
   modelId: string,
   systemPrompt?: string,
@@ -45,6 +69,7 @@ export const useAgentChat = (
         setCurrentSessionId(sessionId)
       }
     } else {
+      // TODO: agentId によって履歴を復元できる機能は後日実装する
       const newSessionId = window.chatHistory.createSession('defaultAgent', modelId, systemPrompt)
       setCurrentSessionId(newSessionId)
     }
@@ -62,10 +87,8 @@ export const useAgentChat = (
     if (currentSessionId) {
       // セッション切り替え時に進行中の通信を中断
       abortCurrentRequest()
-
       const session = window.chatHistory.getSession(currentSessionId)
       if (session) {
-        console.log({ sessionをHistoryから復元: session })
         setMessages(session.messages as Message[])
         window.chatHistory.setActiveSession(currentSessionId)
       }
@@ -100,6 +123,8 @@ export const useAgentChat = (
 
     // 新しい AbortController を作成
     abortController.current = new AbortController()
+
+    props.messages = removeTraces(props.messages)
 
     const generator = streamChatCompletion(props, abortController.current.signal)
 
@@ -210,14 +235,28 @@ export const useAgentChat = (
         const toolUse = contentBlock.toolUse
         if (toolUse?.name) {
           try {
-            const toolResult = await window.api.bedrock.executeTool(toolUse.name, toolUse.input)
-            toolResults.push({
-              toolResult: {
-                toolUseId: toolUse.toolUseId,
-                content: [{ text: toolResult }],
-                status: 'success'
-              }
-            })
+            const toolInput = {
+              type: toolUse.name,
+              ...(toolUse.input as any)
+            }
+            const toolResult = await window.api.bedrock.executeTool(toolInput)
+            if (Object.prototype.hasOwnProperty.call(toolResult, 'name')) {
+              toolResults.push({
+                toolResult: {
+                  toolUseId: toolUse.toolUseId,
+                  content: [{ json: toolResult }],
+                  status: 'success'
+                }
+              })
+            } else {
+              toolResults.push({
+                toolResult: {
+                  toolUseId: toolUse.toolUseId,
+                  content: [{ text: toolResult }],
+                  status: 'success'
+                }
+              })
+            }
           } catch (e: any) {
             console.error(e)
             toolResults.push({

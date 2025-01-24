@@ -19,6 +19,17 @@ export interface ChatMessage {
   }
 }
 
+export interface SessionMetadata {
+  id: string
+  title: string
+  createdAt: number
+  updatedAt: number
+  messageCount: number
+  agentId: string
+  modelId: string
+  systemPrompt?: string
+}
+
 export interface ChatSession {
   id: string
   title: string

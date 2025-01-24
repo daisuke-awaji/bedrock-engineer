@@ -2,43 +2,69 @@ import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { ToolService } from './toolService'
 import { store } from '../store'
 import { BedrockService } from '../../main/api/bedrock'
+import { ToolInput, ToolResult } from '../../types/tools'
 
-export const executeTool = async (toolName: string | undefined, toolInput: any) => {
+export const executeTool = async (input: ToolInput): Promise<string | ToolResult> => {
   const toolService = new ToolService()
   const bedrock = new BedrockService({ store })
-  switch (toolName) {
+
+  switch (input.type) {
     case 'createFolder':
-      return toolService.createFolder(toolInput['path'])
+      return toolService.createFolder(input.path)
+
     case 'readFiles':
-      return toolService.readFiles(toolInput['paths'])
+      return toolService.readFiles(input.paths)
+
     case 'writeToFile':
-      return toolService.writeToFile(toolInput['path'], toolInput['content'])
+      return toolService.writeToFile(input.path, input.content)
+
     case 'listFiles': {
-      const ignoreFiles = store.get('agentChatConfig').ignoreFiles
-      console.log(ignoreFiles)
-      return toolService.listFiles(toolInput['path'], '', ignoreFiles)
+      const ignoreFiles = store.get('agentChatConfig')?.ignoreFiles
+      return toolService.listFiles(input.path, '', ignoreFiles)
     }
+
     case 'moveFile':
-      return toolService.moveFile(toolInput['source'], toolInput['destination'])
+      return toolService.moveFile(input.source, input.destination)
+
     case 'copyFile':
-      return toolService.copyFile(toolInput['source'], toolInput['destination'])
+      return toolService.copyFile(input.source, input.destination)
+
     case 'tavilySearch': {
       const apiKey = store.get('tavilySearch').apikey
-      return toolService.tavilySearch(toolInput['query'], apiKey)
+      return toolService.tavilySearch(input.query, apiKey)
     }
+
     case 'fetchWebsite':
-      return toolService.fetchWebsite(toolInput['url'], toolInput['options'])
-    case 'generateImage': {
+      return toolService.fetchWebsite(input.url, input.options)
+
+    case 'generateImage':
       return toolService.generateImage(bedrock, {
-        prompt: toolInput['prompt'],
-        outputPath: toolInput['outputPath'],
-        modelId: toolInput['modelId'],
-        negativePrompt: toolInput['negativePrompt'],
-        aspect_ratio: toolInput['aspect_ratio'],
-        seed: toolInput['seed'],
-        output_format: toolInput['output_format']
+        prompt: input.prompt,
+        outputPath: input.outputPath,
+        modelId: input.modelId,
+        negativePrompt: input.negativePrompt,
+        aspect_ratio: input.aspect_ratio,
+        seed: input.seed,
+        output_format: input.output_format
+      })
+
+    case 'retrieve':
+      return toolService.retrieve(bedrock, {
+        knowledgeBaseId: input.knowledgeBaseId,
+        query: input.query
+      })
+
+    case 'invokeBedrockAgent': {
+      const projectPath = store.get('projectPath')!
+      return toolService.invokeBedrockAgent(bedrock, projectPath, {
+        agentId: input.agentId,
+        agentAliasId: input.agentAliasId,
+        sessionId: input.sessionId,
+        inputText: input.inputText,
+        file: input.file
       })
     }
+
     case 'executeCommand': {
       const commandSettings = store.get('command')
       const commandConfig = {
@@ -46,35 +72,32 @@ export const executeTool = async (toolName: string | undefined, toolInput: any) 
         shell: commandSettings.shell
       }
 
-      if (toolInput['pid'] && toolInput['stdin']) {
-        // 標準入力を送信
+      if ('pid' in input && 'stdin' in input && input?.pid && input?.stdin) {
         return toolService.executeCommand(
           {
-            pid: toolInput['pid'],
-            stdin: toolInput['stdin']
+            pid: input.pid,
+            stdin: input.stdin
           },
           commandConfig
         )
-      } else if (toolInput['command'] && toolInput['cwd']) {
-        // 新しいコマンドを実行
+      } else if ('command' in input && 'cwd' in input && input?.command && input?.cwd) {
         return toolService.executeCommand(
           {
-            command: toolInput['command'],
-            cwd: toolInput['cwd']
+            command: input.command,
+            cwd: input.cwd
           },
           commandConfig
-        )
-      } else {
-        throw new Error(
-          'Invalid input format for executeCommand: requires either (command, cwd) or (pid, stdin)'
         )
       }
+
+      throw new Error(
+        'Invalid input format for executeCommand: requires either (command, cwd) or (pid, stdin)'
+      )
     }
-    default:
-      throw new Error(`Unknown tool: ${toolName}`)
   }
 }
 
+// ツール定義（JSON Schema）
 export const tools: Tool[] = [
   {
     toolSpec: {
@@ -345,6 +368,78 @@ First call without a chunkIndex(Must be 1 or greater) to get an overview and tot
             }
           },
           required: ['prompt', 'outputPath', 'modelId']
+        }
+      }
+    }
+  },
+  {
+    toolSpec: {
+      name: 'retrieve',
+      description:
+        'Retrieve information from a knowledge base using Amazon Bedrock Knowledge Base. Use this when you need to get information from a knowledge base.',
+      inputSchema: {
+        json: {
+          type: 'object',
+          properties: {
+            knowledgeBaseId: {
+              type: 'string',
+              description: 'The ID of the knowledge base to retrieve from'
+            },
+            query: {
+              type: 'string',
+              description: 'The query to search for in the knowledge base'
+            }
+          },
+          required: ['knowledgeBaseId', 'query']
+        }
+      }
+    }
+  },
+  {
+    toolSpec: {
+      name: 'invokeBedrockAgent',
+      description:
+        'Invoke an Amazon Bedrock Agent using the specified agent ID and alias ID. Use this when you need to interact with an agent.',
+      inputSchema: {
+        json: {
+          type: 'object',
+          properties: {
+            agentId: {
+              type: 'string',
+              description: 'The ID of the agent to invoke'
+            },
+            agentAliasId: {
+              type: 'string',
+              description: 'The alias ID of the agent to invoke'
+            },
+            sessionId: {
+              type: 'string',
+              description:
+                'Optional. The session ID to use for the agent invocation. The session ID is issued when you execute invokeBedrockAgent for the first time and is included in the response. Specify it if you want to continue the conversation from the second time onwards.'
+            },
+            inputText: {
+              type: 'string',
+              description: 'The input text to send to the agent'
+            },
+            file: {
+              type: 'object',
+              description:
+                'Optional. The file to send to the agent. Be sure to specify if you need to analyze files.',
+              properties: {
+                filePath: {
+                  type: 'string',
+                  description: 'The path of the file to send to the agent'
+                },
+                useCase: {
+                  type: 'string',
+                  description:
+                    'The use case of the file. Specify "CODE_INTERPRETER" if Python code analysis is required. Otherwise, specify "CHAT".',
+                  enum: ['CODE_INTERPRETER', 'CHAT']
+                }
+              }
+            }
+          },
+          required: ['agentId', 'agentAliasId', 'inputText']
         }
       }
     }

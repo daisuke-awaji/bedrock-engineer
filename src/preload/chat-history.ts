@@ -1,4 +1,5 @@
 import { ChatMessage } from '../types/chat/history'
+import { SessionMetadata } from '../types/chat/history'
 import { ChatSessionManager } from '../main/store/chatSession'
 
 const chatSessionManager = new ChatSessionManager()
@@ -24,12 +25,16 @@ export const chatHistory = {
     return chatSessionManager.deleteSession(sessionId)
   },
 
-  getRecentSessions() {
+  deleteAllSessions() {
+    return chatSessionManager.deleteAllSessions()
+  },
+
+  getRecentSessions(): SessionMetadata[] {
     return chatSessionManager.getRecentSessions()
   },
 
-  getAllSessions() {
-    return chatSessionManager.getAllSessions()
+  getAllSessionMetadata(): SessionMetadata[] {
+    return chatSessionManager.getAllSessionMetadata()
   },
 
   setActiveSession(sessionId: string | undefined) {
