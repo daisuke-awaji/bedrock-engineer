@@ -1,8 +1,8 @@
 Language: [English](./README.md) / [Japanese](./README-ja.md)
 
-# 🧙 Bedrock Enginner
+# 🧙 Bedrock Engineer
 
-Bedrock Enginner は、[Amazon Bedrock](https://aws.amazon.com/bedrock/) を活用したソフトウェア開発タスクのための AI アシスタントです。大規模な言語モデルと実際のファイルシステム操作、Web検索機能などを含む自律的な AI エージェントがあなたの開発を支援します。
+Bedrock Engineer は、[Amazon Bedrock](https://aws.amazon.com/bedrock/) を活用したソフトウェア開発タスクのための AI アシスタントです。大規模な言語モデルと実際のファイルシステム操作、Web検索機能などを含む自律的な AI エージェントがあなたの開発を支援します。
 
 ## 💻 デモ
 
