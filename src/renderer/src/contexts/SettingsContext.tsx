@@ -105,6 +105,9 @@ export interface SettingsContextType {
   inferenceParams: InferenceParameters
   updateInferenceParams: (params: Partial<InferenceParameters>) => void
 
+  // userDataPath (Electorn store directory)
+  userDataPath: string
+
   // Project Settings
   projectPath: string
   setProjectPath: (path: string) => void
@@ -170,6 +173,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [availableModels, setAvailableModels] = useState<LLM[]>([])
   const [inferenceParams, setInferenceParams] =
     useState<InferenceParameters>(DEFAULT_INFERENCE_PARAMS)
+
+  const userDataPath = window.store.get('userDataPath')
 
   // Project Settings
   const [projectPath, setProjectPath] = useState<string>('')
@@ -582,6 +587,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Inference Parameters
     inferenceParams,
     updateInferenceParams,
+
+    // userDataPath (Electron store directory)
+    userDataPath,
 
     // Project Settings
     projectPath,
