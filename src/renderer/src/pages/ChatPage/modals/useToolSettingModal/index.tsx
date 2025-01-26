@@ -187,4 +187,6 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
   )
 })
 
+ToolSettingModal.displayName = 'ToolSettingModal'
+
 export default ToolSettingModal

@@ -440,3 +440,5 @@ const AgentSettingsModal = React.memo(({ isOpen, onClose }: AgentSettingModalPro
     </Modal>
   )
 })
+
+AgentSettingsModal.displayName = 'AgentSettingsModal'

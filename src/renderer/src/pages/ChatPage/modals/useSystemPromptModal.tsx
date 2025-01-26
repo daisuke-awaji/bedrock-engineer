@@ -39,3 +39,5 @@ const SystemPromptModal = React.memo(({ isOpen, onClose }: SystemPromptModalProp
     </Modal>
   )
 })
+
+SystemPromptModal.displayName = 'SystemPromptModal'

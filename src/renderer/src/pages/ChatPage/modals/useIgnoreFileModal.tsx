@@ -60,3 +60,5 @@ const IgnoreFileModal = React.memo(({ isOpen, onClose }: IgnoreFileModalProps) =
     </Modal>
   )
 })
+
+IgnoreFileModal.displayName = 'IgnoreFileModal'
