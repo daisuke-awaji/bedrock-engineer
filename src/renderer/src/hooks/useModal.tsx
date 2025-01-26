@@ -9,6 +9,10 @@ type CustomModalProps = {
   size?: keyof ModalSizes
 }
 
+/**
+ * @deprecated use flowbite-react Modal instead
+ * @returns
+ */
 const useModal = () => {
   const [show, setShow] = useState(false)
 

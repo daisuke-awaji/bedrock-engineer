@@ -1,4 +1,3 @@
-import useModal from '@renderer/hooks/useModal'
 import { useSettings } from '@renderer/contexts/SettingsContext'
 import toast from 'react-hot-toast'
 import { ToolName } from '@/types/tools'
@@ -6,6 +5,8 @@ import { toolIcons } from '../../components/Tool/ToolIcons'
 import { KnowledgeBaseSettingForm } from './KnowledgeBaseSettingForm'
 import { CommandForm } from './CommandForm'
 import { BedrockAgent, BedrockAgentSettingForm } from './BedrockAgentSettingForm'
+import { Modal } from 'flowbite-react'
+import { memo, useState } from 'react'
 
 export interface CommandConfig {
   pattern: string
@@ -37,11 +38,32 @@ const toolDescriptions: { [key in ToolName]: string } = {
   executeCommand: 'Execute allowed commands with support for wildcards'
 }
 
-const useToolSettingModal = () => {
+interface ToolSettingModalProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
+export const useToolSettingModal = () => {
+  const [show, setShow] = useState(false)
+  const handleOpen = () => {
+    setShow(true)
+  }
+  const handleClose = () => {
+    setShow(false)
+  }
+
+  return {
+    show: show,
+    handleOpen: handleOpen,
+    handleClose: handleClose,
+    ToolSettingModal: ToolSettingModal
+  }
+}
+
+const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
   const {
     tools,
     setTools,
-    enabledTools,
     currentLLM,
     knowledgeBases,
     setKnowledgeBases,
@@ -67,11 +89,10 @@ const useToolSettingModal = () => {
     setTools(updatedTools)
   }
 
-  const { Modal, openModal } = useModal()
-
-  const ToolSettingModal = () => {
-    return (
-      <Modal header="Available Tools" size="8xl">
+  return (
+    <Modal dismissible size="8xl" show={isOpen} onClose={onClose}>
+      <Modal.Header>Available Tools</Modal.Header>
+      <Modal.Body>
         <p className="text-gray-700 text-sm pb-4 dark:text-white">
           Choose the tools you want to enable for the AI assistant
         </p>
@@ -88,16 +109,16 @@ const useToolSettingModal = () => {
               <div
                 key={toolName}
                 className={`
-                  ${isCommandTool || isRetrieveTool || isBedrockAgentTool ? 'col-span-full xl:col-span-3' : ''}
-                  p-4 rounded-lg
-                  border-2 transition-all duration-200
-                  ${
-                    tool.enabled
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-200 dark:border-gray-700'
-                  }
-                  hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/10
-                `}
+                ${isCommandTool || isRetrieveTool || isBedrockAgentTool ? 'col-span-full xl:col-span-3' : ''}
+                p-4 rounded-lg
+                border-2 transition-all duration-200
+                ${
+                  tool.enabled
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                    : 'border-gray-200 dark:border-gray-700'
+                }
+                hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/10
+              `}
               >
                 <div className="flex items-start gap-3">
                   <div
@@ -115,13 +136,13 @@ const useToolSettingModal = () => {
                       <div>
                         <span
                           className={`
-                            text-sm font-medium
-                            ${
-                              tool.enabled
-                                ? 'text-blue-700 dark:text-blue-300'
-                                : 'text-gray-900 dark:text-gray-300'
-                            }
-                          `}
+                          text-sm font-medium
+                          ${
+                            tool.enabled
+                              ? 'text-blue-700 dark:text-blue-300'
+                              : 'text-gray-900 dark:text-gray-300'
+                          }
+                        `}
                         >
                           {toolName === 'retrieve'
                             ? 'retrieve (from Bedrock Knowledge Base)'
@@ -161,11 +182,9 @@ const useToolSettingModal = () => {
             )
           })}
         </div>
-      </Modal>
-    )
-  }
+      </Modal.Body>
+    </Modal>
+  )
+})
 
-  return { tools, enabledTools, setTools, ToolSettingModal, openModal }
-}
-
-export default useToolSettingModal
+export default ToolSettingModal
