@@ -21,13 +21,28 @@ function removeTraces(messages) {
         ...message,
         content: message.content.map((item) => {
           if (item.toolResult) {
-            item.toolResult.content.map((c) => {
-              if (c?.json?.result) {
-                const { traces, ...restToolResult } = c.json.result
-                console.debug(traces)
-                return { ...c, json: { result: restToolResult } }
+            return {
+              ...item,
+              toolResult: {
+                ...item.toolResult,
+                content: item.toolResult.content.map((c) => {
+                  if (c?.json?.result?.completion) {
+                    const { traces, ...restCompletion } = c.json.result.completion
+                    return {
+                      ...c,
+                      json: {
+                        ...c.json,
+                        result: {
+                          ...c.json.result,
+                          completion: restCompletion
+                        }
+                      }
+                    }
+                  }
+                  return c
+                })
               }
-            })
+            }
           }
           return item
         })
