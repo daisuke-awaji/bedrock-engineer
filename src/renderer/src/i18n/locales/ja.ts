@@ -12,6 +12,8 @@ const HomePage = {
 
 const SettingPage = {
   Setting: '設定',
+  'Config Directory': 'アプリの設定',
+  'Config Directory Description': 'アプリの設定が保存されるディレクトリです。',
   'Project Setting': 'プロジェクト設定',
   'Agent Chat': 'エージェントチャット',
   'Tavily Search API Key': 'Tavily 検索 API キー',
