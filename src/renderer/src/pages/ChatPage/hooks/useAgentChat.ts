@@ -27,6 +27,7 @@ function removeTraces(messages) {
                 ...item.toolResult,
                 content: item.toolResult.content.map((c) => {
                   if (c?.json?.result?.completion) {
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     const { traces, ...restCompletion } = c.json.result.completion
                     return {
                       ...c,
