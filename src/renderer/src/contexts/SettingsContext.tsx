@@ -495,7 +495,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           })
         }))
       },
-      [t, replacePlaceholders]
+      [t, replacePlaceholders, projectPath, allowedCommands, knowledgeBases, bedrockAgents]
     )
 
     // ローカライズされたエージェントを生成

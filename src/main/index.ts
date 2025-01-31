@@ -148,6 +148,9 @@ async function createWindow(): Promise<void> {
       } else if (input.key === '0') {
         mainWindow.webContents.setZoomFactor(1.0)
         event.preventDefault()
+      } else if (input.key === 'r') {
+        mainWindow.reload()
+        event.preventDefault()
       }
     }
   })
