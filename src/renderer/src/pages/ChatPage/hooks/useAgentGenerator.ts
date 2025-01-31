@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import useSetting from '@renderer/hooks/useSetting'
 import { useAgentChat } from './useAgentChat'
 import { ToolState } from '@/types/agent-chat'
-import { SOFTWARE_AGENT_SYSTEM_PROMPT } from './defaultAgents'
+import { SOFTWARE_AGENT_SYSTEM_PROMPT } from '../constants/DEFAULT_AGENTS'
 
 const getPromptTemplate = (
   tools: ToolState[]

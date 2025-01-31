@@ -1,10 +1,17 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
-import { KnowledgeBase, SendMsgKey, ToolState } from 'src/types/agent-chat'
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react'
+import { Agent, KnowledgeBase, Scenario, SendMsgKey, ToolState } from 'src/types/agent-chat'
 import { InferenceParameters, LLM } from 'src/types/llm'
 import { listModels } from '@renderer/lib/api'
 import { CustomAgent } from '@/types/agent-chat'
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { BedrockAgent } from '../pages/ChatPage/modals/useToolSettingModal/BedrockAgentSettingForm'
+import { replacePlaceholders } from '@renderer/pages/ChatPage/utils/placeholder'
+import { useTranslation } from 'react-i18next'
+import {
+  SOFTWARE_AGENT_SYSTEM_PROMPT,
+  CODE_BUDDY_SYSTEM_PROMPT,
+  PRODUCT_DESIGNER_SYSTEM_PROMPT
+} from '@renderer/pages/ChatPage/constants/DEFAULT_AGENTS'
 
 const DEFAULT_INFERENCE_PARAMS: InferenceParameters = {
   maxTokens: 4096,
@@ -98,6 +105,9 @@ export interface SettingsContextType {
   inferenceParams: InferenceParameters
   updateInferenceParams: (params: Partial<InferenceParameters>) => void
 
+  // userDataPath (Electorn store directory)
+  userDataPath: string
+
   // Project Settings
   projectPath: string
   setProjectPath: (path: string) => void
@@ -123,6 +133,9 @@ export interface SettingsContextType {
   // Selected Agent Settings
   selectedAgentId: string
   setSelectedAgentId: (agentId: string) => void
+  agents: CustomAgent[]
+  currentAgent: CustomAgent | undefined
+  currentAgentSystemPrompt: string
 
   // Tools Settings
   tools: ToolState[]
@@ -161,6 +174,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [inferenceParams, setInferenceParams] =
     useState<InferenceParameters>(DEFAULT_INFERENCE_PARAMS)
 
+  const userDataPath = window.store.get('userDataPath')
+
   // Project Settings
   const [projectPath, setProjectPath] = useState<string>('')
 
@@ -176,7 +191,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [customAgents, setCustomAgents] = useState<CustomAgent[]>([])
 
   // Selected Agent Settings
-  const [selectedAgentId, setSelectedAgentId] = useState<string>('softwareAgent')
+  const [selectedAgentId, setStateSelectedAgentId] = useState<string>('softwareAgent')
 
   // Tools Settings
   const [tools, setStateTools] = useState<ToolState[]>([])
@@ -406,6 +421,116 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     window.store.set('customAgents', agents)
   }
 
+  const setSelectedAgentId = (agentId: string) => {
+    setStateSelectedAgentId(agentId)
+    window.store.set('selectedAgentId', agentId)
+  }
+
+  const { t, i18n } = useTranslation()
+  // エージェントの基本定義を取得
+  const getBaseAgents = useCallback((): Agent[] => {
+    return [
+      {
+        name: 'Software Developer',
+        id: 'softwareAgent',
+        description: t('softwareAgent.description'),
+        system: SOFTWARE_AGENT_SYSTEM_PROMPT,
+        scenarios: [
+          { title: 'What is Amazon Bedrock', content: '' },
+          { title: 'Organizing folders', content: '' },
+          { title: 'Simple website', content: '' },
+          { title: 'Simple Web API', content: '' },
+          { title: 'CDK Project', content: '' },
+          { title: 'Understanding the source code', content: '' },
+          { title: 'Refactoring', content: '' },
+          { title: 'Testcode', content: '' }
+        ]
+      },
+      {
+        name: 'Programming Mentor',
+        id: 'codeBuddy',
+        description: t('codeBuddy.description'),
+        system: CODE_BUDDY_SYSTEM_PROMPT,
+        scenarios: [
+          { title: 'Learning JavaScript Basics', content: '' },
+          { title: 'Understanding Functions', content: '' },
+          { title: 'DOM Manipulation', content: '' },
+          { title: 'Debugging JavaScript', content: '' },
+          { title: 'Building a Simple Web App', content: '' },
+          { title: 'Learning Python', content: '' },
+          { title: 'Object-Oriented Programming', content: '' },
+          { title: 'Data Visualization with Python', content: '' }
+        ]
+      },
+      {
+        name: 'Product Designer',
+        id: 'productDesigner',
+        description: t('productDesigner.description'),
+        system: PRODUCT_DESIGNER_SYSTEM_PROMPT,
+        scenarios: [
+          { title: 'Wireframing a Mobile App', content: '' },
+          { title: 'Designing a Landing Page', content: '' },
+          { title: 'Improving User Experience', content: '' },
+          { title: 'Creating a Design System', content: '' },
+          { title: 'Accessibility Evaluation', content: '' },
+          { title: 'Prototyping an Interface', content: '' },
+          { title: 'Design Handoff', content: '' },
+          { title: 'Design Trend Research', content: '' }
+        ]
+      }
+    ]
+  }, [t])
+
+  const getLocalizedBaseAgents = useCallback((): CustomAgent[] => {
+    // シナリオをローカライズする関数
+    const localizeScenarios = useCallback(
+      (scenarios: Scenario[]): Scenario[] => {
+        return scenarios.map((scenario) => ({
+          title: t(scenario.title),
+          content: replacePlaceholders(t(`${scenario.title} description`), {
+            projectPath: projectPath || t('no project path'),
+            allowedCommands: allowedCommands,
+            knowledgeBases: knowledgeBases,
+            bedrockAgents: bedrockAgents
+          })
+        }))
+      },
+      [t, replacePlaceholders]
+    )
+
+    // ローカライズされたエージェントを生成
+    const localizedAgents = useMemo(() => {
+      const baseAgents = getBaseAgents()
+      return baseAgents.map((agent) => ({
+        ...agent,
+        name: agent.name,
+        system: replacePlaceholders(agent.system, {
+          projectPath: projectPath || t('no project path'),
+          allowedCommands: allowedCommands,
+          knowledgeBases: knowledgeBases,
+          bedrockAgents: bedrockAgents
+        }),
+        scenarios: localizeScenarios(agent.scenarios)
+      }))
+    }, [getBaseAgents, i18n.language, t, replacePlaceholders, localizeScenarios])
+
+    return localizedAgents
+  }, [t, projectPath, allowedCommands, knowledgeBases, bedrockAgents])
+
+  const baseAgents = getLocalizedBaseAgents()
+  const allAgents = useMemo(() => {
+    return [...baseAgents, ...customAgents]
+  }, [baseAgents, customAgents])
+  const currentAgent = allAgents.find((a) => a.id === selectedAgentId)
+  const systemPrompt = currentAgent?.system
+    ? replacePlaceholders(currentAgent?.system, {
+        projectPath,
+        allowedCommands: allowedCommands,
+        knowledgeBases: knowledgeBases,
+        bedrockAgents: bedrockAgents
+      })
+    : ''
+
   const setTools = (newTools: ToolState[]) => {
     setStateTools(newTools)
     window.store.set('tools', newTools)
@@ -463,6 +588,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     inferenceParams,
     updateInferenceParams,
 
+    // userDataPath (Electron store directory)
+    userDataPath,
+
     // Project Settings
     projectPath,
     setProjectPath,
@@ -487,10 +615,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     // Selected Agent Settings
     selectedAgentId,
-    setSelectedAgentId: (agentId: string) => {
-      setSelectedAgentId(agentId)
-      window.store.set('selectedAgentId', agentId)
-    },
+    setSelectedAgentId,
+    agents: allAgents,
+    currentAgent,
+    currentAgentSystemPrompt: systemPrompt,
 
     // Tools Settings
     tools,
@@ -532,7 +660,6 @@ function replaceGenerateImageModels(tools: ToolState[], awsRegion: string) {
   const updatedTools = tools.map((tool) => {
     if (tool.toolSpec?.name && isGenerateImageTool(tool.toolSpec?.name)) {
       if (supportGenerateImageToolRegions.includes(awsRegion)) {
-        console.log('generateImage tool is enabled.')
         return {
           ...tool,
           toolSpec: {
@@ -555,7 +682,6 @@ function replaceGenerateImageModels(tools: ToolState[], awsRegion: string) {
           enabled: true
         }
       } else {
-        console.log('generateImage tool is disabled.')
         return { ...tool, enabled: false }
       }
     }

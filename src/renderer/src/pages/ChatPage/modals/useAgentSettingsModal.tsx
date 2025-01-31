@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import useModal from '@renderer/hooks/useModal'
 import { CustomAgent } from '@/types/agent-chat'
 import { nanoid } from 'nanoid'
 import { FiPlus, FiTrash, FiEdit2, FiZap } from 'react-icons/fi'
@@ -8,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { useAgentGenerator } from '../hooks/useAgentGenerator'
 import toast from 'react-hot-toast'
 import { replacePlaceholders } from '../utils/placeholder'
+import { Modal } from 'flowbite-react'
 
 const AgentForm: React.FC<{
   agent?: CustomAgent
@@ -340,8 +340,26 @@ const AgentForm: React.FC<{
   )
 }
 
-const useAgentSettingsModal = () => {
-  const { Modal, openModal: openModalBase, closeModal } = useModal()
+export const useAgentSettingsModal = () => {
+  const [show, setShow] = useState(false)
+
+  const handleOpen = () => setShow(true)
+  const handleClose = () => setShow(false)
+
+  return {
+    show,
+    handleOpen,
+    handleClose,
+    AgentSettingsModal: AgentSettingsModal
+  }
+}
+
+interface AgentSettingModalProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
+const AgentSettingsModal = React.memo(({ isOpen, onClose }: AgentSettingModalProps) => {
   const [editingAgent, setEditingAgent] = useState<CustomAgent | null>(null)
   const { customAgents, saveCustomAgents } = useSetting()
   const { t } = useTranslation()
@@ -352,7 +370,7 @@ const useAgentSettingsModal = () => {
       : [...customAgents, agent]
     saveCustomAgents(updatedAgents)
     setEditingAgent(null)
-    closeModal()
+    onClose()
   }
 
   const handleDeleteAgent = (id: string) => {
@@ -360,68 +378,67 @@ const useAgentSettingsModal = () => {
     saveCustomAgents(updatedAgents)
   }
 
-  const AgentSettingsModal: React.FC = () => (
-    <Modal header={t('customAgents')} size="4xl">
-      <div className="space-y-4">
-        {editingAgent ? (
-          <AgentForm
-            agent={editingAgent}
-            onSave={handleSaveAgent}
-            onCancel={() => setEditingAgent(null)}
-          />
-        ) : (
-          <>
-            <div className="flex justify-end">
-              <button
-                onClick={() => setEditingAgent({} as CustomAgent)}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 border border-transparent
-                  rounded-md shadow-sm hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2
-                  focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900"
-              >
-                {t('addNewAgent')}
-              </button>
-            </div>
-            <div className="space-y-2">
-              {customAgents.map((agent) => (
-                <div
-                  key={agent.id}
-                  className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700
-                    rounded-lg bg-white dark:bg-gray-800"
+  return (
+    <Modal dismissible show={isOpen} onClose={onClose} size="4xl">
+      <Modal.Header>{t('customAgents')}</Modal.Header>
+      <Modal.Body>
+        <div className="space-y-4">
+          {editingAgent ? (
+            <AgentForm
+              agent={editingAgent}
+              onSave={handleSaveAgent}
+              onCancel={() => setEditingAgent(null)}
+            />
+          ) : (
+            <>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setEditingAgent({} as CustomAgent)}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 border border-transparent
+              rounded-md shadow-sm hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2
+              focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900"
                 >
-                  <div>
-                    <h3 className="font-medium text-gray-900 dark:text-gray-100">{agent.name}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{agent.description}</p>
+                  {t('addNewAgent')}
+                </button>
+              </div>
+              <div className="space-y-2">
+                {customAgents.map((agent) => (
+                  <div
+                    key={agent.id}
+                    className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700
+                rounded-lg bg-white dark:bg-gray-800"
+                  >
+                    <div>
+                      <h3 className="font-medium text-gray-900 dark:text-gray-100">{agent.name}</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {agent.description}
+                      </p>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => setEditingAgent(agent)}
+                        className="p-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                        title={t('editAgent')}
+                      >
+                        <FiEdit2 />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteAgent(agent.id!)}
+                        className="p-2 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                        title={t('deleteAgent')}
+                      >
+                        <FiTrash />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => setEditingAgent(agent)}
-                      className="p-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-                      title={t('editAgent')}
-                    >
-                      <FiEdit2 />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteAgent(agent.id!)}
-                      className="p-2 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
-                      title={t('deleteAgent')}
-                    >
-                      <FiTrash />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </Modal.Body>
     </Modal>
   )
+})
 
-  return {
-    customAgents,
-    AgentSettingsModal,
-    openModal: openModalBase
-  }
-}
-
-export default useAgentSettingsModal
+AgentSettingsModal.displayName = 'AgentSettingsModal'
