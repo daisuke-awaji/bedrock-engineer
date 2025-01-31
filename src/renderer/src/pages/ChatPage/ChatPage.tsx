@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import AILogo from '../../assets/images/icons/ai.svg'
 import { MessageList } from './components/MessageList'
 import { InputForm } from './components/InputForm'
@@ -7,16 +7,14 @@ import { useAgentChat } from './hooks/useAgentChat'
 import { AgentSelector } from './components/AgentSelector'
 import useSetting from '@renderer/hooks/useSetting'
 import useScroll from '@renderer/hooks/useScroll'
-import useIgnoreFileModal from './modals/useIgnoreFileModal'
-import useToolSettingModal from './modals/useToolSettingModal'
-import useAgentSettingsModal from './modals/useAgentSettingsModal'
+import { useIgnoreFileModal } from './modals/useIgnoreFileModal'
+import { useToolSettingModal } from './modals/useToolSettingModal'
+import { useAgentSettingsModal } from './modals/useAgentSettingsModal'
 import { FiSettings, FiChevronRight } from 'react-icons/fi'
 import { useTranslation } from 'react-i18next'
-import SystemPromptModal from './components/SystemPromptModal'
 import { AttachedImage } from './components/InputForm/TextArea'
-import { useDefaultAgents } from './hooks/useDefaultAgents'
 import { ChatHistory } from './components/ChatHistory'
-import { replacePlaceholders } from './utils/placeholder'
+import { useSystemPromptModal } from './modals/useSystemPromptModal'
 
 export default function ChatPage() {
   const [userInput, setUserInput] = useState('')
@@ -28,35 +26,14 @@ export default function ChatPage() {
     sendMsgKey,
     selectedAgentId,
     setSelectedAgentId,
-    allowedCommands,
-    knowledgeBases,
-    bedrockAgents
+    agents,
+    currentAgent,
+    currentAgentSystemPrompt: systemPrompt,
+    enabledTools
   } = useSetting()
 
-  const {
-    customAgents,
-    AgentSettingsModal,
-    openModal: openAgentSettingsModal
-  } = useAgentSettingsModal()
-
-  const baseAgents = useDefaultAgents()
-
-  const allAgents = useMemo(() => {
-    return [...baseAgents, ...customAgents]
-  }, [baseAgents, customAgents])
-
-  const currentAgent = allAgents.find((a) => a.id === selectedAgentId)
-  const systemPrompt = currentAgent?.system
-    ? replacePlaceholders(currentAgent?.system, {
-        projectPath,
-        allowedCommands: allowedCommands,
-        knowledgeBases: knowledgeBases,
-        bedrockAgents: bedrockAgents
-      })
-    : ''
   const currentScenarios = currentAgent?.scenarios || []
 
-  const { enabledTools, ToolSettingModal, openModal: openToolSettingModal } = useToolSettingModal()
   const { messages, loading, handleSubmit, currentSessionId, setCurrentSessionId, clearChat } =
     useAgentChat(
       llm?.modelId,
@@ -70,15 +47,33 @@ export default function ChatPage() {
   }
 
   const { scrollToBottom } = useScroll()
-  const { openModal: openIgnoreModal, IgnoreFileModal } = useIgnoreFileModal()
+  const {
+    show: showIgnoreFileModal,
+    handleClose: handleCloseIgnoreFileModal,
+    handleOpen: handleOpenIgnoreFileModal,
+    IgnoreFileModal
+  } = useIgnoreFileModal()
 
-  const [showSystemPrompt, setShowSystemPrompt] = useState(false)
-  const handleOpenSystemPrompt = () => {
-    setShowSystemPrompt(true)
-  }
-  const handleCloseSystemPrompt = () => {
-    setShowSystemPrompt(false)
-  }
+  const {
+    show: showAgentSettingModal,
+    handleOpen: openAgentSettingsModal,
+    handleClose: handleCloseAgentSettingsModal,
+    AgentSettingsModal
+  } = useAgentSettingsModal()
+
+  const {
+    show: showSystemPromptModal,
+    handleClose: handleCloseSystemPromptModal,
+    handleOpen: handleOpenSystemPromptModal,
+    SystemPromptModal
+  } = useSystemPromptModal()
+
+  const {
+    show: showToolSettingModal,
+    handleClose: handleCloseToolSettingModal,
+    handleOpen: handleOpenToolSettingModal,
+    ToolSettingModal
+  } = useToolSettingModal()
 
   const handleClearChat = () => {
     if (window.confirm(t('confirmClearChat'))) {
@@ -103,9 +98,9 @@ export default function ChatPage() {
         <div className="flex-1 flex flex-col overflow-y-auto">
           {/* ヘッダー */}
           <div className="flex justify-between items-center mb-4">
-            {allAgents.length > 1 ? (
+            {agents.length > 1 ? (
               <AgentSelector
-                agents={allAgents}
+                agents={agents}
                 selectedAgent={selectedAgentId}
                 onSelectAgent={setSelectedAgentId}
                 openable={messages.length === 0}
@@ -122,20 +117,25 @@ export default function ChatPage() {
               </button>
               <span
                 className="text-xs text-gray-400 font-thin cursor-pointer hover:text-gray-700"
-                onClick={handleOpenSystemPrompt}
+                onClick={handleOpenSystemPromptModal}
               >
                 SYSTEM_PROMPT
               </span>
             </div>
           </div>
+
+          {/* Modals */}
           <SystemPromptModal
-            isOpen={showSystemPrompt}
-            onClose={handleCloseSystemPrompt}
-            systemPrompt={systemPrompt}
+            isOpen={showSystemPromptModal}
+            onClose={handleCloseSystemPromptModal}
           />
-          <AgentSettingsModal />
-          <ToolSettingModal />
-          <IgnoreFileModal />
+          <AgentSettingsModal
+            isOpen={showAgentSettingModal}
+            onClose={handleCloseAgentSettingsModal}
+          />
+          <ToolSettingModal isOpen={showToolSettingModal} onClose={handleCloseToolSettingModal} />
+          <IgnoreFileModal isOpen={showIgnoreFileModal} onClose={handleCloseIgnoreFileModal} />
+
           <div className="flex flex-row h-full">
             {/* チャット履歴サイドパネル */}
             <div
@@ -193,9 +193,9 @@ export default function ChatPage() {
             sendMsgKey={sendMsgKey}
             onSubmit={(input, attachedImages) => onSubmit(input, attachedImages)}
             onChange={setUserInput}
-            onOpenToolSettings={openToolSettingModal}
+            onOpenToolSettings={handleOpenToolSettingModal}
             onSelectDirectory={selectDirectory}
-            onOpenIgnoreModal={openIgnoreModal}
+            onOpenIgnoreModal={handleOpenIgnoreFileModal}
             onClearChat={handleClearChat}
             hasMessages={messages.length > 0}
           />

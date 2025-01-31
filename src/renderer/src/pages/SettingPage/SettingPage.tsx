@@ -9,10 +9,12 @@ import {
   BedrockSection,
   AdvancedSection
 } from './components/sections'
+import { ConfigDirSection } from './components/sections/ConfigDirSection'
 
 export const SettingPage: React.FC = () => {
   const { t, i18n } = useTranslation()
   const {
+    userDataPath,
     projectPath,
     selectDirectory,
     currentLLM,
@@ -52,6 +54,8 @@ export const SettingPage: React.FC = () => {
       dark:text-white md:px-16 px-8 py-6"
     >
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('Setting')}</h1>
+
+      <ConfigDirSection userDataPath={userDataPath} />
 
       <ProjectSection projectPath={projectPath} onSelectDirectory={selectDirectory} />
 
