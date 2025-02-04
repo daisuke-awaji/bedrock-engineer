@@ -128,6 +128,7 @@ export default function ChatPage() {
           <SystemPromptModal
             isOpen={showSystemPromptModal}
             onClose={handleCloseSystemPromptModal}
+            systemPrompt={systemPrompt}
           />
           <AgentSettingsModal
             isOpen={showAgentSettingModal}

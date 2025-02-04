@@ -6,8 +6,6 @@ import { BsDatabaseCheck, BsDatabase } from 'react-icons/bs'
 import prompts from '../../prompts/prompts'
 import { AiOutlineReload } from 'react-icons/ai'
 
-import { useChat } from '@renderer/hooks/useChat'
-import { retrieveAndGenerate } from '@renderer/lib/api'
 import { autocompletion, completionKeymap } from '@codemirror/autocomplete'
 import {
   SandpackCodeEditor,
@@ -32,9 +30,16 @@ import LazyVisibleMessage from './LazyVisibleMessage'
 import { Style, SupportedTemplate, templates, TEMPLATES, supportedStyles } from './templates'
 import { useTranslation } from 'react-i18next'
 import useSetting from '@renderer/hooks/useSetting'
-import toast from 'react-hot-toast'
-import useModal from '@renderer/hooks/useModal'
-import MD from '@renderer/components/Markdown/MD'
+import { useAgentChat } from '../ChatPage/hooks/useAgentChat'
+import { useSystemPromptModal } from '../ChatPage/modals/useSystemPromptModal'
+import { extractCode, extractCodeBlock } from './util'
+import { KnowledgeBase } from '@/types/agent-chat'
+import useWebsiteGeneratorSettings from '@renderer/hooks/useWebsiteGeneratorSetting'
+import { WebsiteGeneratorProvider } from '@renderer/contexts/WebsiteGeneratorContext'
+
+const replacePlaceholders = (text: string, knowledgeBases: KnowledgeBase[]) => {
+  return text.replace(/{{knowledgeBases}}/g, JSON.stringify(knowledgeBases))
+}
 
 export default function WebsiteGeneratorPage() {
   const [template, setTemplate] = useState<SupportedTemplate['id']>('react-ts')
@@ -42,26 +47,28 @@ export default function WebsiteGeneratorPage() {
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
 
   return (
-    <SandpackProvider
-      template={template}
-      theme={isDark ? 'dark' : 'light'}
-      files={templates[template].files}
-      style={{
-        height: 'calc(100vh - 16rem)'
-      }}
-      options={{
-        externalResources: ['https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css'],
-        initMode: 'user-visible',
-        recompileMode: 'delayed',
-        autorun: true,
-        autoReload: false
-      }}
-      customSetup={{
-        dependencies: templates[template].customSetup.dependencies
-      }}
-    >
-      <WebsiteGeneratorPageContents template={template} setTemplate={setTemplate} />
-    </SandpackProvider>
+    <WebsiteGeneratorProvider>
+      <SandpackProvider
+        template={template}
+        theme={isDark ? 'dark' : 'light'}
+        files={templates[template].files}
+        style={{
+          height: 'calc(100vh - 16rem)'
+        }}
+        options={{
+          externalResources: ['https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css'],
+          initMode: 'user-visible',
+          recompileMode: 'delayed',
+          autorun: true,
+          autoReload: false
+        }}
+        customSetup={{
+          dependencies: templates[template].customSetup.dependencies
+        }}
+      >
+        <WebsiteGeneratorPageContents template={template} setTemplate={setTemplate} />
+      </SandpackProvider>
+    </WebsiteGeneratorProvider>
   )
 }
 
@@ -150,9 +157,8 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   const [recommendLoading, setRecommendLoading] = useState(false)
 
   const [showCode, setShowCode] = useState(true)
-  const [ragLoading, setRagLoading] = useState<boolean>(false)
   const [userInput, setUserInput] = useState('')
-  const { currentLLM: llm, sendMsgKey } = useSetting()
+  const { currentLLM: llm, sendMsgKey, enabledTools } = useSetting()
 
   const handleClickShowCode = () => {
     setShowCode(!showCode)
@@ -162,14 +168,44 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     label: 'Tailwind.css',
     value: 'tailwind'
   })
-  const systemPrompt = prompts.WebsiteGenerator.system[template]({
-    styleType: styleType.value,
-    libraries: Object.keys(templates[template].customSetup.dependencies)
-  })
-  const { handleSubmit, messages, loading, lastText, initChat, setLoading } = useChat({
-    systemPrompt,
-    modelId: llm.modelId
-  })
+
+  const {
+    show: showDataSourceConnectModal,
+    handleClose: handleCloseDataSourceConnectModal,
+    handleOpen: handleOpenDataSourceConnectModal,
+    DataSourceConnectModal
+  } = useDataSourceConnectModal()
+  const { knowledgeBases, enableKnowledgeBase } = useWebsiteGeneratorSettings()
+
+  const ragEnabled = !!knowledgeBases && enableKnowledgeBase
+  const systemPrompt = replacePlaceholders(
+    prompts.WebsiteGenerator.system[template]({
+      styleType: styleType.value,
+      libraries: Object.keys(templates[template].customSetup.dependencies),
+      ragEnabled
+    }),
+    knowledgeBases
+  )
+
+  const tools = ragEnabled ? enabledTools.filter((tool) => tool.toolSpec?.name === 'retrieve') : []
+  const sessionId = undefined
+  const options = { enableHistory: false }
+  const {
+    messages,
+    loading,
+    toolExecuting: ragLoading,
+    handleSubmit,
+    clearChat: initChat
+  } = useAgentChat(llm?.modelId, systemPrompt, tools, sessionId, options)
+
+  const lastText = messages[messages.length - 1]?.role === 'assistant' ? extractCode(messages) : ''
+
+  const {
+    show: showSystemPromptModal,
+    handleClose: handleCloseSystemPromptModal,
+    handleOpen: handleOpenSystemPromptModal,
+    SystemPromptModal
+  } = useSystemPromptModal()
 
   const getRecommendChanges = async (websiteCode: string) => {
     let retry = 0
@@ -188,7 +224,6 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     try {
       if (recommendChanges) {
         const json = JSON.parse(recommendChanges)
-        console.log({ json })
         setRecommendChanges(json)
         setRecommendLoading(false)
       }
@@ -204,90 +239,6 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
       getRecommendChanges(lastText)
     }
   }, [loading, messages])
-
-  const { kbId, DataSourceConnectModal, openModal, enableKnowledgeBase, modelId } =
-    useDataSourceConnectModal()
-  const { awsRegion } = useSetting()
-  const ragEnabled = !!kbId && enableKnowledgeBase
-
-  const ragSubmit = useCallback(
-    async (input: string, messages) => {
-      setLoading(true)
-
-      setRagLoading(true)
-
-      const promptTemplate = prompts.WebsiteGenerator.rag.promptTemplate
-      const inputText = `Follow these instructions to create a website that conforms to the requirements described in <website-requirements>.
-
-Please provide examples of the React source code needed to create the components that achieve these requirements.
-If the data source contains programs written in a language other than React, please extract the source code equivalent for the web styles.
-
-<website-requirements>
-${input}
-</website-requirements>
-`
-
-      try {
-        // Knowledge base から関連コードの取得
-        const res = await retrieveAndGenerate({
-          input: {
-            text: inputText
-          },
-          retrieveAndGenerateConfiguration: {
-            type: 'KNOWLEDGE_BASE',
-            knowledgeBaseConfiguration: {
-              knowledgeBaseId: kbId,
-              modelArn: `arn:aws:bedrock:${awsRegion}::foundation-model/${modelId}`,
-              generationConfiguration: {
-                promptTemplate: {
-                  textPromptTemplate: promptTemplate
-                }
-              },
-              retrievalConfiguration: {
-                vectorSearchConfiguration: {
-                  numberOfResults: 5
-                }
-              }
-            }
-          }
-        })
-
-        const response = await res.json()
-        if (res.status !== 200) {
-          toast.error(response.message)
-          return
-        }
-
-        console.log(response?.output?.text)
-
-        setRagLoading(false)
-
-        const prompt = `Create a website based on the sample source code below.
-Important: The style should follow the sample code as closely as possible. Even if the system prompts you about the style you should use, the style in the sample code should be your first priority. If there is a designated design system, use it.
-
-<code>
-${response?.output.text}
-</code>
-
-<website-requirements>
-${input}
-</website-requirements>
-
-<language>
-${language}
-</language>
-
-!Important rule: Do not import modules with relative paths (e.g. import { Button } from './Button';) If you have required components, put them all in the same file.
-`
-        await handleSubmit(prompt, messages)
-      } catch (error) {
-        console.log(error)
-      }
-
-      setLoading(false)
-    },
-    [kbId, language]
-  )
 
   const { refresh } = useSandpackNavigation()
 
@@ -336,7 +287,7 @@ ${language}
 
       if ((sendMsgKey === 'Enter' && enter) || (sendMsgKey === 'Cmd+Enter' && cmdenter)) {
         e.preventDefault()
-        ragEnabled ? ragSubmit(userInput, messages) : handleSubmit(userInput, messages)
+        handleSubmit(userInput)
       }
     },
     [isComposing, sendMsgKey, ragEnabled, userInput, messages]
@@ -376,22 +327,20 @@ ${language}
     [version]
   )
 
-  const { Modal: SystemPromptModal, openModal: openSystemPromptModal } = useModal()
-
   return (
     <div className={'flex flex-col h-[calc(100vh-11rem)] overflow-y-auto'}>
-      <SystemPromptModal header="SYSTEM PROMPT" size="7xl">
-        <div className="dark:text-white">
-          <MD>{systemPrompt}</MD>
-        </div>
-      </SystemPromptModal>
+      <SystemPromptModal
+        isOpen={showSystemPromptModal}
+        onClose={handleCloseSystemPromptModal}
+        systemPrompt={systemPrompt}
+      />
       <div className="flex pb-2 justify-between">
         <span className="font-bold flex flex-col gap-2 w-full">
           <div className="flex justify-between">
             <h1 className="content-center">Website Generator</h1>
             <span
               className="text-xs text-gray-400 font-thin cursor-pointer hover:text-gray-700"
-              onClick={openSystemPromptModal}
+              onClick={handleOpenSystemPromptModal}
             >
               SYSTEM_PROMPT
             </span>
@@ -402,8 +351,23 @@ ${language}
                 <TemplateButton {...fw} key={fw.id} />
               ))}
               <div className="ml-8 flex gap-2 items-center max-w-[30%] overflow-x-auto">
-                {messages.map((m, index) => {
-                  if (index % 2 == 0) {
+                {messages
+                  .filter((m) => {
+                    if (m?.content === undefined) {
+                      return false
+                    }
+                    if (
+                      m?.content[0] &&
+                      ('toolUse' in m.content[0] || 'toolResult' in m.content[0])
+                    ) {
+                      return false
+                    }
+                    if (m?.role === 'user') {
+                      return false
+                    }
+                    return true
+                  })
+                  .map((m, index) => {
                     return (
                       <motion.span
                         initial={{ opacity: 0, scale: 0 }}
@@ -412,26 +376,20 @@ ${language}
                         key={index}
                         className="p-2 bg-gray-200 rounded text-gray-500 cursor-pointer hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white"
                         onClick={async () => {
-                          const code = messages[index + 1]?.content[0].text
+                          const code = extractCodeBlock(
+                            m?.content?.map((i) => i.text).join('') ?? ''
+                          )
                           if (code) {
                             setVersion(index + 1)
-                            updateCode(code, true)
+                            updateCode(code[0], true)
                             runSandpack()
                           }
                         }}
                       >
-                        <Tooltip
-                          content={m.content[0].text}
-                          placement="bottom"
-                          animation="duration-500"
-                        >
-                          v{index / 2 + 1}
-                        </Tooltip>
+                        v{index}
                       </motion.span>
                     )
-                  }
-                  return null
-                })}
+                  })}
               </div>
             </div>
 
@@ -447,7 +405,10 @@ ${language}
         </span>
       </div>
 
-      <DataSourceConnectModal />
+      <DataSourceConnectModal
+        isOpen={showDataSourceConnectModal}
+        onClose={handleCloseDataSourceConnectModal}
+      />
 
       <SandpackLayout
         style={{
@@ -492,7 +453,7 @@ ${language}
                 </span>
               </div>
             ) : (
-              <Loader text={'Generating code...'} />
+              <Loader text={'Loading...'} />
             )}
           </div>
         ) : (
@@ -532,7 +493,7 @@ ${language}
 
             <div className="flex gap-3 items-center">
               <button
-                onClick={() => openModal()}
+                onClick={() => handleOpenDataSourceConnectModal()}
                 className="flex items-center justify-center p-[2px] overflow-hidden text-xs text-gray-900 rounded-lg group bg-gradient-to-br from-red-200 via-red-300 to-yellow-200 group-hover:from-red-200 group-hover:via-red-300 group-hover:to-yellow-200 dark:text-white dark:hover:text-gray-900 focus:ring-4 focus:outline-none focus:ring-red-100 dark:focus:ring-red-400"
               >
                 <span className="items-center px-3 py-1.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0 flex gap-2">
@@ -586,9 +547,7 @@ ${language}
             rows={3}
           />
           <button
-            onClick={() =>
-              ragEnabled ? ragSubmit(userInput, messages) : handleSubmit(userInput, messages)
-            }
+            onClick={() => handleSubmit(userInput)}
             className={`absolute end-2.5 bottom-2.5 rounded-lg hover:bg-gray-200 px-2 py-2 dark:text-white dark:hover:bg-gray-700`}
             disabled={loading}
           >
