@@ -54,7 +54,7 @@ export default function WebsiteGeneratorPage() {
           initMode: 'user-visible',
           recompileMode: 'delayed',
           autorun: true,
-          autoReload: false
+          autoReload: true
         }}
         customSetup={{
           dependencies: templates[template].customSetup.dependencies
@@ -75,7 +75,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   const { template, setTemplate } = props
   const { sandpack } = useSandpack()
   const { runSandpack } = sandpack
-  const { updateCode } = useActiveCode()
+  const { updateCode, code } = useActiveCode()
   const { t } = useTranslation()
 
   const { recommendChanges, recommendLoading, getRecommendChanges, refleshRecommendChanges } =
@@ -166,6 +166,10 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
       if (!loading) {
         runSandpack()
       }
+    }
+
+    return () => {
+      refresh()
     }
   }, [loading, lastText])
 
@@ -301,7 +305,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
             {ragLoading ? <RagLoader /> : <Loader text={'Loading...'} />}
           </div>
         ) : (
-          <Preview isDark={isDark} />
+          <Preview isDark={isDark} code={code} />
         )}
       </SandpackLayout>
 

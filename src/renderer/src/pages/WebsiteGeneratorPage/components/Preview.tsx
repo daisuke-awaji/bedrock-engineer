@@ -4,12 +4,14 @@ import { FiMaximize } from 'react-icons/fi'
 
 interface PreviewProps {
   isDark: boolean
+  code: string
 }
 
-export const Preview: React.FC<PreviewProps> = ({ isDark }) => {
+export const Preview: React.FC<PreviewProps> = ({ isDark, code }) => {
   return (
     <SandpackPreview
       id="sandpack-preview"
+      key={code}
       style={{
         height: '100%',
         borderRadius: '8px',
