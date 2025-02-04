@@ -143,8 +143,6 @@ You need to store source code and crawled web pages in the knowledge base in adv
 
 Click the "Connect" button at the bottom of the screen and enter your knowledge base ID.
 
-![knowledgebase-connect](./assets//knowledgebase-connect.gif)
-
 ### Step Functions Generator
 
 Generate AWS Step Functions ASL definitions and preview them in real-time.

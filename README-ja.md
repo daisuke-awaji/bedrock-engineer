@@ -144,8 +144,6 @@ Amazon Bedrock の Knowledge Base に接続することで、任意のデザイ�
 
 画面下部の「Connect」ボタンをクリックし、ナレッジベースIDを入力してください。
 
-![knowledgebase-connect](./assets//knowledgebase-connect.gif)
-
 ### Step Functions Generator
 
 AWS Step Functions の ASL 定義を生成し、リアルタイムにプレビューします。
