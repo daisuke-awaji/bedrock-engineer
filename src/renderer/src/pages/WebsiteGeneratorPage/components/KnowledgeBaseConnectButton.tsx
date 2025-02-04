@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { BsDatabase, BsDatabaseCheck } from 'react-icons/bs'
 
 type KnowledgeBaseConnectButtonProps = {
