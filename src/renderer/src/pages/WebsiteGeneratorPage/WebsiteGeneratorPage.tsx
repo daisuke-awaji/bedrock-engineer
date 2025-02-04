@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ToggleSwitch, Tooltip } from 'flowbite-react'
 import { GrClearOption } from 'react-icons/gr'
-import { FiSend } from 'react-icons/fi'
 import prompts from '../../prompts/prompts'
 import { AiOutlineReload } from 'react-icons/ai'
 
@@ -18,7 +17,6 @@ import {
 import { Loader } from '@renderer/components/Loader'
 import useDataSourceConnectModal from './useDataSourceConnectModal'
 
-import { converse } from '../../lib/api'
 import { motion } from 'framer-motion'
 import { Style, SupportedTemplate, templates, TEMPLATES, supportedStyles } from './templates'
 import { useTranslation } from 'react-i18next'
@@ -34,6 +32,8 @@ import { RecommendChanges } from './components/RecommendChanges'
 import { StyleSelector } from './components/StyleSelector'
 import { KnowledgeBaseConnectButton } from './components/KnowledgeBaseConnectButton'
 import { RagLoader } from './components/RagLoader'
+import { AttachedImage, TextArea } from '../ChatPage/components/InputForm/TextArea'
+import { useRecommendChanges } from './hooks/useRecommendChanges'
 
 export default function WebsiteGeneratorPage() {
   const [template, setTemplate] = useState<SupportedTemplate['id']>('react-ts')
@@ -71,81 +71,6 @@ type WebsiteGeneratorPageContentsProps = {
   setTemplate: (template: SupportedTemplate['id']) => void
 }
 
-const useRecommendChanges = () => {
-  const {
-    t,
-    i18n: { language }
-  } = useTranslation()
-  const examplePrompts = [
-    {
-      title: t('ecSiteTitle'),
-      value: t('ecSiteValue')
-    },
-    {
-      title: t('ecSiteAdminTitle'),
-      value: t('ecSiteAdminValue')
-    },
-    {
-      title: t('healthFitnessSiteTitle'),
-      value: t('healthFitnessSiteValue')
-    },
-    {
-      title: t('drawingGraphTitle'),
-      value: t('drawingGraphValue')
-    },
-    {
-      title: t('todoAppTitle'),
-      value: t('todoAppValue')
-    },
-    {
-      title: t('codeTransformTitle'),
-      value: t('codeTransformValue')
-    }
-  ]
-  const [recommendChanges, setRecommendChanges] = useState(examplePrompts)
-  const [recommendLoading, setRecommendLoading] = useState(false)
-  const { currentLLM: llm } = useSetting()
-
-  const getRecommendChanges = async (websiteCode: string) => {
-    let retry = 0
-    if (retry > 3) {
-      return
-    }
-    setRecommendLoading(true)
-    const result = await converse({
-      modelId: llm.modelId,
-      system: [{ text: t(prompts.WebsiteGenerator.recommend.system, { language }) }],
-      messages: [{ role: 'user', content: [{ text: websiteCode }] }]
-    })
-
-    const recommendChanges = result.output.message?.content[0]?.text
-
-    try {
-      if (recommendChanges) {
-        const json = JSON.parse(recommendChanges)
-        setRecommendChanges(json)
-        setRecommendLoading(false)
-      }
-    } catch (e) {
-      console.log(e)
-      retry += 1
-      return getRecommendChanges(websiteCode)
-    }
-  }
-
-  const refleshRecommendChanges = () => {
-    setRecommendChanges(examplePrompts)
-  }
-
-  return {
-    recommendChanges,
-    setRecommendChanges,
-    recommendLoading,
-    getRecommendChanges,
-    refleshRecommendChanges
-  }
-}
-
 function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) {
   const { template, setTemplate } = props
   const { sandpack } = useSandpack()
@@ -156,7 +81,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   const { recommendChanges, recommendLoading, getRecommendChanges, refleshRecommendChanges } =
     useRecommendChanges()
 
-  const [showCode, setShowCode] = useState(true)
+  const [showCode, setShowCode] = useState(false)
   const [userInput, setUserInput] = useState('')
   const { currentLLM: llm, sendMsgKey, enabledTools } = useSetting()
 
@@ -197,6 +122,11 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     handleSubmit,
     clearChat: initChat
   } = useAgentChat(llm?.modelId, systemPrompt, tools, sessionId, options)
+
+  const onSubmit = (input: string, images: AttachedImage[]) => {
+    handleSubmit(input, images)
+    setUserInput('')
+  }
 
   const lastText = messages[messages.length - 1]?.role === 'assistant' ? extractCode(messages) : ''
 
@@ -240,27 +170,6 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   }, [loading, lastText])
 
   const [isComposing, setIsComposing] = useState(false)
-
-  const onkeydown = useCallback(
-    (e) => {
-      if (e.shiftKey) {
-        return
-      }
-
-      if (isComposing) {
-        return
-      }
-
-      const cmdenter = e.key === 'Enter' && (e.metaKey || e.ctrlKey)
-      const enter = e.key === 'Enter'
-
-      if ((sendMsgKey === 'Enter' && enter) || (sendMsgKey === 'Cmd+Enter' && cmdenter)) {
-        e.preventDefault()
-        handleSubmit(userInput)
-      }
-    },
-    [isComposing, sendMsgKey, ragEnabled, userInput, messages]
-  )
 
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
 
@@ -399,7 +308,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
       {/* Buttom Input Field Block */}
       <div className="flex gap-2 fixed bottom-0 left-20 right-5 bottom-3 z-10">
         <div className="relative w-full">
-          <div className="flex gap-2 justify-between">
+          <div className="flex gap-2 justify-between pb-2">
             <RecommendChanges
               loading={recommendLoading}
               recommendations={recommendChanges}
@@ -438,26 +347,15 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
             </div>
           </div>
 
-          {/* prompt input form */}
-          <textarea
-            onCompositionStart={() => setIsComposing(true)}
-            onCompositionEnd={() => setIsComposing(false)}
-            className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2 dark:text-white dark:bg-gray-800 z-9`}
-            placeholder="What kind of website will you create?"
+          <TextArea
             value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            onKeyDown={onkeydown}
-            required
+            onChange={setUserInput}
             disabled={loading}
-            rows={3}
+            onSubmit={(input, attachedImages) => onSubmit(input, attachedImages)}
+            isComposing={isComposing}
+            setIsComposing={setIsComposing}
+            sendMsgKey={sendMsgKey}
           />
-          <button
-            onClick={() => handleSubmit(userInput)}
-            className={`absolute end-2.5 bottom-2.5 rounded-lg hover:bg-gray-200 px-2 py-2 dark:text-white dark:hover:bg-gray-700`}
-            disabled={loading}
-          >
-            <FiSend className="text-xl" />
-          </button>
         </div>
       </div>
     </div>

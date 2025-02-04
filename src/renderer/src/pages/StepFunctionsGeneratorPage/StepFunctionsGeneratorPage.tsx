@@ -3,7 +3,6 @@ import { SAMPLE_ASL_PARALLEL } from './SAMPLE_ASL'
 import AWSSfnGraph from '@tshepomgaga/aws-sfn-graph'
 import '@tshepomgaga/aws-sfn-graph/index.css'
 import { ASLEditor } from './ASLEditor'
-import { FiSend } from 'react-icons/fi'
 import { useChat } from '@renderer/hooks/useChat'
 import { Loader } from '../../components/Loader'
 import { useTranslation } from 'react-i18next'
@@ -12,6 +11,7 @@ import { motion } from 'framer-motion'
 import useModal from '@renderer/hooks/useModal'
 import prompts from '@renderer/prompts/prompts'
 import MD from '@renderer/components/Markdown/MD'
+import { AttachedImage, TextArea } from '../ChatPage/components/InputForm/TextArea'
 
 function StepFunctionsGeneratorPage() {
   const {
@@ -30,6 +30,10 @@ function StepFunctionsGeneratorPage() {
     systemPrompt,
     modelId: llm.modelId
   })
+  const onSubmit = (input: string, images: AttachedImage[]) => {
+    handleSubmit(input, images)
+    setUserInput('')
+  }
 
   useEffect(() => {
     if (messages !== undefined && messages.length > 0) {
@@ -51,22 +55,6 @@ function StepFunctionsGeneratorPage() {
   }, [messages, loading])
 
   const [isComposing, setIsComposing] = useState(false)
-  const onkeydown = (e) => {
-    if (e.shiftKey) {
-      return
-    }
-    if (isComposing) {
-      return
-    }
-
-    const cmdenter = e.key === 'Enter' && (e.metaKey || e.ctrlKey)
-    const enter = e.key === 'Enter'
-
-    if ((sendMsgKey === 'Enter' && enter) || (sendMsgKey === 'Cmd+Enter' && cmdenter)) {
-      e.preventDefault()
-      handleSubmit(userInput, messages)
-    }
-  }
 
   useEffect(() => {
     const wfg = document.getElementsByClassName('workflowgraph')[0]
@@ -174,7 +162,16 @@ function StepFunctionsGeneratorPage() {
           </div>
 
           {/* prompt input form */}
-          <textarea
+          <TextArea
+            value={userInput}
+            onChange={setUserInput}
+            disabled={loading}
+            onSubmit={(input, attachedImages) => onSubmit(input, attachedImages)}
+            isComposing={isComposing}
+            setIsComposing={setIsComposing}
+            sendMsgKey={sendMsgKey}
+          />
+          {/* <textarea
             onCompositionStart={() => setIsComposing(true)}
             onCompositionEnd={() => setIsComposing(false)}
             className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2 dark:text-white dark:bg-gray-800`}
@@ -191,7 +188,7 @@ function StepFunctionsGeneratorPage() {
             className="absolute end-2.5 bottom-2.5 rounded-lg hover:bg-gray-200 px-2 py-2 dark:hover:bg-gray-700 dark:text-white"
           >
             <FiSend className="text-xl" />
-          </button>
+          </button> */}
         </div>
       </div>
     </div>

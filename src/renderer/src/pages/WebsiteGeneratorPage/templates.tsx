@@ -4,12 +4,11 @@ import {
   DEFAULT_APP_VUE,
   DEFAULT_VUE_INDEX_HTML,
   DEFAULT_SVELTE_APP_SVELTE,
-  DEFAULT_SVELTE_INDEX_HTML,
-  DEFAULT_VANILLA_INDEX_HTML
+  DEFAULT_SVELTE_INDEX_HTML
 } from './DEFAULT_CODES'
 
 import { SandpackPredefinedTemplate } from '@codesandbox/sandpack-react'
-import { FaJsSquare, FaReact, FaVuejs } from 'react-icons/fa'
+import { FaReact, FaVuejs } from 'react-icons/fa'
 import { RiSvelteFill } from 'react-icons/ri'
 
 export type SupportedTemplate = {
@@ -33,11 +32,6 @@ export const TEMPLATES: SupportedTemplate[] = [
     id: 'svelte',
     name: 'Svelte',
     logo: <RiSvelteFill size={18} />
-  },
-  {
-    id: 'static',
-    name: 'Vanilla',
-    logo: <FaJsSquare size={18} />
   }
 ]
 
@@ -107,17 +101,6 @@ export const templates = {
         'd3-fetch': 'latest'
       }
     }
-  },
-  static: {
-    files: {
-      'index.html': {
-        code: DEFAULT_VANILLA_INDEX_HTML
-      }
-    },
-    mainFile: 'index.html',
-    customSetup: {
-      dependencies: {}
-    }
   }
 }
 
@@ -152,16 +135,6 @@ export const supportedStyles = {
     }
   ],
   svelte: [
-    {
-      label: 'Inline style',
-      value: 'inline'
-    },
-    {
-      label: 'Tailwind.css',
-      value: 'tailwind'
-    }
-  ],
-  static: [
     {
       label: 'Inline style',
       value: 'inline'

@@ -120,6 +120,10 @@ export const TextArea: React.FC<TextAreaProps> = ({
   }
 
   const handleSubmit = () => {
+    if (value.trim() === '') {
+      toast.error(t('Enter at least one character of text'))
+      return
+    }
     if (value.trim() || attachedImages.length > 0) {
       onSubmit(value, attachedImages)
       setAttachedImages([])
