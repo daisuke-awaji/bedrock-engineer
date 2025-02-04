@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { SAMPLE_ASL_PARALLEL } from './SAMPLE_ASL'
-import StepFunctionLogo from '../../assets/images/aws-icons/Arch_AWS-Step-Functions_32.svg'
 import AWSSfnGraph from '@tshepomgaga/aws-sfn-graph'
 import '@tshepomgaga/aws-sfn-graph/index.css'
 import { ASLEditor } from './ASLEditor'
@@ -118,9 +117,6 @@ function StepFunctionsGeneratorPage() {
       </SystemPromptModal>
       <div className="flex pb-2 justify-between">
         <span className="font-bold flex gap-2">
-          <div className="content-center">
-            <StepFunctionLogo />
-          </div>
           <h1 className="content-center dark:text-white">AWS Step Functions Generator</h1>
         </span>
         <span

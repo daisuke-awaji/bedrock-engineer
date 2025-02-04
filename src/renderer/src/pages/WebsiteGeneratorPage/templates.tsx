@@ -1,7 +1,3 @@
-import ReactLogo from '../../assets/images/icons/react.svg'
-import VueLogo from '../../assets/images/icons/vue.svg'
-import VanillaLogo from '../../assets/images/icons/vanilla.svg'
-import SvelteLogo from '../../assets/images/icons/svelte.svg'
 import {
   DEFAULT_INDEX_HTML,
   DEFAULT_APP_TSX,
@@ -13,6 +9,8 @@ import {
 } from './DEFAULT_CODES'
 
 import { SandpackPredefinedTemplate } from '@codesandbox/sandpack-react'
+import { FaJsSquare, FaReact, FaVuejs } from 'react-icons/fa'
+import { RiSvelteFill } from 'react-icons/ri'
 
 export type SupportedTemplate = {
   id: SandpackPredefinedTemplate
@@ -24,22 +22,22 @@ export const TEMPLATES: SupportedTemplate[] = [
   {
     id: 'react-ts',
     name: 'React',
-    logo: <ReactLogo />
+    logo: <FaReact size={18} />
   },
   {
     id: 'vue-ts',
     name: 'Vue',
-    logo: <VueLogo />
+    logo: <FaVuejs size={18} />
   },
   {
     id: 'svelte',
     name: 'Svelte',
-    logo: <SvelteLogo />
+    logo: <RiSvelteFill size={18} />
   },
   {
     id: 'static',
     name: 'Vanilla',
-    logo: <VanillaLogo />
+    logo: <FaJsSquare size={18} />
   }
 ]
 

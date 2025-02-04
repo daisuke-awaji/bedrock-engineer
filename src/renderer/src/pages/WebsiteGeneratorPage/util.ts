@@ -1,3 +1,4 @@
+import { KnowledgeBase } from '@/types/agent-chat'
 import { Message } from '@aws-sdk/client-bedrock-runtime'
 
 // コードブロックを抽出する関数
@@ -70,4 +71,8 @@ export const extractCode = (messages: Message[]): string => {
 
   const codeBlocks = extractCodeBlock(lastText)
   return codeBlocks.join('\n')
+}
+
+export const replacePlaceholders = (text: string, knowledgeBases: KnowledgeBase[]) => {
+  return text.replace(/{{knowledgeBases}}/g, JSON.stringify(knowledgeBases))
 }

@@ -1,8 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react'
-import { Dropdown, ToggleSwitch, Tooltip } from 'flowbite-react'
+import { useCallback, useEffect, useState } from 'react'
+import { ToggleSwitch, Tooltip } from 'flowbite-react'
 import { GrClearOption } from 'react-icons/gr'
 import { FiSend } from 'react-icons/fi'
-import { BsDatabaseCheck, BsDatabase } from 'react-icons/bs'
 import prompts from '../../prompts/prompts'
 import { AiOutlineReload } from 'react-icons/ai'
 
@@ -10,36 +9,31 @@ import { autocompletion, completionKeymap } from '@codemirror/autocomplete'
 import {
   SandpackCodeEditor,
   SandpackLayout,
-  SandpackPreview,
   SandpackProvider,
   useActiveCode,
   useSandpack,
   useSandpackNavigation
 } from '@codesandbox/sandpack-react'
 
-import { FiMaximize } from 'react-icons/fi'
 import { Loader } from '@renderer/components/Loader'
-import { sleep } from '@renderer/lib/util'
 import useDataSourceConnectModal from './useDataSourceConnectModal'
 
 import { converse } from '../../lib/api'
 import { motion } from 'framer-motion'
-import LoadingDotsLottie from './LoadingDots.lottie'
-import LoadingDataBaseLottie from './LoadingDataBase.lottie'
-import LazyVisibleMessage from './LazyVisibleMessage'
 import { Style, SupportedTemplate, templates, TEMPLATES, supportedStyles } from './templates'
 import { useTranslation } from 'react-i18next'
 import useSetting from '@renderer/hooks/useSetting'
 import { useAgentChat } from '../ChatPage/hooks/useAgentChat'
 import { useSystemPromptModal } from '../ChatPage/modals/useSystemPromptModal'
-import { extractCode, extractCodeBlock } from './util'
-import { KnowledgeBase } from '@/types/agent-chat'
+import { extractCode, extractCodeBlock, replacePlaceholders } from './util'
 import useWebsiteGeneratorSettings from '@renderer/hooks/useWebsiteGeneratorSetting'
 import { WebsiteGeneratorProvider } from '@renderer/contexts/WebsiteGeneratorContext'
-
-const replacePlaceholders = (text: string, knowledgeBases: KnowledgeBase[]) => {
-  return text.replace(/{{knowledgeBases}}/g, JSON.stringify(knowledgeBases))
-}
+import { TemplateButton } from './components/TemplateButton'
+import { Preview } from './components/Preview'
+import { RecommendChanges } from './components/RecommendChanges'
+import { StyleSelector } from './components/StyleSelector'
+import { KnowledgeBaseConnectButton } from './components/KnowledgeBaseConnectButton'
+import { RagLoader } from './components/RagLoader'
 
 export default function WebsiteGeneratorPage() {
   const [template, setTemplate] = useState<SupportedTemplate['id']>('react-ts')
@@ -76,53 +70,8 @@ type WebsiteGeneratorPageContentsProps = {
   template: SupportedTemplate['id']
   setTemplate: (template: SupportedTemplate['id']) => void
 }
-function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) {
-  const { template, setTemplate } = props
 
-  const TemplateButton: React.FC<SupportedTemplate> = (t) => {
-    return (
-      <button
-        type="button"
-        className={`
-    text-gray-900
-    ${template === t.id ? 'bg-green-50' : 'bg-white'}
-    hover:bg-green-50
-    border
-    ${template === t.id ? 'border-green-600' : 'border-gray-200'}
-    focus:ring-4
-    focus:outline-none
-    focus:ring-gray-100
-    font-medium
-    rounded-[1rem]
-    text-xs
-    px-3
-    py-1.5
-    inline-flex
-    items-center
-    flex
-    gap-2
-    dark:bg-gray-800
-    dark:text-white
-    dark:border-gray-600
-    dark:hover:bg-gray-700
-    `}
-        onClick={async () => {
-          setTemplate(t.id)
-          await sleep(100)
-          handleRefresh()
-        }}
-      >
-        <div className="w-[18px]">{t.logo}</div>
-        <span>{t.name}</span>
-      </button>
-    )
-  }
-
-  const { sandpack } = useSandpack()
-
-  const { runSandpack } = sandpack
-
-  const { updateCode } = useActiveCode()
+const useRecommendChanges = () => {
   const {
     t,
     i18n: { language }
@@ -155,6 +104,57 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   ]
   const [recommendChanges, setRecommendChanges] = useState(examplePrompts)
   const [recommendLoading, setRecommendLoading] = useState(false)
+  const { currentLLM: llm } = useSetting()
+
+  const getRecommendChanges = async (websiteCode: string) => {
+    let retry = 0
+    if (retry > 3) {
+      return
+    }
+    setRecommendLoading(true)
+    const result = await converse({
+      modelId: llm.modelId,
+      system: [{ text: t(prompts.WebsiteGenerator.recommend.system, { language }) }],
+      messages: [{ role: 'user', content: [{ text: websiteCode }] }]
+    })
+
+    const recommendChanges = result.output.message?.content[0]?.text
+
+    try {
+      if (recommendChanges) {
+        const json = JSON.parse(recommendChanges)
+        setRecommendChanges(json)
+        setRecommendLoading(false)
+      }
+    } catch (e) {
+      console.log(e)
+      retry += 1
+      return getRecommendChanges(websiteCode)
+    }
+  }
+
+  const refleshRecommendChanges = () => {
+    setRecommendChanges(examplePrompts)
+  }
+
+  return {
+    recommendChanges,
+    setRecommendChanges,
+    recommendLoading,
+    getRecommendChanges,
+    refleshRecommendChanges
+  }
+}
+
+function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) {
+  const { template, setTemplate } = props
+  const { sandpack } = useSandpack()
+  const { runSandpack } = sandpack
+  const { updateCode } = useActiveCode()
+  const { t } = useTranslation()
+
+  const { recommendChanges, recommendLoading, getRecommendChanges, refleshRecommendChanges } =
+    useRecommendChanges()
 
   const [showCode, setShowCode] = useState(true)
   const [userInput, setUserInput] = useState('')
@@ -207,33 +207,6 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     SystemPromptModal
   } = useSystemPromptModal()
 
-  const getRecommendChanges = async (websiteCode: string) => {
-    let retry = 0
-    if (retry > 3) {
-      return
-    }
-    setRecommendLoading(true)
-    const result = await converse({
-      modelId: llm.modelId,
-      system: [{ text: t(prompts.WebsiteGenerator.recommend.system, { language }) }],
-      messages: [{ role: 'user', content: [{ text: websiteCode }] }]
-    })
-
-    const recommendChanges = result.output.message?.content[0]?.text
-
-    try {
-      if (recommendChanges) {
-        const json = JSON.parse(recommendChanges)
-        setRecommendChanges(json)
-        setRecommendLoading(false)
-      }
-    } catch (e) {
-      console.log(e)
-      retry += 1
-      return getRecommendChanges(websiteCode)
-    }
-  }
-
   useEffect(() => {
     if (!loading && messages.length > 0 && lastText) {
       getRecommendChanges(lastText)
@@ -252,20 +225,16 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
       label: 'Tailwind.css',
       value: 'tailwind'
     })
-    setRecommendChanges(examplePrompts)
+    refleshRecommendChanges()
     initChat()
     runSandpack()
   }, [template, updateCode, initChat, runSandpack])
-
-  const [version, setVersion] = useState(0)
 
   useEffect(() => {
     if (messages?.length > 0) {
       updateCode(lastText)
       if (!loading) {
-        console.log('runSandpack')
         runSandpack()
-        setVersion(messages.length)
       }
     }
   }, [loading, lastText])
@@ -295,49 +264,24 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
 
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
 
-  const Preview = useCallback(
-    () => (
-      <SandpackPreview
-        id="sandpack-preview"
-        style={{
-          height: '100%',
-          borderRadius: '8px',
-          border: isDark ? '2px solid black' : '2px solid white'
-        }}
-        showRestartButton={true}
-        showOpenNewtab={true}
-        showSandpackErrorOverlay={true}
-        showOpenInCodeSandbox={false}
-        showNavigator={true}
-        actionsChildren={
-          <button
-            onClick={() => {
-              const iframe = document.getElementById('sandpack-preview')
-              if (iframe) {
-                iframe?.requestFullscreen()
-              }
-            }}
-            className="border rounded-full bg-[#EFEFEF] p-2 text-gray-500 hover:text-gray-800"
-          >
-            <FiMaximize className="text-gray" />
-          </button>
-        }
-      />
-    ),
-    [version]
-  )
-
   return (
     <div className={'flex flex-col h-[calc(100vh-11rem)] overflow-y-auto'}>
+      {/* Modals */}
       <SystemPromptModal
         isOpen={showSystemPromptModal}
         onClose={handleCloseSystemPromptModal}
         systemPrompt={systemPrompt}
       />
+      <DataSourceConnectModal
+        isOpen={showDataSourceConnectModal}
+        onClose={handleCloseDataSourceConnectModal}
+      />
+
+      {/* Header */}
       <div className="flex pb-2 justify-between">
         <span className="font-bold flex flex-col gap-2 w-full">
           <div className="flex justify-between">
-            <h1 className="content-center">Website Generator</h1>
+            <h1 className="content-center dark:text-white text-lg">Website Generator</h1>
             <span
               className="text-xs text-gray-400 font-thin cursor-pointer hover:text-gray-700"
               onClick={handleOpenSystemPromptModal}
@@ -348,7 +292,13 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
           <div className="flex justify-between w-full">
             <div className="flex gap-2">
               {TEMPLATES.map((fw) => (
-                <TemplateButton {...fw} key={fw.id} />
+                <TemplateButton
+                  {...fw}
+                  key={fw.id}
+                  isSelected={template === fw.id}
+                  onSelect={setTemplate}
+                  onRefresh={handleRefresh}
+                />
               ))}
               <div className="ml-8 flex gap-2 items-center max-w-[30%] overflow-x-auto">
                 {messages
@@ -380,13 +330,12 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
                             m?.content?.map((i) => i.text).join('') ?? ''
                           )
                           if (code) {
-                            setVersion(index + 1)
                             updateCode(code[0], true)
                             runSandpack()
                           }
                         }}
                       >
-                        v{index}
+                        v{index + 1}
                       </motion.span>
                     )
                   })}
@@ -405,11 +354,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
         </span>
       </div>
 
-      <DataSourceConnectModal
-        isOpen={showDataSourceConnectModal}
-        onClose={handleCloseDataSourceConnectModal}
-      />
-
+      {/* Sandpack Editor and Previewer */}
       <SandpackLayout
         style={{
           display: 'flex',
@@ -444,20 +389,10 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
           <div
             className={`flex ${showCode ? 'w-[50%]' : 'w-[100%]'} h-[100%] justify-center items-center content-center align-center`}
           >
-            {ragLoading ? (
-              <div className="flex flex-col justify-center items-center gap-2">
-                <LoadingDataBaseLottie className="w-[6rem]" />
-                <span className="text-sm text-gray-400">Connecting datasource...</span>
-                <span className="text-xs text-gray-400">
-                  <LazyVisibleMessage message="Searching for related source code" />
-                </span>
-              </div>
-            ) : (
-              <Loader text={'Loading...'} />
-            )}
+            {ragLoading ? <RagLoader /> : <Loader text={'Loading...'} />}
           </div>
         ) : (
-          <Preview />
+          <Preview isDark={isDark} />
         )}
       </SandpackLayout>
 
@@ -465,55 +400,25 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
       <div className="flex gap-2 fixed bottom-0 left-20 right-5 bottom-3 z-10">
         <div className="relative w-full">
           <div className="flex gap-2 justify-between">
-            <div>
-              {recommendLoading ? (
-                <div className="flex gap-1 justify-center items-center dark:text-white">
-                  <LoadingDotsLottie className="h-[2rem]" />
-                  <span className="dark:text-white">{t('addRecommend')}</span>
-                </div>
-              ) : (
-                recommendChanges?.map((a, index) => {
-                  return (
-                    <motion.button
-                      initial={{ opacity: 0, scale: 0 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.2 }}
-                      key={a.title}
-                      className="cursor-pointer rounded-full border p-2 text-xs hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:hover:border-gray-600"
-                      onClick={() => {
-                        setUserInput(a.value)
-                      }}
-                    >
-                      {a.title}
-                    </motion.button>
-                  )
-                })
-              )}
-            </div>
+            <RecommendChanges
+              loading={recommendLoading}
+              recommendations={recommendChanges}
+              onSelect={setUserInput}
+              loadingText={t('addRecommend')}
+            />
 
             <div className="flex gap-3 items-center">
-              <button
-                onClick={() => handleOpenDataSourceConnectModal()}
-                className="flex items-center justify-center p-[2px] overflow-hidden text-xs text-gray-900 rounded-lg group bg-gradient-to-br from-red-200 via-red-300 to-yellow-200 group-hover:from-red-200 group-hover:via-red-300 group-hover:to-yellow-200 dark:text-white dark:hover:text-gray-900 focus:ring-4 focus:outline-none focus:ring-red-100 dark:focus:ring-red-400"
-              >
-                <span className="items-center px-3 py-1.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0 flex gap-2">
-                  {enableKnowledgeBase ? (
-                    <BsDatabaseCheck className="text-sm" />
-                  ) : (
-                    <BsDatabase className="text-sm" />
-                  )}
-                  {enableKnowledgeBase ? 'Connected' : 'Connect'}
-                </span>
-              </button>
-              <Dropdown label={styleType.label} dismissOnClick={true} size="xs" color={'indigo'}>
-                {supportedStyles[template]?.map((s) => {
-                  return (
-                    <Dropdown.Item key={s.value} onClick={() => setStyleType(s)}>
-                      {s.label}
-                    </Dropdown.Item>
-                  )
-                })}
-              </Dropdown>
+              <KnowledgeBaseConnectButton
+                enableKnowledgeBase={enableKnowledgeBase}
+                handleOpenDataSourceConnectModal={handleOpenDataSourceConnectModal}
+              />
+
+              <StyleSelector
+                currentStyle={styleType}
+                styles={supportedStyles[template] || []}
+                onSelect={setStyleType}
+              />
+
               <Tooltip content="show code" placement="bottom" animation="duration-500">
                 <ToggleSwitch
                   checked={showCode}
