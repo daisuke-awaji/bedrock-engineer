@@ -57,10 +57,14 @@ export const useAgentChat = (
   modelId: string,
   systemPrompt?: string,
   enabledTools: ToolState[] = [],
-  sessionId?: string
+  sessionId?: string,
+  options?: { enableHistory?: boolean }
 ) => {
+  const { enableHistory = true } = options || {} // デフォルトで履歴保存は有効
+
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
+  const [toolExecuting, setToolExecuting] = useState(false)
   const [currentSessionId, setCurrentSessionId] = useState<string | undefined>(sessionId)
   const abortController = useRef<AbortController | null>(null)
   const { t } = useTranslation()
@@ -84,12 +88,13 @@ export const useAgentChat = (
         setMessages(session.messages as Message[])
         setCurrentSessionId(sessionId)
       }
-    } else {
+    } else if (enableHistory) {
+      // 履歴保存が有効な場合のみ新しいセッションを作成
       // TODO: agentId によって履歴を復元できる機能は後日実装する
       const newSessionId = window.chatHistory.createSession('defaultAgent', modelId, systemPrompt)
       setCurrentSessionId(newSessionId)
     }
-  }, [sessionId])
+  }, [sessionId, enableHistory])
 
   // コンポーネントのアンマウント時にアクティブな通信を中断
   useEffect(() => {
@@ -114,6 +119,8 @@ export const useAgentChat = (
   // メッセージの永続化を行うラッパー関数
   const persistMessage = useCallback(
     (message: Message) => {
+      if (!enableHistory) return
+
       if (currentSessionId && message.role && message.content) {
         const chatMessage: ChatMessage = {
           id: `msg_${Date.now()}`,
@@ -128,7 +135,7 @@ export const useAgentChat = (
         window.chatHistory.addMessage(currentSessionId, chatMessage)
       }
     },
-    [currentSessionId, modelId, enabledTools]
+    [currentSessionId, modelId, enabledTools, enableHistory]
   )
 
   const streamChat = async (props: StreamChatCompletionProps, currentMessages: Message[]) => {
@@ -255,7 +262,9 @@ export const useAgentChat = (
               type: toolUse.name,
               ...(toolUse.input as any)
             }
+            setToolExecuting(true)
             const toolResult = await window.api.bedrock.executeTool(toolInput)
+            setToolExecuting(false)
             if (Object.prototype.hasOwnProperty.call(toolResult, 'name')) {
               toolResults.push({
                 toolResult: {
@@ -373,6 +382,7 @@ export const useAgentChat = (
       toast.error(error.message || 'An error occurred')
     } finally {
       setLoading(false)
+      setToolExecuting(false)
     }
     return result
   }
@@ -402,6 +412,7 @@ export const useAgentChat = (
   return {
     messages,
     loading,
+    toolExecuting,
     handleSubmit,
     setMessages,
     currentSessionId,

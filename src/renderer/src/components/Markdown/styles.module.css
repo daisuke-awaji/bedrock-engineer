@@ -100,6 +100,13 @@
   animation-fill-mode: forwards;
 }
 
+.reactMarkDown ol {
+  margin-top: 1em;
+  margin-bottom: 1em;
+  margin-left: 2rem;
+  list-style: decimal outside none;
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;

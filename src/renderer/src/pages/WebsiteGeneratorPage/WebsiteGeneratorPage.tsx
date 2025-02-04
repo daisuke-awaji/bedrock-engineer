@@ -1,40 +1,39 @@
-import React, { useCallback, useEffect, useState } from 'react'
-import { Dropdown, ToggleSwitch, Tooltip } from 'flowbite-react'
+import { useCallback, useEffect, useState } from 'react'
+import { ToggleSwitch, Tooltip } from 'flowbite-react'
 import { GrClearOption } from 'react-icons/gr'
-import { FiSend } from 'react-icons/fi'
-import { BsDatabaseCheck, BsDatabase } from 'react-icons/bs'
 import prompts from '../../prompts/prompts'
 import { AiOutlineReload } from 'react-icons/ai'
 
-import { useChat } from '@renderer/hooks/useChat'
-import { retrieveAndGenerate } from '@renderer/lib/api'
 import { autocompletion, completionKeymap } from '@codemirror/autocomplete'
 import {
   SandpackCodeEditor,
   SandpackLayout,
-  SandpackPreview,
   SandpackProvider,
   useActiveCode,
   useSandpack,
   useSandpackNavigation
 } from '@codesandbox/sandpack-react'
 
-import { FiMaximize } from 'react-icons/fi'
 import { Loader } from '@renderer/components/Loader'
-import { sleep } from '@renderer/lib/util'
 import useDataSourceConnectModal from './useDataSourceConnectModal'
 
-import { converse } from '../../lib/api'
 import { motion } from 'framer-motion'
-import LoadingDotsLottie from './LoadingDots.lottie'
-import LoadingDataBaseLottie from './LoadingDataBase.lottie'
-import LazyVisibleMessage from './LazyVisibleMessage'
 import { Style, SupportedTemplate, templates, TEMPLATES, supportedStyles } from './templates'
 import { useTranslation } from 'react-i18next'
 import useSetting from '@renderer/hooks/useSetting'
-import toast from 'react-hot-toast'
-import useModal from '@renderer/hooks/useModal'
-import MD from '@renderer/components/Markdown/MD'
+import { useAgentChat } from '../ChatPage/hooks/useAgentChat'
+import { useSystemPromptModal } from '../ChatPage/modals/useSystemPromptModal'
+import { extractCode, extractCodeBlock, replacePlaceholders } from './util'
+import useWebsiteGeneratorSettings from '@renderer/hooks/useWebsiteGeneratorSetting'
+import { WebsiteGeneratorProvider } from '@renderer/contexts/WebsiteGeneratorContext'
+import { TemplateButton } from './components/TemplateButton'
+import { Preview } from './components/Preview'
+import { RecommendChanges } from './components/RecommendChanges'
+import { StyleSelector } from './components/StyleSelector'
+import { KnowledgeBaseConnectButton } from './components/KnowledgeBaseConnectButton'
+import { RagLoader } from './components/RagLoader'
+import { AttachedImage, TextArea } from '../ChatPage/components/InputForm/TextArea'
+import { useRecommendChanges } from './hooks/useRecommendChanges'
 
 export default function WebsiteGeneratorPage() {
   const [template, setTemplate] = useState<SupportedTemplate['id']>('react-ts')
@@ -42,26 +41,28 @@ export default function WebsiteGeneratorPage() {
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
 
   return (
-    <SandpackProvider
-      template={template}
-      theme={isDark ? 'dark' : 'light'}
-      files={templates[template].files}
-      style={{
-        height: 'calc(100vh - 16rem)'
-      }}
-      options={{
-        externalResources: ['https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css'],
-        initMode: 'user-visible',
-        recompileMode: 'delayed',
-        autorun: true,
-        autoReload: false
-      }}
-      customSetup={{
-        dependencies: templates[template].customSetup.dependencies
-      }}
-    >
-      <WebsiteGeneratorPageContents template={template} setTemplate={setTemplate} />
-    </SandpackProvider>
+    <WebsiteGeneratorProvider>
+      <SandpackProvider
+        template={template}
+        theme={isDark ? 'dark' : 'light'}
+        files={templates[template].files}
+        style={{
+          height: 'calc(100vh - 16rem)'
+        }}
+        options={{
+          externalResources: ['https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css'],
+          initMode: 'user-visible',
+          recompileMode: 'delayed',
+          autorun: true,
+          autoReload: true
+        }}
+        customSetup={{
+          dependencies: templates[template].customSetup.dependencies
+        }}
+      >
+        <WebsiteGeneratorPageContents template={template} setTemplate={setTemplate} />
+      </SandpackProvider>
+    </WebsiteGeneratorProvider>
   )
 }
 
@@ -69,90 +70,20 @@ type WebsiteGeneratorPageContentsProps = {
   template: SupportedTemplate['id']
   setTemplate: (template: SupportedTemplate['id']) => void
 }
+
 function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) {
   const { template, setTemplate } = props
-
-  const TemplateButton: React.FC<SupportedTemplate> = (t) => {
-    return (
-      <button
-        type="button"
-        className={`
-    text-gray-900
-    ${template === t.id ? 'bg-green-50' : 'bg-white'}
-    hover:bg-green-50
-    border
-    ${template === t.id ? 'border-green-600' : 'border-gray-200'}
-    focus:ring-4
-    focus:outline-none
-    focus:ring-gray-100
-    font-medium
-    rounded-[1rem]
-    text-xs
-    px-3
-    py-1.5
-    inline-flex
-    items-center
-    flex
-    gap-2
-    dark:bg-gray-800
-    dark:text-white
-    dark:border-gray-600
-    dark:hover:bg-gray-700
-    `}
-        onClick={async () => {
-          setTemplate(t.id)
-          await sleep(100)
-          handleRefresh()
-        }}
-      >
-        <div className="w-[18px]">{t.logo}</div>
-        <span>{t.name}</span>
-      </button>
-    )
-  }
-
   const { sandpack } = useSandpack()
-
   const { runSandpack } = sandpack
+  const { updateCode, code } = useActiveCode()
+  const { t } = useTranslation()
 
-  const { updateCode } = useActiveCode()
-  const {
-    t,
-    i18n: { language }
-  } = useTranslation()
-  const examplePrompts = [
-    {
-      title: t('ecSiteTitle'),
-      value: t('ecSiteValue')
-    },
-    {
-      title: t('ecSiteAdminTitle'),
-      value: t('ecSiteAdminValue')
-    },
-    {
-      title: t('healthFitnessSiteTitle'),
-      value: t('healthFitnessSiteValue')
-    },
-    {
-      title: t('drawingGraphTitle'),
-      value: t('drawingGraphValue')
-    },
-    {
-      title: t('todoAppTitle'),
-      value: t('todoAppValue')
-    },
-    {
-      title: t('codeTransformTitle'),
-      value: t('codeTransformValue')
-    }
-  ]
-  const [recommendChanges, setRecommendChanges] = useState(examplePrompts)
-  const [recommendLoading, setRecommendLoading] = useState(false)
+  const { recommendChanges, recommendLoading, getRecommendChanges, refleshRecommendChanges } =
+    useRecommendChanges()
 
-  const [showCode, setShowCode] = useState(true)
-  const [ragLoading, setRagLoading] = useState<boolean>(false)
+  const [showCode, setShowCode] = useState(false)
   const [userInput, setUserInput] = useState('')
-  const { currentLLM: llm, sendMsgKey } = useSetting()
+  const { currentLLM: llm, sendMsgKey, enabledTools } = useSetting()
 
   const handleClickShowCode = () => {
     setShowCode(!showCode)
@@ -162,132 +93,55 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     label: 'Tailwind.css',
     value: 'tailwind'
   })
-  const systemPrompt = prompts.WebsiteGenerator.system[template]({
-    styleType: styleType.value,
-    libraries: Object.keys(templates[template].customSetup.dependencies)
-  })
-  const { handleSubmit, messages, loading, lastText, initChat, setLoading } = useChat({
-    systemPrompt,
-    modelId: llm.modelId
-  })
 
-  const getRecommendChanges = async (websiteCode: string) => {
-    let retry = 0
-    if (retry > 3) {
-      return
-    }
-    setRecommendLoading(true)
-    const result = await converse({
-      modelId: llm.modelId,
-      system: [{ text: t(prompts.WebsiteGenerator.recommend.system, { language }) }],
-      messages: [{ role: 'user', content: [{ text: websiteCode }] }]
-    })
+  const {
+    show: showDataSourceConnectModal,
+    handleClose: handleCloseDataSourceConnectModal,
+    handleOpen: handleOpenDataSourceConnectModal,
+    DataSourceConnectModal
+  } = useDataSourceConnectModal()
+  const { knowledgeBases, enableKnowledgeBase } = useWebsiteGeneratorSettings()
 
-    const recommendChanges = result.output.message?.content[0]?.text
+  const ragEnabled = !!knowledgeBases && enableKnowledgeBase
+  const systemPrompt = replacePlaceholders(
+    prompts.WebsiteGenerator.system[template]({
+      styleType: styleType.value,
+      libraries: Object.keys(templates[template].customSetup.dependencies),
+      ragEnabled
+    }),
+    knowledgeBases
+  )
 
-    try {
-      if (recommendChanges) {
-        const json = JSON.parse(recommendChanges)
-        console.log({ json })
-        setRecommendChanges(json)
-        setRecommendLoading(false)
-      }
-    } catch (e) {
-      console.log(e)
-      retry += 1
-      return getRecommendChanges(websiteCode)
-    }
+  const tools = ragEnabled ? enabledTools.filter((tool) => tool.toolSpec?.name === 'retrieve') : []
+  const sessionId = undefined
+  const options = { enableHistory: false }
+  const {
+    messages,
+    loading,
+    toolExecuting: ragLoading,
+    handleSubmit,
+    clearChat: initChat
+  } = useAgentChat(llm?.modelId, systemPrompt, tools, sessionId, options)
+
+  const onSubmit = (input: string, images: AttachedImage[]) => {
+    handleSubmit(input, images)
+    setUserInput('')
   }
+
+  const lastText = messages[messages.length - 1]?.role === 'assistant' ? extractCode(messages) : ''
+
+  const {
+    show: showSystemPromptModal,
+    handleClose: handleCloseSystemPromptModal,
+    handleOpen: handleOpenSystemPromptModal,
+    SystemPromptModal
+  } = useSystemPromptModal()
 
   useEffect(() => {
     if (!loading && messages.length > 0 && lastText) {
       getRecommendChanges(lastText)
     }
   }, [loading, messages])
-
-  const { kbId, DataSourceConnectModal, openModal, enableKnowledgeBase, modelId } =
-    useDataSourceConnectModal()
-  const { awsRegion } = useSetting()
-  const ragEnabled = !!kbId && enableKnowledgeBase
-
-  const ragSubmit = useCallback(
-    async (input: string, messages) => {
-      setLoading(true)
-
-      setRagLoading(true)
-
-      const promptTemplate = prompts.WebsiteGenerator.rag.promptTemplate
-      const inputText = `Follow these instructions to create a website that conforms to the requirements described in <website-requirements>.
-
-Please provide examples of the React source code needed to create the components that achieve these requirements.
-If the data source contains programs written in a language other than React, please extract the source code equivalent for the web styles.
-
-<website-requirements>
-${input}
-</website-requirements>
-`
-
-      try {
-        // Knowledge base から関連コードの取得
-        const res = await retrieveAndGenerate({
-          input: {
-            text: inputText
-          },
-          retrieveAndGenerateConfiguration: {
-            type: 'KNOWLEDGE_BASE',
-            knowledgeBaseConfiguration: {
-              knowledgeBaseId: kbId,
-              modelArn: `arn:aws:bedrock:${awsRegion}::foundation-model/${modelId}`,
-              generationConfiguration: {
-                promptTemplate: {
-                  textPromptTemplate: promptTemplate
-                }
-              },
-              retrievalConfiguration: {
-                vectorSearchConfiguration: {
-                  numberOfResults: 5
-                }
-              }
-            }
-          }
-        })
-
-        const response = await res.json()
-        if (res.status !== 200) {
-          toast.error(response.message)
-          return
-        }
-
-        console.log(response?.output?.text)
-
-        setRagLoading(false)
-
-        const prompt = `Create a website based on the sample source code below.
-Important: The style should follow the sample code as closely as possible. Even if the system prompts you about the style you should use, the style in the sample code should be your first priority. If there is a designated design system, use it.
-
-<code>
-${response?.output.text}
-</code>
-
-<website-requirements>
-${input}
-</website-requirements>
-
-<language>
-${language}
-</language>
-
-!Important rule: Do not import modules with relative paths (e.g. import { Button } from './Button';) If you have required components, put them all in the same file.
-`
-        await handleSubmit(prompt, messages)
-      } catch (error) {
-        console.log(error)
-      }
-
-      setLoading(false)
-    },
-    [kbId, language]
-  )
 
   const { refresh } = useSandpackNavigation()
 
@@ -301,97 +155,49 @@ ${language}
       label: 'Tailwind.css',
       value: 'tailwind'
     })
-    setRecommendChanges(examplePrompts)
+    refleshRecommendChanges()
     initChat()
     runSandpack()
   }, [template, updateCode, initChat, runSandpack])
-
-  const [version, setVersion] = useState(0)
 
   useEffect(() => {
     if (messages?.length > 0) {
       updateCode(lastText)
       if (!loading) {
-        console.log('runSandpack')
         runSandpack()
-        setVersion(messages.length)
       }
+    }
+
+    return () => {
+      refresh()
     }
   }, [loading, lastText])
 
   const [isComposing, setIsComposing] = useState(false)
 
-  const onkeydown = useCallback(
-    (e) => {
-      if (e.shiftKey) {
-        return
-      }
-
-      if (isComposing) {
-        return
-      }
-
-      const cmdenter = e.key === 'Enter' && (e.metaKey || e.ctrlKey)
-      const enter = e.key === 'Enter'
-
-      if ((sendMsgKey === 'Enter' && enter) || (sendMsgKey === 'Cmd+Enter' && cmdenter)) {
-        e.preventDefault()
-        ragEnabled ? ragSubmit(userInput, messages) : handleSubmit(userInput, messages)
-      }
-    },
-    [isComposing, sendMsgKey, ragEnabled, userInput, messages]
-  )
-
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-
-  const Preview = useCallback(
-    () => (
-      <SandpackPreview
-        id="sandpack-preview"
-        style={{
-          height: '100%',
-          borderRadius: '8px',
-          border: isDark ? '2px solid black' : '2px solid white'
-        }}
-        showRestartButton={true}
-        showOpenNewtab={true}
-        showSandpackErrorOverlay={true}
-        showOpenInCodeSandbox={false}
-        showNavigator={true}
-        actionsChildren={
-          <button
-            onClick={() => {
-              const iframe = document.getElementById('sandpack-preview')
-              if (iframe) {
-                iframe?.requestFullscreen()
-              }
-            }}
-            className="border rounded-full bg-[#EFEFEF] p-2 text-gray-500 hover:text-gray-800"
-          >
-            <FiMaximize className="text-gray" />
-          </button>
-        }
-      />
-    ),
-    [version]
-  )
-
-  const { Modal: SystemPromptModal, openModal: openSystemPromptModal } = useModal()
 
   return (
     <div className={'flex flex-col h-[calc(100vh-11rem)] overflow-y-auto'}>
-      <SystemPromptModal header="SYSTEM PROMPT" size="7xl">
-        <div className="dark:text-white">
-          <MD>{systemPrompt}</MD>
-        </div>
-      </SystemPromptModal>
+      {/* Modals */}
+      <SystemPromptModal
+        isOpen={showSystemPromptModal}
+        onClose={handleCloseSystemPromptModal}
+        systemPrompt={systemPrompt}
+      />
+      <DataSourceConnectModal
+        isOpen={showDataSourceConnectModal}
+        onClose={handleCloseDataSourceConnectModal}
+      />
+
+      {/* Header */}
       <div className="flex pb-2 justify-between">
         <span className="font-bold flex flex-col gap-2 w-full">
           <div className="flex justify-between">
-            <h1 className="content-center">Website Generator</h1>
+            <h1 className="content-center dark:text-white text-lg">Website Generator</h1>
             <span
               className="text-xs text-gray-400 font-thin cursor-pointer hover:text-gray-700"
-              onClick={openSystemPromptModal}
+              onClick={handleOpenSystemPromptModal}
             >
               SYSTEM_PROMPT
             </span>
@@ -399,11 +205,32 @@ ${language}
           <div className="flex justify-between w-full">
             <div className="flex gap-2">
               {TEMPLATES.map((fw) => (
-                <TemplateButton {...fw} key={fw.id} />
+                <TemplateButton
+                  {...fw}
+                  key={fw.id}
+                  isSelected={template === fw.id}
+                  onSelect={setTemplate}
+                  onRefresh={handleRefresh}
+                />
               ))}
               <div className="ml-8 flex gap-2 items-center max-w-[30%] overflow-x-auto">
-                {messages.map((m, index) => {
-                  if (index % 2 == 0) {
+                {messages
+                  .filter((m) => {
+                    if (m?.content === undefined) {
+                      return false
+                    }
+                    if (
+                      m?.content[0] &&
+                      ('toolUse' in m.content[0] || 'toolResult' in m.content[0])
+                    ) {
+                      return false
+                    }
+                    if (m?.role === 'user') {
+                      return false
+                    }
+                    return true
+                  })
+                  .map((m, index) => {
                     return (
                       <motion.span
                         initial={{ opacity: 0, scale: 0 }}
@@ -412,26 +239,19 @@ ${language}
                         key={index}
                         className="p-2 bg-gray-200 rounded text-gray-500 cursor-pointer hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white"
                         onClick={async () => {
-                          const code = messages[index + 1]?.content[0].text
+                          const code = extractCodeBlock(
+                            m?.content?.map((i) => i.text).join('') ?? ''
+                          )
                           if (code) {
-                            setVersion(index + 1)
-                            updateCode(code, true)
+                            updateCode(code[0], true)
                             runSandpack()
                           }
                         }}
                       >
-                        <Tooltip
-                          content={m.content[0].text}
-                          placement="bottom"
-                          animation="duration-500"
-                        >
-                          v{index / 2 + 1}
-                        </Tooltip>
+                        v{index + 1}
                       </motion.span>
                     )
-                  }
-                  return null
-                })}
+                  })}
               </div>
             </div>
 
@@ -447,8 +267,7 @@ ${language}
         </span>
       </div>
 
-      <DataSourceConnectModal />
-
+      {/* Sandpack Editor and Previewer */}
       <SandpackLayout
         style={{
           display: 'flex',
@@ -483,76 +302,36 @@ ${language}
           <div
             className={`flex ${showCode ? 'w-[50%]' : 'w-[100%]'} h-[100%] justify-center items-center content-center align-center`}
           >
-            {ragLoading ? (
-              <div className="flex flex-col justify-center items-center gap-2">
-                <LoadingDataBaseLottie className="w-[6rem]" />
-                <span className="text-sm text-gray-400">Connecting datasource...</span>
-                <span className="text-xs text-gray-400">
-                  <LazyVisibleMessage message="Searching for related source code" />
-                </span>
-              </div>
-            ) : (
-              <Loader text={'Generating code...'} />
-            )}
+            {ragLoading ? <RagLoader /> : <Loader text={'Loading...'} />}
           </div>
         ) : (
-          <Preview />
+          <Preview isDark={isDark} code={code} />
         )}
       </SandpackLayout>
 
       {/* Buttom Input Field Block */}
       <div className="flex gap-2 fixed bottom-0 left-20 right-5 bottom-3 z-10">
         <div className="relative w-full">
-          <div className="flex gap-2 justify-between">
-            <div>
-              {recommendLoading ? (
-                <div className="flex gap-1 justify-center items-center dark:text-white">
-                  <LoadingDotsLottie className="h-[2rem]" />
-                  <span className="dark:text-white">{t('addRecommend')}</span>
-                </div>
-              ) : (
-                recommendChanges?.map((a, index) => {
-                  return (
-                    <motion.button
-                      initial={{ opacity: 0, scale: 0 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.2 }}
-                      key={a.title}
-                      className="cursor-pointer rounded-full border p-2 text-xs hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:hover:border-gray-600"
-                      onClick={() => {
-                        setUserInput(a.value)
-                      }}
-                    >
-                      {a.title}
-                    </motion.button>
-                  )
-                })
-              )}
-            </div>
+          <div className="flex gap-2 justify-between pb-2">
+            <RecommendChanges
+              loading={recommendLoading}
+              recommendations={recommendChanges}
+              onSelect={setUserInput}
+              loadingText={t('addRecommend')}
+            />
 
             <div className="flex gap-3 items-center">
-              <button
-                onClick={() => openModal()}
-                className="flex items-center justify-center p-[2px] overflow-hidden text-xs text-gray-900 rounded-lg group bg-gradient-to-br from-red-200 via-red-300 to-yellow-200 group-hover:from-red-200 group-hover:via-red-300 group-hover:to-yellow-200 dark:text-white dark:hover:text-gray-900 focus:ring-4 focus:outline-none focus:ring-red-100 dark:focus:ring-red-400"
-              >
-                <span className="items-center px-3 py-1.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0 flex gap-2">
-                  {enableKnowledgeBase ? (
-                    <BsDatabaseCheck className="text-sm" />
-                  ) : (
-                    <BsDatabase className="text-sm" />
-                  )}
-                  {enableKnowledgeBase ? 'Connected' : 'Connect'}
-                </span>
-              </button>
-              <Dropdown label={styleType.label} dismissOnClick={true} size="xs" color={'indigo'}>
-                {supportedStyles[template]?.map((s) => {
-                  return (
-                    <Dropdown.Item key={s.value} onClick={() => setStyleType(s)}>
-                      {s.label}
-                    </Dropdown.Item>
-                  )
-                })}
-              </Dropdown>
+              <KnowledgeBaseConnectButton
+                enableKnowledgeBase={enableKnowledgeBase}
+                handleOpenDataSourceConnectModal={handleOpenDataSourceConnectModal}
+              />
+
+              <StyleSelector
+                currentStyle={styleType}
+                styles={supportedStyles[template] || []}
+                onSelect={setStyleType}
+              />
+
               <Tooltip content="show code" placement="bottom" animation="duration-500">
                 <ToggleSwitch
                   checked={showCode}
@@ -572,28 +351,15 @@ ${language}
             </div>
           </div>
 
-          {/* prompt input form */}
-          <textarea
-            onCompositionStart={() => setIsComposing(true)}
-            onCompositionEnd={() => setIsComposing(false)}
-            className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2 dark:text-white dark:bg-gray-800 z-9`}
-            placeholder="What kind of website will you create?"
+          <TextArea
             value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            onKeyDown={onkeydown}
-            required
+            onChange={setUserInput}
             disabled={loading}
-            rows={3}
+            onSubmit={(input, attachedImages) => onSubmit(input, attachedImages)}
+            isComposing={isComposing}
+            setIsComposing={setIsComposing}
+            sendMsgKey={sendMsgKey}
           />
-          <button
-            onClick={() =>
-              ragEnabled ? ragSubmit(userInput, messages) : handleSubmit(userInput, messages)
-            }
-            className={`absolute end-2.5 bottom-2.5 rounded-lg hover:bg-gray-200 px-2 py-2 dark:text-white dark:hover:bg-gray-700`}
-            disabled={loading}
-          >
-            <FiSend className="text-xl" />
-          </button>
         </div>
       </div>
     </div>

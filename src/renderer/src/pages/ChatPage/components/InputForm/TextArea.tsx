@@ -120,6 +120,10 @@ export const TextArea: React.FC<TextAreaProps> = ({
   }
 
   const handleSubmit = () => {
+    if (value.trim() === '') {
+      toast.error(t('Enter at least one character of text'))
+      return
+    }
     if (value.trim() || attachedImages.length > 0) {
       onSubmit(value, attachedImages)
       setAttachedImages([])
@@ -195,7 +199,7 @@ export const TextArea: React.FC<TextAreaProps> = ({
         <textarea
           onCompositionStart={() => setIsComposing(true)}
           onCompositionEnd={() => setIsComposing(false)}
-          className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 dark:text-white dark:bg-gray-800 ${
+          className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 dark:text-white dark:bg-gray-800 z-9 ${
             dragActive ? 'border-blue-500' : ''
           }`}
           placeholder={placeholder}

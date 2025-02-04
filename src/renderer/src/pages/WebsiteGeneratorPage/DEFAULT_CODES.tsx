@@ -11,15 +11,24 @@ export const DEFAULT_INDEX_HTML = `<!DOCTYPE html>
   </body>
 </html>
 `
-export const DEFAULT_APP_TSX = `import React from 'react';
+export const DEFAULT_APP_TSX = `import React, { useState } from 'react';
 
-export default function App() {
+const WebsiteGenerator = () => {
+  const [prompt, setPrompt] = useState('');
+
   return (
-    <div className="m-2">
-      <h1>Hello World</h1>
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
+      <h1 className="text-5xl font-light text-gray-900 mb-12">
+        Website Generator
+      </h1>
+      <span>
+        What can I help you build ?
+      </span>
     </div>
   );
-}
+};
+
+export default WebsiteGenerator;
 `
 export const DEFAULT_VUE_INDEX_HTML = `<!DOCTYPE html>
 <html lang="en">
@@ -43,8 +52,13 @@ export const DEFAULT_VUE_INDEX_HTML = `<!DOCTYPE html>
 </html>
 `
 export const DEFAULT_APP_VUE = `<template>
-  <div className="m-2">
-    <h1>Hello {{ msg }}</h1>
+  <div class="min-h-screen bg-white flex flex-col items-center justify-center p-4">
+    <h1 class="text-5xl font-light text-gray-900 mb-12">
+      Website Generator
+    </h1>
+    <span class="text-lg text-gray-700 mb-6">
+      What can I help you build?
+    </span>
   </div>
 </template>
 
@@ -53,21 +67,7 @@ import { ref } from 'vue';
 const msg = ref<string>('world');
 </script>
 `
-export const DEFAULT_VANILLA_INDEX_HTML = `<!DOCTYPE html>
-<html>
 
-<head>
-  <title>Parcel Sandbox</title>
-  <meta charset="UTF-8" />
-  <link rel="stylesheet" href="/styles.css" />
-</head>
-
-<body>
-  <h1>Hello world</h1>
-</body>
-
-</html>
-`
 export const DEFAULT_SVELTE_INDEX_HTML = `<!DOCTYPE html>
 <html>
   <head>
@@ -83,17 +83,21 @@ export const DEFAULT_SVELTE_INDEX_HTML = `<!DOCTYPE html>
     <script src="bundle.js"></script>
   </body>
 </html>`
-export const DEFAULT_SVELTE_APP_SVELTE = `<style>
-  h1 {
-    font-size: 1.5rem;
+export const DEFAULT_SVELTE_APP_SVELTE = `<script>
+  let prompt = '';
+</script>
+<main class="min-h-screen bg-white flex flex-col items-center justify-center p-4">
+  <h1 class="text-5xl font-light text-gray-900 mb-12">
+    Website Generator
+  </h1>
+  <span>
+    What can I help you build ?
+  </span>
+</main>
+
+<style>
+  main {
+    font-family: system-ui, -apple-system, sans-serif;
   }
 </style>
-
-<script>
-  let name = 'world';
-</script>
-
-<main>
-  <h1>Hello {name}</h1>
-</main>
 `

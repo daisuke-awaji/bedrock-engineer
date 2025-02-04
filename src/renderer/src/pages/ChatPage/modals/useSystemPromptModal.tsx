@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 import MD from '@renderer/components/Markdown/MD'
 import { Modal } from 'flowbite-react'
-import useSetting from '@renderer/hooks/useSetting'
 
 interface SystemPromptModalProps {
   isOpen: boolean
   onClose: () => void
+  systemPrompt: string
 }
 
 export const useSystemPromptModal = () => {
@@ -25,19 +25,19 @@ export const useSystemPromptModal = () => {
   }
 }
 
-const SystemPromptModal = React.memo(({ isOpen, onClose }: SystemPromptModalProps) => {
-  if (!isOpen) return null
+const SystemPromptModal = React.memo(
+  ({ isOpen, onClose, systemPrompt }: SystemPromptModalProps) => {
+    if (!isOpen) return null
 
-  const { currentAgentSystemPrompt: systemPrompt } = useSetting()
-
-  return (
-    <Modal dismissible show={isOpen} onClose={onClose} size="7xl">
-      <Modal.Header>SYSTEM PROMPT</Modal.Header>
-      <Modal.Body className="dark:text-white">
-        <MD>{systemPrompt}</MD>
-      </Modal.Body>
-    </Modal>
-  )
-})
+    return (
+      <Modal dismissible show={isOpen} onClose={onClose} size="7xl">
+        <Modal.Header>SYSTEM PROMPT</Modal.Header>
+        <Modal.Body className="dark:text-white">
+          <MD>{systemPrompt}</MD>
+        </Modal.Body>
+      </Modal>
+    )
+  }
+)
 
 SystemPromptModal.displayName = 'SystemPromptModal'

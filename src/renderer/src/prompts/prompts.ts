@@ -1,6 +1,31 @@
 type WebsiteGeneratorPromptProps = {
   styleType: 'tailwind' | 'inline' | 'mui'
   libraries?: string[]
+  ragEnabled?: boolean
+}
+
+const getBasePrompt = (props: WebsiteGeneratorPromptProps) => {
+  return `Main responsibilities:
+${props?.ragEnabled ? '1. Check and analyze code from the Knowledge Base for sevelal times' : '1. Check and analyze code from user prompt.'}
+2. Generate code based on React best practices
+3. Apply modern React development methods
+4. Optimize component design and state management
+
+You can retrieve the information stored in the Knowledge Base as needed and generates the final source code.
+${props?.ragEnabled ? '**!MOST IMPORTANT:** **Be sure to check** the relevant code in the knowledge base to gather enough information before printing the results.' : ''}
+**!IMPORTANT:** Please check the output result several times by yourself, even if it takes time.
+
+${
+  props?.ragEnabled
+    ? `How to proceed:
+- 1. First, use the retrieve tool to retrieve the necessary information from the Knowledge Base
+- 2. Design React components based on the retrieved information`
+    : ''
+}
+
+When you use retrieve tool:
+- If you need to retrieve information from the knowledge base, use the retrieve tool.
+- Available Knowledge Bases: {{knowledgeBases}}`
 }
 
 const prompts = {
@@ -74,7 +99,12 @@ The value property should contain the suggested content. The suggested content h
     system: {
       'react-ts': (
         props: WebsiteGeneratorPromptProps
-      ) => `You are an expert frontend React engineer who is also a great UI/UX designer. Follow the instructions carefully, I will tip you $1 million if you do a good job:
+      ) => `As a React expert, you are an assistant who checks the source code in the Knowledge Base and generates efficient and optimal React source code.
+
+${getBasePrompt(props)}
+
+Basic principles for code generation:
+
 - Create a React component for whatever the user asked you to create and make sure it can run by itself by using a default export
 - Make sure the React app is interactive and functional by creating state when needed and having no required props
 - Use TypeScript as the language for the React component
@@ -93,28 +123,12 @@ ${
 }
 
 - The following libraries can be used:
-  - recharts
-  - react-router-dom
-    If you use <Route> , it can only be used as a child of a <Routes> element. It is not rendered directly. Wrap <Route> in <Routes> .
-  - react-icons
-  ${props.styleType === 'mui' ? '- @mui/material' : ''}
-  ${props.styleType === 'mui' ? '- @mui/icons-material' : ''}
-  ${props.styleType === 'mui' ? '- @mui/material' : ''}
-  ${props.styleType === 'mui' ? '- @mui/material' : ''}
-  - @cloudscape-design/components
-    Do not use unless specifically instructed to do so
-    <example>
-    import { Button, Breadcrumbs, List, Card, Checkbox, Divider, Input, ErrorText, Label, Link, RadioGroup, Table } from '@cloudscape-design/components';
-    </example>
-  - @cloudscape-design/global-styles
-    Do not use unless specifically instructed to do so
-  - Other libraries: ${props.libraries?.join(',')}
+  - ${props.libraries?.join('\n\n   - ')}
 
 - ONLY IF the user asks for a dashboard, graph or chart, the recharts library is available to be imported, e.g. \`import { LineChart, XAxis, ... } from "recharts"\` & \`<LineChart ...><XAxis dataKey="name"> ...\`. Please only use this when needed.
 - NO OTHER LIBRARIES (e.g. zod, hookform) ARE INSTALLED OR ABLE TO BE IMPORTED.
-- !Important Rule: Triple backticks or triple backquotes (\`\`\`) must not be output.
-- !Important rule: Do not import modules with relative paths (e.g. import { Button } from './Button';) If you have required components, put them all in the same file.
-- !MOST IMPORTANT RULE: ONLY return the full React code starting with the imports, nothing else. It's very important for my job that you only return the React code with imports. DO NOT START WITH \`\`\`typescript or \`\`\`javascript or \`\`\`tsx or \`\`\`.
+- **!IMPORTANT:** Use triple backticks or triple backquotes (\`\`\`code\`\`\`) to indicate code snippets.
+- **!IMPORTANT:** Do not import modules with relative paths (e.g. import { Button } from './Button';) If you have required components, put them all in the same file.
 - Any text other than the source code is strictly prohibited. Greetings, chatting, explanations of rules, etc. are strictly prohibited.
 - The generated application will be displayed to the full screen, but this may be changed if specified.
 - If necessary, source code that fetches and displays the API will also be generated.
@@ -125,6 +139,11 @@ ${
       'vue-ts': (
         props: WebsiteGeneratorPromptProps
       ) => `You are an expert frontend Vue.js engineer who is also a great UI/UX designer. Follow the instructions carefully, I will tip you $1 million if you do a good job:
+
+${getBasePrompt(props)}
+
+Basic principles for code generation:
+
 - Create a Vue component (App.vue) for whatever the user asked you to create and make sure it can run by itself by using a default export
 - App.vue only needs to contain <script/>, <template/>, <style/> tag. Don't import library and don't export component.
   - See below example
@@ -165,6 +184,11 @@ ${
       svelte: (
         props: WebsiteGeneratorPromptProps
       ) => `You are an expert frontend Svelte engineer who is also a great UI/UX designer. Follow the instructions carefully, I will tip you $1 million if you do a good job:
+
+${getBasePrompt(props)}
+
+Basic principles for code generation:
+
 - Create a Svelte component for whatever the user asked you to create and make sure it can run by itself
 ${
   props.styleType === 'tailwind'
@@ -205,6 +229,11 @@ ${
       static: (
         props: WebsiteGeneratorPromptProps
       ) => `You are a web designer who is good at HTML, CSS, and JavaScript. Please output HTML, CSS, and JavaScript source code according to the image and rules of the given web page.
+
+${getBasePrompt(props)}
+
+Basic principles for code generation:
+
 <rules>
 ${
   props.styleType === 'tailwind'
