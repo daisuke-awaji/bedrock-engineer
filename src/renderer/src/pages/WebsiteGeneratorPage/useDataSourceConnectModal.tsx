@@ -1,84 +1,155 @@
-import useModal from '@renderer/hooks/useModal'
+import { KnowledgeBase } from '@/types/agent-chat'
 import useWebsiteGeneratorSettings from '@renderer/hooks/useWebsiteGeneratorSetting'
-import { ToggleSwitch } from 'flowbite-react'
+import { Button, Label, Modal, TextInput, ToggleSwitch } from 'flowbite-react'
+import React, { useState } from 'react'
 import { BsDatabase } from 'react-icons/bs'
-import { FiCpu } from 'react-icons/fi'
 
-const useDataSourceConnectModal = () => {
-  const { Modal, openModal } = useModal()
-  const {
-    kbId,
-    setKnowledgeBaseId,
-    enableKnowledgeBase,
-    setEnableKnowledgeBase,
-    modelId,
-    setModelId
-  } = useWebsiteGeneratorSettings()
+export const useDataSourceConnectModal = () => {
+  const [show, setShow] = useState(false)
 
-  const DataSourceConnectModal = () => (
-    <Modal header="Connect Datasource">
-      <div className="flex flex-col gap-3">
-        <p className="text-gray-700 text-sm pb-2 dark:text-white">
-          Currently, only support Knowledge base for Amazon Bedrock. <br />
-          In advance, store the source code of your design system or existing github projects in the
-          knowledge base. If you do not want to connect, leave the field blank.
-        </p>
-        <div className="grid grid-cols-3 items-center justify-center">
-          <label className="flex items-center gap-2 block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-            <BsDatabase className="text-lg" />
-            Knowledge base ID
-          </label>
-          <input
-            type="string"
-            className="col-span-2 bg-white-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            placeholder="12345ABCDE"
-            defaultValue={kbId}
-            onChange={(e) => setKnowledgeBaseId(e.target.value)}
-            required
-          />
-        </div>
-        <div className="grid grid-cols-3 items-center justify-center ">
-          <div></div>
-          <div className="grid grid-cols-3 items-center justify-center cursor-pointer">
+  const handleOpen = () => setShow(true)
+  const handleClose = () => setShow(false)
+
+  return {
+    show,
+    handleOpen,
+    handleClose,
+    DataSourceConnectModal: DataSourceConnectModal
+  }
+}
+
+interface DataSourceConnectModalProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
+const DataSourceConnectModal = React.memo(({ isOpen, onClose }: DataSourceConnectModalProps) => {
+  const { knowledgeBases, setKnowledgeBases, enableKnowledgeBase, setEnableKnowledgeBase } =
+    useWebsiteGeneratorSettings()
+  const [newKnowledgeBase, setNewKnowledgeBase] = useState<KnowledgeBase>({
+    knowledgeBaseId: '',
+    description: ''
+  })
+
+  const handleAddKnowledgeBase = () => {
+    if (newKnowledgeBase.knowledgeBaseId && newKnowledgeBase.description) {
+      setKnowledgeBases([...knowledgeBases, newKnowledgeBase])
+      setNewKnowledgeBase({ knowledgeBaseId: '', description: '' }) // フォームをリセット
+    }
+  }
+
+  const handleRemoveKnowledgeBase = (index: number) => {
+    const updatedKnowledgeBases = knowledgeBases.filter((_, i) => i !== index)
+    setKnowledgeBases(updatedKnowledgeBases)
+  }
+
+  return (
+    <Modal dismissible show={isOpen} onClose={onClose}>
+      <Modal.Header>Connect Knowledge Base</Modal.Header>
+      <Modal.Body>
+        <div className="flex flex-col gap-6">
+          {/* Enable/Disable Toggle */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BsDatabase className="text-lg text-gray-600 dark:text-gray-400" />
+              <span className="text-sm font-medium text-gray-900 dark:text-white">
+                Knowledge Base Connection
+              </span>
+            </div>
             <ToggleSwitch
               checked={enableKnowledgeBase}
               onChange={() => setEnableKnowledgeBase(!enableKnowledgeBase)}
-              color="gray"
-            ></ToggleSwitch>
-            <span
-              className="col-span-1 text-sm text-gray-500 hover:text-gray-700"
-              onClick={() => setEnableKnowledgeBase(!enableKnowledgeBase)}
-            >
-              {enableKnowledgeBase ? 'Enable' : 'Disable'}
-            </span>
-          </div>
-        </div>
-        <div className="grid grid-cols-3 items-center justify-center">
-          <label className="flex items-center gap-2 block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-            <FiCpu className="text-lg" />
-            Model Id
-          </label>
-          <div className="col-span-2 flex flex-col">
-            <input
-              type="string"
-              className="bg-white-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              placeholder="anthropic.claude-3-haiku-20240307-v1:0"
-              value={modelId}
-              onChange={(e) => setModelId(e.target.value)}
+              label={enableKnowledgeBase ? 'Enabled' : 'Disabled'}
             />
-            <span
-              className="text-xs text-gray-500 pt-1 cursor-pointer hover:text-gray-700"
-              onClick={() => setModelId('anthropic.claude-3-haiku-20240307-v1:0')}
-            >
-              Set default value
-            </span>
+          </div>
+
+          <div className="space-y-4">
+            {knowledgeBases.length > 0 && (
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Currently connected knowledge bases:
+              </div>
+            )}
+
+            {knowledgeBases.length > 0 ? (
+              <div className="space-y-2">
+                {knowledgeBases.map((kb, index) => (
+                  <div
+                    key={index}
+                    className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                  >
+                    <div className="flex-1">
+                      <div className="font-medium text-sm text-gray-900 dark:text-white">
+                        {kb.knowledgeBaseId}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        {kb.description}
+                      </div>
+                    </div>
+                    <Button
+                      size="xs"
+                      color="failure"
+                      onClick={() => handleRemoveKnowledgeBase(index)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500 dark:text-gray-400 italic">
+                No knowledge bases connected
+              </div>
+            )}
+          </div>
+
+          {/* Add New Knowledge Base Form */}
+          <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <Label>Add New Knowledge Base</Label>
+            <div className="grid gap-4">
+              <div>
+                <div className="mb-2 block">
+                  <Label htmlFor="kbId" value="Knowledge Base ID" />
+                </div>
+                <TextInput
+                  id="kbId"
+                  value={newKnowledgeBase.knowledgeBaseId}
+                  onChange={(e) =>
+                    setNewKnowledgeBase({ ...newKnowledgeBase, knowledgeBaseId: e.target.value })
+                  }
+                  placeholder="e.g., BM7GYFCKIA"
+                />
+              </div>
+              <div>
+                <div className="mb-2 block flex flex-col gap-1">
+                  <Label htmlFor="description" value="Description" />
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    This is where you outline the data you store, and how it will be referenced in
+                    the knowledge base when generating your website.
+                  </span>
+                </div>
+                <TextInput
+                  id="description"
+                  value={newKnowledgeBase.description}
+                  onChange={(e) =>
+                    setNewKnowledgeBase({ ...newKnowledgeBase, description: e.target.value })
+                  }
+                  placeholder="e.g., Knowledge base of our in-house design system (React component source code)"
+                />
+              </div>
+              <Button
+                onClick={handleAddKnowledgeBase}
+                disabled={!newKnowledgeBase.knowledgeBaseId || !newKnowledgeBase.description}
+              >
+                Add Knowledge Base
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      </Modal.Body>
     </Modal>
   )
+})
 
-  return { kbId, DataSourceConnectModal, openModal, enableKnowledgeBase, modelId }
-}
+DataSourceConnectModal.displayName = 'DataSourceConnectModal'
 
 export default useDataSourceConnectModal

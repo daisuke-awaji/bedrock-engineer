@@ -1,18 +1,15 @@
-import ReactLogo from '../../assets/images/icons/react.svg'
-import VueLogo from '../../assets/images/icons/vue.svg'
-import VanillaLogo from '../../assets/images/icons/vanilla.svg'
-import SvelteLogo from '../../assets/images/icons/svelte.svg'
 import {
   DEFAULT_INDEX_HTML,
   DEFAULT_APP_TSX,
   DEFAULT_APP_VUE,
   DEFAULT_VUE_INDEX_HTML,
   DEFAULT_SVELTE_APP_SVELTE,
-  DEFAULT_SVELTE_INDEX_HTML,
-  DEFAULT_VANILLA_INDEX_HTML
+  DEFAULT_SVELTE_INDEX_HTML
 } from './DEFAULT_CODES'
 
 import { SandpackPredefinedTemplate } from '@codesandbox/sandpack-react'
+import { FaReact, FaVuejs } from 'react-icons/fa'
+import { RiSvelteFill } from 'react-icons/ri'
 
 export type SupportedTemplate = {
   id: SandpackPredefinedTemplate
@@ -24,22 +21,17 @@ export const TEMPLATES: SupportedTemplate[] = [
   {
     id: 'react-ts',
     name: 'React',
-    logo: <ReactLogo />
+    logo: <FaReact size={18} />
   },
   {
     id: 'vue-ts',
     name: 'Vue',
-    logo: <VueLogo />
+    logo: <FaVuejs size={18} />
   },
   {
     id: 'svelte',
     name: 'Svelte',
-    logo: <SvelteLogo />
-  },
-  {
-    id: 'static',
-    name: 'Vanilla',
-    logo: <VanillaLogo />
+    logo: <RiSvelteFill size={18} />
   }
 ]
 
@@ -109,17 +101,6 @@ export const templates = {
         'd3-fetch': 'latest'
       }
     }
-  },
-  static: {
-    files: {
-      'index.html': {
-        code: DEFAULT_VANILLA_INDEX_HTML
-      }
-    },
-    mainFile: 'index.html',
-    customSetup: {
-      dependencies: {}
-    }
   }
 }
 
@@ -154,16 +135,6 @@ export const supportedStyles = {
     }
   ],
   svelte: [
-    {
-      label: 'Inline style',
-      value: 'inline'
-    },
-    {
-      label: 'Tailwind.css',
-      value: 'tailwind'
-    }
-  ],
-  static: [
     {
       label: 'Inline style',
       value: 'inline'
