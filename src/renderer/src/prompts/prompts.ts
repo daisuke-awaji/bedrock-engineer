@@ -23,9 +23,15 @@ ${
     : ''
 }
 
-When you use retrieve tool:
+${
+  props?.ragEnabled
+    ? `When you use retrieve tool:
 - If you need to retrieve information from the knowledge base, use the retrieve tool.
 - Available Knowledge Bases: {{knowledgeBases}}`
+    : ''
+}
+
+`
 }
 
 const prompts = {
