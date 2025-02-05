@@ -52,7 +52,8 @@ export default function WebsiteGeneratorPage() {
         options={{
           externalResources: ['https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css'],
           initMode: 'user-visible',
-          recompileMode: 'delayed',
+          recompileMode: 'immediate',
+          recompileDelay: 500,
           autorun: true,
           autoReload: true
         }}
@@ -166,10 +167,6 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
       if (!loading) {
         runSandpack()
       }
-    }
-
-    return () => {
-      refresh()
     }
   }, [loading, lastText])
 
