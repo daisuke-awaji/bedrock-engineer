@@ -103,17 +103,18 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   } = useDataSourceConnectModal()
   const { knowledgeBases, enableKnowledgeBase } = useWebsiteGeneratorSettings()
 
-  const ragEnabled = !!knowledgeBases && enableKnowledgeBase
   const systemPrompt = replacePlaceholders(
     prompts.WebsiteGenerator.system[template]({
       styleType: styleType.value,
       libraries: Object.keys(templates[template].customSetup.dependencies),
-      ragEnabled
+      ragEnabled: enableKnowledgeBase
     }),
     knowledgeBases
   )
 
-  const tools = ragEnabled ? enabledTools.filter((tool) => tool.toolSpec?.name === 'retrieve') : []
+  const tools = enableKnowledgeBase
+    ? enabledTools.filter((tool) => tool.toolSpec?.name === 'retrieve')
+    : []
   const sessionId = undefined
   const options = { enableHistory: false }
   const {
