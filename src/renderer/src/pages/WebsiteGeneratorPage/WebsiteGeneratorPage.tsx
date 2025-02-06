@@ -245,7 +245,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
                 />
               ))}
               <div className="ml-8 flex gap-2 items-center max-w-[40%] overflow-x-auto">
-                {filterdMessages.map((m, index) => {
+                {filterdMessages.map((_m, index) => {
                   return (
                     index % 2 !== 0 && (
                       <motion.span
