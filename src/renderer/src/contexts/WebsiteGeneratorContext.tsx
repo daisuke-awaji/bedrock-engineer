@@ -7,6 +7,8 @@ interface WebsiteGeneratorContextType {
   setKnowledgeBases: (knowledgeBases: KnowledgeBase[]) => void
   enableKnowledgeBase: boolean
   setEnableKnowledgeBase: (bool: boolean) => void
+  enableSearch: boolean
+  setEnableSearch: (bool: boolean) => void
 }
 
 const WebsiteGeneratorContext = createContext<WebsiteGeneratorContextType | undefined>(undefined)
@@ -15,6 +17,7 @@ export const WebsiteGeneratorProvider: React.FC<{ children: React.ReactNode }> =
   // Knowledge Base Settings
   const [knowledgeBases, setStateKnowledgeBases] = useState<KnowledgeBase[]>([])
   const [enableKnowledgeBase, setStateEnableKnowledgeBase] = useState<boolean>(false)
+  const [enableSearch, setStateEnableSearch] = useState(false)
 
   // Initialize settings
   useEffect(() => {
@@ -24,6 +27,9 @@ export const WebsiteGeneratorProvider: React.FC<{ children: React.ReactNode }> =
     }
     if (settings?.enableKnowledgeBase) {
       setStateEnableKnowledgeBase(settings.enableKnowledgeBase)
+    }
+    if (settings?.enableSearch) {
+      setStateEnableSearch(settings.enableSearch)
     }
   }, [])
 
@@ -45,11 +51,22 @@ export const WebsiteGeneratorProvider: React.FC<{ children: React.ReactNode }> =
     })
   }
 
+  const setEnableSearch = (bool: boolean) => {
+    setStateEnableSearch(bool)
+    const settings = window.store.get('websiteGenerator')
+    window.store.set('websiteGenerator', {
+      ...settings,
+      enableSearch: bool
+    })
+  }
+
   const value = {
     knowledgeBases,
     setKnowledgeBases,
     enableKnowledgeBase,
-    setEnableKnowledgeBase
+    setEnableKnowledgeBase,
+    enableSearch,
+    setEnableSearch
   }
 
   return (

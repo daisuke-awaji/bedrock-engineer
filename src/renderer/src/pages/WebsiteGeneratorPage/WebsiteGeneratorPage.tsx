@@ -103,24 +103,22 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     handleOpen: handleOpenDataSourceConnectModal,
     DataSourceConnectModal
   } = useDataSourceConnectModal()
-  const { knowledgeBases, enableKnowledgeBase } = useWebsiteGeneratorSettings()
-
-  const [enableDeepSearch, setEnableDeepSearch] = useState(false)
+  const { knowledgeBases, enableKnowledgeBase, enableSearch, setEnableSearch } =
+    useWebsiteGeneratorSettings()
 
   const systemPrompt = replacePlaceholders(
     prompts.WebsiteGenerator.system[template]({
       styleType: styleType.value,
       libraries: Object.keys(templates[template].customSetup.dependencies),
       ragEnabled: enableKnowledgeBase,
-      tavilySearchEnabled: enableDeepSearch
+      tavilySearchEnabled: enableSearch
     }),
     knowledgeBases
   )
 
   const tools = enabledTools.filter(
     (tool) =>
-      tool.toolSpec?.name === 'retrieve' ||
-      (enableDeepSearch && tool.toolSpec?.name === 'tavilySearch')
+      tool.toolSpec?.name === 'retrieve' || (enableSearch && tool.toolSpec?.name === 'tavilySearch')
   )
   const sessionId = undefined
   const options = { enableHistory: false }
@@ -342,8 +340,8 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
 
             <div className="flex gap-3 items-center">
               <DeepSearchButton
-                enableDeepSearch={enableDeepSearch}
-                handleToggleDeepSearch={() => setEnableDeepSearch(!enableDeepSearch)}
+                enableDeepSearch={enableSearch}
+                handleToggleDeepSearch={() => setEnableSearch(!enableSearch)}
               />
               <KnowledgeBaseConnectButton
                 enableKnowledgeBase={enableKnowledgeBase}
