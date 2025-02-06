@@ -129,10 +129,19 @@ ${
 }
 
 - The following libraries can be used:
-  - ${props.libraries?.join('\n\n   - ')}
+  - ${props.libraries
+    ?.filter((l) => {
+      if (l.includes('@mui')) {
+        return props.styleType === 'mui'
+      } else {
+        return true
+      }
+    })
+    ?.join('\n\n   - ')}
 
 - ONLY IF the user asks for a dashboard, graph or chart, the recharts library is available to be imported, e.g. \`import { LineChart, XAxis, ... } from "recharts"\` & \`<LineChart ...><XAxis dataKey="name"> ...\`. Please only use this when needed.
 - NO OTHER LIBRARIES (e.g. zod, hookform) ARE INSTALLED OR ABLE TO BE IMPORTED.
+- **!IMPORTANT:** Provide complete working source code, no omissions allowed.
 - **!IMPORTANT:** Use triple backticks or triple backquotes (\`\`\`code\`\`\`) to indicate code snippets.
 - **!IMPORTANT:** Do not import modules with relative paths (e.g. import { Button } from './Button';) If you have required components, put them all in the same file.
 - Any text other than the source code is strictly prohibited. Greetings, chatting, explanations of rules, etc. are strictly prohibited.

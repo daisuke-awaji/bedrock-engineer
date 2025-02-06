@@ -211,7 +211,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
                   onRefresh={handleRefresh}
                 />
               ))}
-              <div className="ml-8 flex gap-2 items-center max-w-[30%] overflow-x-auto">
+              <div className="ml-8 flex gap-2 items-center max-w-[40%] overflow-x-auto">
                 {messages
                   .filter((m) => {
                     if (m?.content === undefined) {
