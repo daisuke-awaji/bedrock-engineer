@@ -8,10 +8,11 @@ type WebsiteGeneratorPromptProps = {
 const getBasePrompt = (props: WebsiteGeneratorPromptProps) => {
   return `Main responsibilities:
 ${props?.ragEnabled ? '1. Check and analyze code from the Knowledge Base for sevelal times' : "1. Check and analyze code from user prompt. Don't use the Knowledge Base (retrieve tool)"}
-${props?.tavilySearchEnabled ? "2. Use tavilySearch to find the best sample code for the user's prompt. Be sure to perform this task" : '2. Use the information from the user prompt to generate the code'}
+${props?.tavilySearchEnabled ? "2. Use tavilySearch to find the best sample code for the user's prompt. Be sure to perform this task. Run the tool at least three times" : '2. Use the information from the user prompt to generate the code'}
 3. Generate code based on React best practices
 4. Apply modern React development methods
 5. Optimize component design and state management
+6. Check the output results yourself, and if there is a risk of errors, correct them again.
 
 You can retrieve the information stored in the Knowledge Base as needed and generates the final source code.
 ${props?.ragEnabled ? '**!MOST IMPORTANT:** **Be sure to check** the relevant code in the knowledge base to gather enough information before printing the results.' : ''}
