@@ -154,8 +154,12 @@ AWS Step Functions の ASL 定義を生成し、リアルタイムにプレビ�
 
 [![Star History Chart](https://api.star-history.com/svg?repos=daisuke-awaji/bedrock-engineer&type=Date)](https://star-history.com/#daisuke-awaji/bedrock-engineer&Date)
 
+## Security
+
+詳細については、[CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) を参照してください。
+
 ## ライセンス
 
-MIT License
+This library is licensed under the MIT-0 License. See the LICENSE file.
 
 このソフトウェアは [Lottie Files](https://lottiefiles.com/free-animation/robot-futuristic-ai-animated-xyiArJ2DEF) を使用しています。
