@@ -51,7 +51,14 @@ export const agent = {
     pleaseEnterNameAndDescription: 'Please enter the agent name and description',
     generating: 'Generating...',
     autoGenerate: 'Auto-generate System Prompt',
-    datePlaceholder: 'Today e.g., 2022-01-01'
+    datePlaceholder: 'Today e.g., 2022-01-01',
+    searchAgents: 'Search agents...',
+    noDescription: 'No description provided',
+    edit: 'Edit',
+    duplicate: 'Duplicate',
+    delete: 'Delete',
+    more: 'More options',
+    inputSystemPrompt: 'Input System Prompt:'
   },
   ja: {
     'What is Amazon Bedrock': 'Amazon Bedrock とは',
@@ -103,6 +110,13 @@ export const agent = {
     pleaseEnterNameAndDescription: 'エージェント名と説明を入力してください',
     generating: '生成中...',
     autoGenerate: 'System Prompt を自動生成する',
-    datePlaceholder: '本日日付 （例：2022-01-01）'
+    datePlaceholder: '本日日付 （例：2022-01-01）',
+    searchAgents: 'エージェントを検索...',
+    noDescription: '説明なし',
+    edit: '編集する',
+    duplicate: '複製する',
+    delete: '削除する',
+    more: 'その他のオプション',
+    inputSystemPrompt: 'システムプロンプトを入力:'
   }
 }

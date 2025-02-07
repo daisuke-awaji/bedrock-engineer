@@ -2,14 +2,17 @@ type WebsiteGeneratorPromptProps = {
   styleType: 'tailwind' | 'inline' | 'mui'
   libraries?: string[]
   ragEnabled?: boolean
+  tavilySearchEnabled?: boolean
 }
 
 const getBasePrompt = (props: WebsiteGeneratorPromptProps) => {
   return `Main responsibilities:
-${props?.ragEnabled ? '1. Check and analyze code from the Knowledge Base for sevelal times' : '1. Check and analyze code from user prompt.'}
-2. Generate code based on React best practices
-3. Apply modern React development methods
-4. Optimize component design and state management
+${props?.ragEnabled ? '1. Check and analyze code from the Knowledge Base for sevelal times' : "1. Check and analyze code from user prompt. Don't use the Knowledge Base (retrieve tool)"}
+${props?.tavilySearchEnabled ? "2. Use tavilySearch to find the best sample code for the user's prompt. Be sure to perform this task. Run the tool at least three times" : '2. Use the information from the user prompt to generate the code'}
+3. Generate code based on React best practices
+4. Apply modern React development methods
+5. Optimize component design and state management
+6. Check the output results yourself, and if there is a risk of errors, correct them again.
 
 You can retrieve the information stored in the Knowledge Base as needed and generates the final source code.
 ${props?.ragEnabled ? '**!MOST IMPORTANT:** **Be sure to check** the relevant code in the knowledge base to gather enough information before printing the results.' : ''}
@@ -28,6 +31,14 @@ ${
     ? `When you use retrieve tool:
 - If you need to retrieve information from the knowledge base, use the retrieve tool.
 - Available Knowledge Bases: {{knowledgeBases}}`
+    : ''
+}
+
+${
+  props.tavilySearchEnabled
+    ? `When you use tavilySearch Tool:
+- Make sure you use the best query to get the most accurate and up-to-date information
+- Try creating and searching at least two different queries to get a better idea of the search results.`
     : ''
 }
 
@@ -107,6 +118,11 @@ The value property should contain the suggested content. The suggested content h
         props: WebsiteGeneratorPromptProps
       ) => `As a React expert, you are an assistant who checks the source code in the Knowledge Base and generates efficient and optimal React source code.
 
+- **!!MOST IMPORTANT:** Provide complete working source code, no omissions allowed.
+- **!IMPORTANT:** Use triple backticks or triple backquotes (\`\`\`code\`\`\`) to indicate code snippets. There must be no explanation before or after the source code. This is an absolute rule.
+- **!IMPORTANT:** Do not import modules with relative paths (e.g. import { Button } from './Button';) If you have required components, put them all in the same file.
+
+
 ${getBasePrompt(props)}
 
 Basic principles for code generation:
@@ -129,12 +145,18 @@ ${
 }
 
 - The following libraries can be used:
-  - ${props.libraries?.join('\n\n   - ')}
+  - ${props.libraries
+    ?.filter((l) => {
+      if (l.includes('@mui')) {
+        return props.styleType === 'mui'
+      } else {
+        return true
+      }
+    })
+    ?.join('\n\n   - ')}
 
 - ONLY IF the user asks for a dashboard, graph or chart, the recharts library is available to be imported, e.g. \`import { LineChart, XAxis, ... } from "recharts"\` & \`<LineChart ...><XAxis dataKey="name"> ...\`. Please only use this when needed.
 - NO OTHER LIBRARIES (e.g. zod, hookform) ARE INSTALLED OR ABLE TO BE IMPORTED.
-- **!IMPORTANT:** Use triple backticks or triple backquotes (\`\`\`code\`\`\`) to indicate code snippets.
-- **!IMPORTANT:** Do not import modules with relative paths (e.g. import { Button } from './Button';) If you have required components, put them all in the same file.
 - Any text other than the source code is strictly prohibited. Greetings, chatting, explanations of rules, etc. are strictly prohibited.
 - The generated application will be displayed to the full screen, but this may be changed if specified.
 - If necessary, source code that fetches and displays the API will also be generated.

@@ -34,6 +34,8 @@ import { KnowledgeBaseConnectButton } from './components/KnowledgeBaseConnectBut
 import { RagLoader } from './components/RagLoader'
 import { AttachedImage, TextArea } from '../ChatPage/components/InputForm/TextArea'
 import { useRecommendChanges } from './hooks/useRecommendChanges'
+import { WebLoader } from './components/WebLoader'
+import { DeepSearchButton } from './components/DeepSearchButton'
 
 export default function WebsiteGeneratorPage() {
   const [template, setTemplate] = useState<SupportedTemplate['id']>('react-ts')
@@ -101,26 +103,29 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     handleOpen: handleOpenDataSourceConnectModal,
     DataSourceConnectModal
   } = useDataSourceConnectModal()
-  const { knowledgeBases, enableKnowledgeBase } = useWebsiteGeneratorSettings()
+  const { knowledgeBases, enableKnowledgeBase, enableSearch, setEnableSearch } =
+    useWebsiteGeneratorSettings()
 
   const systemPrompt = replacePlaceholders(
     prompts.WebsiteGenerator.system[template]({
       styleType: styleType.value,
       libraries: Object.keys(templates[template].customSetup.dependencies),
-      ragEnabled: enableKnowledgeBase
+      ragEnabled: enableKnowledgeBase,
+      tavilySearchEnabled: enableSearch
     }),
     knowledgeBases
   )
 
-  const tools = enableKnowledgeBase
-    ? enabledTools.filter((tool) => tool.toolSpec?.name === 'retrieve')
-    : []
+  const tools = enabledTools.filter(
+    (tool) =>
+      tool.toolSpec?.name === 'retrieve' || (enableSearch && tool.toolSpec?.name === 'tavilySearch')
+  )
   const sessionId = undefined
   const options = { enableHistory: false }
   const {
     messages,
     loading,
-    toolExecuting: ragLoading,
+    executingTool,
     handleSubmit,
     clearChat: initChat
   } = useAgentChat(llm?.modelId, systemPrompt, tools, sessionId, options)
@@ -175,6 +180,32 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
 
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
 
+  const filterdMessages = messages.filter((m) => {
+    if (m?.content === undefined) {
+      return false
+    }
+
+    const hasToolBlock = m?.content.some((c) => {
+      return 'toolUse' in c || 'toolResult' in c
+    })
+
+    if (hasToolBlock) {
+      return false
+    }
+
+    return true
+  })
+
+  const getLoader = (tool: string | null) => {
+    if (tool === 'tavilySearch') {
+      return <WebLoader />
+    } else if (tool === 'retrieve') {
+      return <RagLoader />
+    }
+
+    return <Loader />
+  }
+
   return (
     <div className={'flex flex-col h-[calc(100vh-11rem)] overflow-y-auto'}>
       {/* Modals */}
@@ -211,25 +242,10 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
                   onRefresh={handleRefresh}
                 />
               ))}
-              <div className="ml-8 flex gap-2 items-center max-w-[30%] overflow-x-auto">
-                {messages
-                  .filter((m) => {
-                    if (m?.content === undefined) {
-                      return false
-                    }
-                    if (
-                      m?.content[0] &&
-                      ('toolUse' in m.content[0] || 'toolResult' in m.content[0])
-                    ) {
-                      return false
-                    }
-                    if (m?.role === 'user') {
-                      return false
-                    }
-                    return true
-                  })
-                  .map((m, index) => {
-                    return (
+              <div className="ml-8 flex gap-2 items-center max-w-[40%] overflow-x-auto">
+                {filterdMessages.map((_m, index) => {
+                  return (
+                    index % 2 !== 0 && (
                       <motion.span
                         initial={{ opacity: 0, scale: 0 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -238,18 +254,22 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
                         className="p-2 bg-gray-200 rounded text-gray-500 cursor-pointer hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white"
                         onClick={async () => {
                           const code = extractCodeBlock(
-                            m?.content?.map((i) => i.text).join('') ?? ''
+                            filterdMessages[index]?.content?.map((i) => i.text).join('') ?? ''
                           )
                           if (code) {
                             updateCode(code[0], true)
+                            setUserInput(
+                              filterdMessages[index - 1]?.content?.map((i) => i.text).join('') ?? ''
+                            )
                             runSandpack()
                           }
                         }}
                       >
-                        v{index + 1}
+                        v{(index + 1) / 2}
                       </motion.span>
                     )
-                  })}
+                  )
+                })}
               </div>
             </div>
 
@@ -300,7 +320,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
           <div
             className={`flex ${showCode ? 'w-[50%]' : 'w-[100%]'} h-[100%] justify-center items-center content-center align-center`}
           >
-            {ragLoading ? <RagLoader /> : <Loader text={'Loading...'} />}
+            {getLoader(executingTool)}
           </div>
         ) : (
           <Preview isDark={isDark} code={code} />
@@ -319,6 +339,10 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
             />
 
             <div className="flex gap-3 items-center">
+              <DeepSearchButton
+                enableDeepSearch={enableSearch}
+                handleToggleDeepSearch={() => setEnableSearch(!enableSearch)}
+              />
               <KnowledgeBaseConnectButton
                 enableKnowledgeBase={enableKnowledgeBase}
                 handleOpenDataSourceConnectModal={handleOpenDataSourceConnectModal}

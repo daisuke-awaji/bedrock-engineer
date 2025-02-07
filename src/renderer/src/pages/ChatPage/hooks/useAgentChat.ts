@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next'
 import { ToolState } from '@/types/agent-chat'
 import { AttachedImage } from '../components/InputForm/TextArea'
 import { ChatMessage } from '@/types/chat/history'
+import { ToolName } from '@/types/tools'
 
 // メッセージの送信時に、Trace を全て載せると InputToken が逼迫するので取り除く
 function removeTraces(messages) {
@@ -64,7 +65,7 @@ export const useAgentChat = (
 
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
-  const [toolExecuting, setToolExecuting] = useState(false)
+  const [executingTool, setExecutingTool] = useState<ToolName | null>(null)
   const [currentSessionId, setCurrentSessionId] = useState<string | undefined>(sessionId)
   const abortController = useRef<AbortController | null>(null)
   const { t } = useTranslation()
@@ -262,9 +263,9 @@ export const useAgentChat = (
               type: toolUse.name,
               ...(toolUse.input as any)
             }
-            setToolExecuting(true)
+            setExecutingTool(toolInput.type)
             const toolResult = await window.api.bedrock.executeTool(toolInput)
-            setToolExecuting(false)
+            setExecutingTool(null)
             if (Object.prototype.hasOwnProperty.call(toolResult, 'name')) {
               toolResults.push({
                 toolResult: {
@@ -382,7 +383,7 @@ export const useAgentChat = (
       toast.error(error.message || 'An error occurred')
     } finally {
       setLoading(false)
-      setToolExecuting(false)
+      setExecutingTool(null)
     }
     return result
   }
@@ -412,7 +413,7 @@ export const useAgentChat = (
   return {
     messages,
     loading,
-    toolExecuting,
+    executingTool,
     handleSubmit,
     setMessages,
     currentSessionId,
