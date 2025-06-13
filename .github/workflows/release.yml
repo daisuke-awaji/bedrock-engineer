@@ -1,0 +1,183 @@
+name: Release Preparation
+
+# タグがプッシュされたときにリリース準備を開始
+on:
+  push:
+    tags:
+      - 'v*' # vで始まるタグ（例：v1.2.3）
+
+jobs:
+  build:
+    name: Build and Release
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+        include:
+          - os: macos-latest
+            build_command: build:mac
+            artifact_name: bedrock-engineer-*.dmg
+            asset_name: bedrock-engineer-mac.dmg
+          - os: windows-latest
+            build_command: build:win
+            artifact_name: bedrock-engineer-*-setup.exe
+            asset_name: bedrock-engineer-win-setup.exe
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run ${{ matrix.build_command }}
+
+      - name: Find artifact
+        id: find-artifact
+        shell: bash
+        run: |
+          echo "Looking for artifact with pattern: ${{ matrix.artifact_name }}"
+          if [ "${{ matrix.os }}" = "macos-latest" ]; then
+            ARTIFACT_PATH=$(find ./dist -name "${{ matrix.artifact_name }}" -type f | head -n 1)
+          else
+            ARTIFACT_PATH=$(find ./dist -name "${{ matrix.artifact_name }}" -type f | head -n 1)
+          fi
+          
+          if [ -z "$ARTIFACT_PATH" ]; then
+            echo "No artifact found matching the pattern"
+            find ./dist -type f -name "*.dmg" -o -name "*.exe" | sort
+            exit 1
+          fi
+          
+          echo "ARTIFACT_PATH=${ARTIFACT_PATH}" >> $GITHUB_ENV
+          echo "Found artifact at: ${ARTIFACT_PATH}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: ${{ env.ARTIFACT_PATH }}
+          if-no-files-found: error
+
+  prepare-release:
+    name: Prepare Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Generate Release Notes
+        id: release-notes
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "Generating release notes for version $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          
+          # Extract changes since previous tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "No previous tag found, using all commits"
+            CHANGES=$(git log --pretty=format:"* %s (%h)" $GITHUB_SHA)
+          else
+            echo "Previous tag: $PREVIOUS_TAG"
+            CHANGES=$(git log --pretty=format:"* %s (%h)" ${PREVIOUS_TAG}..${GITHUB_REF})
+          fi
+          
+          # Categorize changes (optional)
+          FEATURES=$(echo "$CHANGES" | grep -i -E '(feat|feature|add):' || echo "")
+          FIXES=$(echo "$CHANGES" | grep -i -E '(fix|bug|issue):' || echo "")
+          OTHERS=$(echo "$CHANGES" | grep -v -i -E '(feat|feature|add|fix|bug|issue):' || echo "")
+          
+          # Save release notes to a file
+          cat > RELEASE_NOTES.md << EOF
+          # Bedrock Engineer $VERSION
+          
+          ## 新機能
+          ${FEATURES:-"なし"}
+          
+          ## 修正
+          ${FIXES:-"なし"}
+          
+          ## その他の変更
+          ${OTHERS:-"なし"}
+          
+          ## プラットフォーム
+          - macOS (Universal)
+          - Windows
+          EOF
+          
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+          
+      # ドラフトリリースを作成
+      - name: Create Draft GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/bedrock-engineer-mac.dmg
+            artifacts/bedrock-engineer-win-setup.exe
+          body_path: RELEASE_NOTES.md
+          draft: true
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      # リリース確認用PRを作成
+      - name: Create Release Approval PR
+        id: create_pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # リリース確認用PRの内容を作成
+          RELEASE_URL="${{ steps.create_release.outputs.url }}"
+          VERSION="${{ env.RELEASE_VERSION }}"
+          
+          # PRブランチを作成
+          git checkout -b release-approval-v$VERSION
+          
+          # 確認用ファイルを作成
+          cat > RELEASE_APPROVAL.md << EOF
+          # リリース承認 v$VERSION
+          
+          このPRはリリース v$VERSION の承認を目的としています。
+          
+          ## リリースノート
+          $(cat RELEASE_NOTES.md)
+          
+          ## ビルド成果物
+          ドラフトリリースで確認できます: $RELEASE_URL
+          
+          ## 承認方法
+          PRを承認するとリリースが公開されます。
+          EOF
+          
+          git add RELEASE_APPROVAL.md
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git commit -m "chore: v$VERSION リリース承認リクエスト"
+          git push origin release-approval-v$VERSION
+          
+          # PRを作成
+          PR_URL=$(gh pr create \
+            --title "リリース承認: v$VERSION" \
+            --body "$(cat RELEASE_APPROVAL.md)" \
+            --base main \
+            --head release-approval-v$VERSION)
+            
+          echo "PR_URL=$PR_URL" >> $GITHUB_ENV
+          echo "Created PR: $PR_URL"
