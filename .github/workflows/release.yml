@@ -65,8 +65,8 @@ jobs:
           path: ${{ env.ARTIFACT_PATH }}
           if-no-files-found: error
 
-  prepare-release:
-    name: Prepare Release
+  create-release:
+    name: Create Release
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -123,8 +123,8 @@ jobs:
           
           echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
           
-      # ドラフトリリースを作成
-      - name: Create Draft GitHub Release
+      # リリースを公開
+      - name: Create GitHub Release
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
@@ -132,52 +132,12 @@ jobs:
             artifacts/bedrock-engineer-mac.dmg
             artifacts/bedrock-engineer-win-setup.exe
           body_path: RELEASE_NOTES.md
-          draft: true
+          draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
-      # リリース確認用PRを作成
-      - name: Create Release Approval PR
-        id: create_pr
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Post release notification
         run: |
-          # リリース確認用PRの内容を作成
-          RELEASE_URL="${{ steps.create_release.outputs.url }}"
-          VERSION="${{ env.RELEASE_VERSION }}"
-          
-          # PRブランチを作成
-          git checkout -b release-approval-v$VERSION
-          
-          # 確認用ファイルを作成
-          cat > RELEASE_APPROVAL.md << EOF
-          # リリース承認 v$VERSION
-          
-          このPRはリリース v$VERSION の承認を目的としています。
-          
-          ## リリースノート
-          $(cat RELEASE_NOTES.md)
-          
-          ## ビルド成果物
-          ドラフトリリースで確認できます: $RELEASE_URL
-          
-          ## 承認方法
-          PRを承認するとリリースが公開されます。
-          EOF
-          
-          git add RELEASE_APPROVAL.md
-          git config --global user.email "github-actions@github.com"
-          git config --global user.name "GitHub Actions"
-          git commit -m "chore: v$VERSION リリース承認リクエスト"
-          git push origin release-approval-v$VERSION
-          
-          # PRを作成
-          PR_URL=$(gh pr create \
-            --title "リリース承認: v$VERSION" \
-            --body "$(cat RELEASE_APPROVAL.md)" \
-            --base main \
-            --head release-approval-v$VERSION)
-            
-          echo "PR_URL=$PR_URL" >> $GITHUB_ENV
-          echo "Created PR: $PR_URL"
+          echo "🎉 リリース v${{ env.RELEASE_VERSION }} が公開されました！"
+          echo "URL: ${{ steps.create_release.outputs.url }}"
