@@ -129,8 +129,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            artifacts/bedrock-engineer-mac.dmg
-            artifacts/bedrock-engineer-win-setup.exe
+            artifacts/**/*.dmg
+            artifacts/**/*.exe
           body_path: RELEASE_NOTES.md
           draft: false
           prerelease: false
