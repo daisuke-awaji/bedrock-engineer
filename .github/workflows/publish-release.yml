@@ -1,0 +1,54 @@
+name: Publish Release
+
+# PRのマージをトリガーにリリースを公開
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+jobs:
+  publish-release:
+    # PRがマージされた場合のみ実行
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release-approval-v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Extract release version
+        id: extract_version
+        run: |
+          PR_BRANCH="${{ github.event.pull_request.head.ref }}"
+          VERSION=$(echo $PR_BRANCH | sed 's/release-approval-v//')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Extracted version: $VERSION"
+          
+      - name: Find draft release
+        id: find_release
+        env: 
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE_ID=$(gh release list --json id,isDraft,tagName --jq '.[] | select(.isDraft==true and .tagName=="v${{ env.VERSION }}") | .id')
+          if [ -z "$RELEASE_ID" ]; then
+            echo "Error: Draft release for v${{ env.VERSION }} not found"
+            exit 1
+          fi
+          echo "RELEASE_ID=$RELEASE_ID" >> $GITHUB_ENV
+          echo "Found draft release ID: $RELEASE_ID"
+      
+      # ドラフトリリースを公開
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release edit v${{ env.VERSION }} --draft=false
+          echo "Release v${{ env.VERSION }} has been published!"
+          
+      - name: Post release notification
+        run: |
+          echo "🎉 リリース v${{ env.VERSION }} が公開されました！"
+          echo "URL: https://github.com/${{ github.repository }}/releases/tag/v${{ env.VERSION }}"
